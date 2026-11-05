@@ -25,6 +25,13 @@ npm run deploy         # Deploy preview branch
 npm run deploy:prod    # Deploy to live production URL
 ```
 
+### Publish Changes to Live Website (Vercel `live` branch)
+```bash
+git checkout live
+git merge main
+git push origin live
+```
+
 ---
 
 ## 🧪 Testing Commands

@@ -1,6 +1,6 @@
 # MELO — Vercel Hosting & Deployment Guide
 
-This guide walks through deploying the MELO online store to **Vercel** on the 100% free Hobby tier.
+This guide walks through deploying the MELO online store to **Vercel** on the 100% free Hobby tier, specifically configured to **only deploy when you push or merge to the `live` branch**.
 
 ---
 
@@ -15,47 +15,62 @@ This guide walks through deploying the MELO online store to **Vercel** on the 10
 
 ---
 
-## 🚀 Deployment Options
+## 🔒 Setup: Deploy ONLY on the `live` Branch
 
-### Method 1: Automatic Deploy via GitHub (Recommended)
+To ensure Vercel only deploys when you push or merge into the `live` branch (and completely ignores all other branches):
 
-This is the standard, zero-maintenance setup:
+### Step 1: Create and Push the `live` Branch on GitHub
+Run these commands in your project terminal:
+```bash
+# 1. Create and switch to the 'live' branch
+git checkout -b live
 
-1. **Push your code to GitHub**:
-   ```bash
-   git add .
-   git commit -m "Initial MELO store commit"
-   git branch -M main
-   git remote add origin https://github.com/<your-username>/melo.git
-   git push -u origin main
-   ```
-2. **Connect to Vercel**:
-   * Sign in to [vercel.com](https://vercel.com) (free account with GitHub).
-   * Click **"Add New..."** → **"Project"**.
-   * Select your `melo` repository from GitHub.
-   * Framework Preset will automatically detect **Next.js**.
-   * Click **"Deploy"**.
-3. **Done!**
-   * Vercel will build and assign you a live HTTPS URL (e.g. `melo-store.vercel.app`) in under 45 seconds.
-   * Any future push to `main` will automatically build and deploy the update.
+# 2. Push the 'live' branch to GitHub
+git push -u origin live
+```
 
 ---
 
-### Method 2: Direct Deploy via Terminal (No GitHub Needed)
+### Step 2: Set the Production Branch to `live` in Vercel
+1. Go to your [Vercel Dashboard](https://vercel.com/dashboard) and select your **melo** project.
+2. Click on **Settings** (top navigation tab) → **Git** (left sidebar).
+3. Find the **Production Branch** section.
+4. Change the branch name from `main` to **`live`**.
+5. Click **Save**.
 
-You can also deploy directly from your local terminal:
+---
 
-1. **Deploy a Preview Version**:
+### Step 3: Tell Vercel to IGNORE All Other Branches
+By default, Vercel builds "Preview Deployments" for every branch. To make sure Vercel **ONLY builds when changes hit `live`**:
+
+1. In the same **Settings** → **Git** page, scroll down to **Ignored Build Step**.
+2. Select **Custom**.
+3. Paste the following command into the box:
    ```bash
-   npx vercel
+   if [ "$VERCEL_GIT_COMMIT_REF" != "live" ]; then exit 0; else exit 1; fi
    ```
-   *Follow the one-time interactive login prompt.*
+   *(How this works: in Vercel, `exit 0` tells Vercel to skip/ignore the build; `exit 1` tells Vercel to proceed. This guarantees that only commits to `live` trigger a build).*
+4. Click **Save**.
 
-2. **Deploy Directly to Production**:
+---
+
+## 🚀 Daily Workflow: How to Release Updates
+
+1. **Do your development work on `main` or a feature branch:**
+   * Test your changes locally (`npm run dev`, `npx jest ...`).
+   * Pushing to `main` will **NOT** trigger a deployment.
+2. **When you are ready to publish live to customers:**
    ```bash
-   npm run deploy:prod
+   # Switch to live branch
+   git checkout live
+
+   # Merge your latest work from main
+   git merge main
+
+   # Push to live (this automatically triggers the Vercel production deployment)
+   git push origin live
    ```
-   *(or `npx vercel --prod`)*
+   Within 30–45 seconds, your updates will be live on your production URL!
 
 ---
 
@@ -64,7 +79,6 @@ You can also deploy directly from your local terminal:
 1. Go to your project on the [Vercel Dashboard](https://vercel.com/dashboard).
 2. Navigate to **Settings** → **Domains**.
 3. Type your domain name (e.g., `melobd.com`) and click **Add**.
-4. Vercel will give you two DNS records (an `A` record pointing to `76.76.21.21` or a `CNAME`).
-5. Copy these into your domain registrar (Namecheap, Cloudflare, BTCL, etc.).
-6. Vercel automatically generates a free SSL certificate (HTTPS) within 5 minutes.
-
+4. Set the domain to point to your **Production Branch (`live`)**.
+5. Copy the DNS records (`A` record pointing to `76.76.21.21` or a `CNAME`) into your registrar (Namecheap, Cloudflare, etc.).
+6. Vercel automatically provisions a free SSL certificate (HTTPS) within 5 minutes.
