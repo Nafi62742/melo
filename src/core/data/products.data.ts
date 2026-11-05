@@ -1,0 +1,811 @@
+import { Product } from "../models/product.model";
+
+export const INITIAL_PRODUCTS: Product[] = [
+  {
+    "id": "prod-ear-1",
+    "name": "Love Cross-Link all with transparent silicone cushion",
+    "slug": "earring-love-cross-link-all-with-transparent-silicone-cushion",
+    "description": "Exquisite French-style light luxury earring: Love Cross-Link all with transparent silicone cushion. Hypoallergenic, comfortable silicone cushion clip, designed for effortless everyday elegance.",
+    "category": "earrings",
+    "categoryName": "Earrings",
+    "priceBDT": 280,
+    "originalPriceBDT": 360,
+    "costPriceCNY": 131.12,
+    "stock": 6,
+    "imageUrl": "/products/earrings/Love%20Cross-Link%20all%20with%20transparent%20silicone%20cushion.jpg",
+    "isNew": true,
+    "isFeatured": true,
+    "tags": [
+      "Hypoallergenic",
+      "Light Luxury",
+      "French Style",
+      "Ear Clip"
+    ]
+  },
+  {
+    "id": "prod-ear-2",
+    "name": "Wreath Flowers",
+    "slug": "earring-wreath-flowers",
+    "description": "Exquisite French-style light luxury earring: Wreath Flowers. Hypoallergenic, comfortable silicone cushion clip, designed for effortless everyday elegance.",
+    "category": "earrings",
+    "categoryName": "Earrings",
+    "priceBDT": 410,
+    "originalPriceBDT": 530,
+    "costPriceCNY": 195.59,
+    "stock": 6,
+    "imageUrl": "/products/earrings/Wreath%20Flowers.jpg",
+    "isNew": true,
+    "isFeatured": true,
+    "tags": [
+      "Hypoallergenic",
+      "Light Luxury",
+      "French Style",
+      "Ear Clip"
+    ]
+  },
+  {
+    "id": "prod-ear-3",
+    "name": "8mm Pearl",
+    "slug": "earring-8mm-pearl",
+    "description": "Exquisite French-style light luxury earring: 8mm Pearl. Hypoallergenic, comfortable silicone cushion clip, designed for effortless everyday elegance.",
+    "category": "earrings",
+    "categoryName": "Earrings",
+    "priceBDT": 220,
+    "originalPriceBDT": 290,
+    "costPriceCNY": 61.88,
+    "stock": 6,
+    "imageUrl": "/products/earrings/8mm%20Pearl.jpg",
+    "isNew": true,
+    "isFeatured": false,
+    "tags": [
+      "Hypoallergenic",
+      "Light Luxury",
+      "French Style",
+      "Ear Clip"
+    ]
+  },
+  {
+    "id": "prod-ear-4",
+    "name": "3-(10mm) Pearl",
+    "slug": "earring-3-10mm-pearl",
+    "description": "Exquisite French-style light luxury earring: 3-(10mm) Pearl. Hypoallergenic, comfortable silicone cushion clip, designed for effortless everyday elegance.",
+    "category": "earrings",
+    "categoryName": "Earrings",
+    "priceBDT": 220,
+    "originalPriceBDT": 290,
+    "costPriceCNY": 64.91,
+    "stock": 6,
+    "imageUrl": "/products/earrings/3-%2810mm%29%20Pearl.jpg",
+    "isNew": true,
+    "isFeatured": false,
+    "tags": [
+      "Hypoallergenic",
+      "Light Luxury",
+      "French Style",
+      "Ear Clip"
+    ]
+  },
+  {
+    "id": "prod-ear-5",
+    "name": "4-(12mm) Pearl",
+    "slug": "earring-4-12mm-pearl",
+    "description": "Exquisite French-style light luxury earring: 4-(12mm) Pearl. Hypoallergenic, comfortable silicone cushion clip, designed for effortless everyday elegance.",
+    "category": "earrings",
+    "categoryName": "Earrings",
+    "priceBDT": 220,
+    "originalPriceBDT": 290,
+    "costPriceCNY": 67.94,
+    "stock": 6,
+    "imageUrl": "/products/earrings/4-%2812mm%29%20Pearl.jpg",
+    "isNew": true,
+    "isFeatured": false,
+    "tags": [
+      "Hypoallergenic",
+      "Light Luxury",
+      "French Style",
+      "Ear Clip"
+    ]
+  },
+  {
+    "id": "prod-ear-6",
+    "name": "5-(14mm) Pearl",
+    "slug": "earring-5-14mm-pearl",
+    "description": "Exquisite French-style light luxury earring: 5-(14mm) Pearl. Hypoallergenic, comfortable silicone cushion clip, designed for effortless everyday elegance.",
+    "category": "earrings",
+    "categoryName": "Earrings",
+    "priceBDT": 220,
+    "originalPriceBDT": 290,
+    "costPriceCNY": 70.97,
+    "stock": 6,
+    "imageUrl": "/products/earrings/5-%2814mm%29%20Pearl.jpg",
+    "isNew": true,
+    "isFeatured": false,
+    "tags": [
+      "Hypoallergenic",
+      "Light Luxury",
+      "French Style",
+      "Ear Clip"
+    ]
+  },
+  {
+    "id": "prod-ear-7",
+    "name": "Flowers",
+    "slug": "earring-flowers",
+    "description": "Exquisite French-style light luxury earring: Flowers. Hypoallergenic, comfortable silicone cushion clip, designed for effortless everyday elegance.",
+    "category": "earrings",
+    "categoryName": "Earrings",
+    "priceBDT": 700,
+    "originalPriceBDT": 910,
+    "costPriceCNY": 334.28,
+    "stock": 15,
+    "imageUrl": "/products/earrings/Flowers.jpg",
+    "isNew": false,
+    "isFeatured": true,
+    "tags": [
+      "Hypoallergenic",
+      "Light Luxury",
+      "French Style",
+      "Ear Clip"
+    ]
+  },
+  {
+    "id": "prod-ear-8",
+    "name": "Golden Flowers",
+    "slug": "earring-golden-flowers",
+    "description": "Exquisite French-style light luxury earring: Golden Flowers. Hypoallergenic, comfortable silicone cushion clip, designed for effortless everyday elegance.",
+    "category": "earrings",
+    "categoryName": "Earrings",
+    "priceBDT": 500,
+    "originalPriceBDT": 650,
+    "costPriceCNY": 240.17,
+    "stock": 15,
+    "imageUrl": "/products/earrings/Golden%20Flowers.jpg",
+    "isNew": false,
+    "isFeatured": true,
+    "tags": [
+      "Hypoallergenic",
+      "Light Luxury",
+      "French Style",
+      "Ear Clip"
+    ]
+  },
+  {
+    "id": "prod-ear-9",
+    "name": "Bud",
+    "slug": "earring-bud",
+    "description": "Exquisite French-style light luxury earring: Bud. Hypoallergenic, comfortable silicone cushion clip, designed for effortless everyday elegance.",
+    "category": "earrings",
+    "categoryName": "Earrings",
+    "priceBDT": 350,
+    "originalPriceBDT": 460,
+    "costPriceCNY": 168.76,
+    "stock": 12,
+    "imageUrl": "/products/earrings/Bud.jpg",
+    "isNew": false,
+    "isFeatured": true,
+    "tags": [
+      "Hypoallergenic",
+      "Light Luxury",
+      "French Style",
+      "Ear Clip"
+    ]
+  },
+  {
+    "id": "prod-ear-10",
+    "name": "Bow Diamond",
+    "slug": "earring-bow-diamond",
+    "description": "Exquisite French-style light luxury earring: Bow Diamond. Hypoallergenic, comfortable silicone cushion clip, designed for effortless everyday elegance.",
+    "category": "earrings",
+    "categoryName": "Earrings",
+    "priceBDT": 310,
+    "originalPriceBDT": 400,
+    "costPriceCNY": 145.4,
+    "stock": 6,
+    "imageUrl": "/products/earrings/Bow%20Diamond.jpg",
+    "isNew": false,
+    "isFeatured": true,
+    "tags": [
+      "Hypoallergenic",
+      "Light Luxury",
+      "French Style",
+      "Ear Clip"
+    ]
+  },
+  {
+    "id": "prod-ear-11",
+    "name": "Pink Cherries",
+    "slug": "earring-pink-cherries",
+    "description": "Exquisite French-style light luxury earring: Pink Cherries. Hypoallergenic, comfortable silicone cushion clip, designed for effortless everyday elegance.",
+    "category": "earrings",
+    "categoryName": "Earrings",
+    "priceBDT": 240,
+    "originalPriceBDT": 310,
+    "costPriceCNY": 115.54,
+    "stock": 6,
+    "imageUrl": "/products/earrings/Pink%20Cherries.jpg",
+    "isNew": false,
+    "isFeatured": false,
+    "tags": [
+      "Hypoallergenic",
+      "Light Luxury",
+      "French Style",
+      "Ear Clip"
+    ]
+  },
+  {
+    "id": "prod-ear-12",
+    "name": "GARLAND PEARL",
+    "slug": "earring-garland-pearl",
+    "description": "Exquisite French-style light luxury earring: GARLAND PEARL. Hypoallergenic, comfortable silicone cushion clip, designed for effortless everyday elegance.",
+    "category": "earrings",
+    "categoryName": "Earrings",
+    "priceBDT": 220,
+    "originalPriceBDT": 290,
+    "costPriceCNY": 99.96,
+    "stock": 6,
+    "imageUrl": "/products/earrings/GARLAND%20PEARL.jpg",
+    "isNew": false,
+    "isFeatured": false,
+    "tags": [
+      "Hypoallergenic",
+      "Light Luxury",
+      "French Style",
+      "Ear Clip"
+    ]
+  },
+  {
+    "id": "prod-ear-13",
+    "name": "Pearl Pendant",
+    "slug": "earring-pearl-pendant",
+    "description": "Exquisite French-style light luxury earring: Pearl Pendant. Hypoallergenic, comfortable silicone cushion clip, designed for effortless everyday elegance.",
+    "category": "earrings",
+    "categoryName": "Earrings",
+    "priceBDT": 230,
+    "originalPriceBDT": 300,
+    "costPriceCNY": 111.64,
+    "stock": 6,
+    "imageUrl": "/products/earrings/Pearl%20Pendant.jpg",
+    "isNew": false,
+    "isFeatured": false,
+    "tags": [
+      "Hypoallergenic",
+      "Light Luxury",
+      "French Style",
+      "Ear Clip"
+    ]
+  },
+  {
+    "id": "prod-ear-14",
+    "name": "Bow Little Pearl",
+    "slug": "earring-bow-little-pearl",
+    "description": "Exquisite French-style light luxury earring: Bow Little Pearl. Hypoallergenic, comfortable silicone cushion clip, designed for effortless everyday elegance.",
+    "category": "earrings",
+    "categoryName": "Earrings",
+    "priceBDT": 260,
+    "originalPriceBDT": 340,
+    "costPriceCNY": 124.63,
+    "stock": 6,
+    "imageUrl": "/products/earrings/Bow%20Little%20Pearl.jpg",
+    "isNew": false,
+    "isFeatured": false,
+    "tags": [
+      "Hypoallergenic",
+      "Light Luxury",
+      "French Style",
+      "Ear Clip"
+    ]
+  },
+  {
+    "id": "prod-ear-15",
+    "name": "Flower Pearls",
+    "slug": "earring-flower-pearls",
+    "description": "Exquisite French-style light luxury earring: Flower Pearls. Hypoallergenic, comfortable silicone cushion clip, designed for effortless everyday elegance.",
+    "category": "earrings",
+    "categoryName": "Earrings",
+    "priceBDT": 220,
+    "originalPriceBDT": 290,
+    "costPriceCNY": 84.38,
+    "stock": 6,
+    "imageUrl": "/products/earrings/Flower%20Pearls.jpg",
+    "isNew": false,
+    "isFeatured": false,
+    "tags": [
+      "Hypoallergenic",
+      "Light Luxury",
+      "French Style",
+      "Ear Clip"
+    ]
+  },
+  {
+    "id": "prod-ear-16",
+    "name": "Pearl Tassel",
+    "slug": "earring-pearl-tassel",
+    "description": "Exquisite French-style light luxury earring: Pearl Tassel. Hypoallergenic, comfortable silicone cushion clip, designed for effortless everyday elegance.",
+    "category": "earrings",
+    "categoryName": "Earrings",
+    "priceBDT": 320,
+    "originalPriceBDT": 420,
+    "costPriceCNY": 151.46,
+    "stock": 6,
+    "imageUrl": "/products/earrings/Pearl%20Tassel.jpg",
+    "isNew": false,
+    "isFeatured": false,
+    "tags": [
+      "Hypoallergenic",
+      "Light Luxury",
+      "French Style",
+      "Ear Clip"
+    ]
+  },
+  {
+    "id": "prod-ear-17",
+    "name": "Three Pearls",
+    "slug": "earring-three-pearls",
+    "description": "Exquisite French-style light luxury earring: Three Pearls. Hypoallergenic, comfortable silicone cushion clip, designed for effortless everyday elegance.",
+    "category": "earrings",
+    "categoryName": "Earrings",
+    "priceBDT": 320,
+    "originalPriceBDT": 420,
+    "costPriceCNY": 151.02,
+    "stock": 6,
+    "imageUrl": "/products/earrings/Three%20Pearls.jpg",
+    "isNew": false,
+    "isFeatured": false,
+    "tags": [
+      "Hypoallergenic",
+      "Light Luxury",
+      "French Style",
+      "Ear Clip"
+    ]
+  },
+  {
+    "id": "prod-ear-18",
+    "name": "Asymmetric Flowers",
+    "slug": "earring-asymmetric-flowers",
+    "description": "Exquisite French-style light luxury earring: Asymmetric Flowers. Hypoallergenic, comfortable silicone cushion clip, designed for effortless everyday elegance.",
+    "category": "earrings",
+    "categoryName": "Earrings",
+    "priceBDT": 470,
+    "originalPriceBDT": 610,
+    "costPriceCNY": 222.64,
+    "stock": 9,
+    "imageUrl": "/products/earrings/Asymmetric%20Flowers.jpg",
+    "isNew": false,
+    "isFeatured": false,
+    "tags": [
+      "Hypoallergenic",
+      "Light Luxury",
+      "French Style",
+      "Ear Clip"
+    ]
+  },
+  {
+    "id": "prod-ear-19",
+    "name": "Letter D",
+    "slug": "earring-letter-d",
+    "description": "Exquisite French-style light luxury earring: Letter D. Hypoallergenic, comfortable silicone cushion clip, designed for effortless everyday elegance.",
+    "category": "earrings",
+    "categoryName": "Earrings",
+    "priceBDT": 230,
+    "originalPriceBDT": 300,
+    "costPriceCNY": 111.64,
+    "stock": 6,
+    "imageUrl": "/products/earrings/Letter%20D.jpg",
+    "isNew": false,
+    "isFeatured": false,
+    "tags": [
+      "Hypoallergenic",
+      "Light Luxury",
+      "French Style",
+      "Ear Clip"
+    ]
+  },
+  {
+    "id": "prod-ear-20",
+    "name": "love hollow with drill",
+    "slug": "earring-love-hollow-with-drill",
+    "description": "Exquisite French-style light luxury earring: love hollow with drill. Hypoallergenic, comfortable silicone cushion clip, designed for effortless everyday elegance.",
+    "category": "earrings",
+    "categoryName": "Earrings",
+    "priceBDT": 260,
+    "originalPriceBDT": 340,
+    "costPriceCNY": 125.06,
+    "stock": 6,
+    "imageUrl": "/products/earrings/love%20hollow%20with%20drill.jpg",
+    "isNew": false,
+    "isFeatured": false,
+    "tags": [
+      "Hypoallergenic",
+      "Light Luxury",
+      "French Style",
+      "Ear Clip"
+    ]
+  },
+  {
+    "id": "prod-ear-21",
+    "name": "Light Luxury Simple Tree",
+    "slug": "earring-light-luxury-simple-tree",
+    "description": "Exquisite French-style light luxury earring: Light Luxury Simple Tree. Hypoallergenic, comfortable silicone cushion clip, designed for effortless everyday elegance.",
+    "category": "earrings",
+    "categoryName": "Earrings",
+    "priceBDT": 220,
+    "originalPriceBDT": 290,
+    "costPriceCNY": 93.04,
+    "stock": 6,
+    "imageUrl": "/products/earrings/Light%20Luxury%20Simple%20Tree.jpg",
+    "isNew": false,
+    "isFeatured": false,
+    "tags": [
+      "Hypoallergenic",
+      "Light Luxury",
+      "French Style",
+      "Ear Clip"
+    ]
+  },
+  {
+    "id": "prod-ear-22",
+    "name": "Black Rose",
+    "slug": "earring-black-rose",
+    "description": "Exquisite French-style light luxury earring: Black Rose. Hypoallergenic, comfortable silicone cushion clip, designed for effortless everyday elegance.",
+    "category": "earrings",
+    "categoryName": "Earrings",
+    "priceBDT": 320,
+    "originalPriceBDT": 420,
+    "costPriceCNY": 151.24,
+    "stock": 9,
+    "imageUrl": "/products/earrings/Black%20Rose.jpg",
+    "isNew": false,
+    "isFeatured": false,
+    "tags": [
+      "Hypoallergenic",
+      "Light Luxury",
+      "French Style",
+      "Ear Clip"
+    ]
+  },
+  {
+    "id": "prod-ear-23",
+    "name": "Pearl Inlay",
+    "slug": "earring-pearl-inlay",
+    "description": "Exquisite French-style light luxury earring: Pearl Inlay. Hypoallergenic, comfortable silicone cushion clip, designed for effortless everyday elegance.",
+    "category": "earrings",
+    "categoryName": "Earrings",
+    "priceBDT": 240,
+    "originalPriceBDT": 310,
+    "costPriceCNY": 116.4,
+    "stock": 6,
+    "imageUrl": "/products/earrings/Pearl%20Inlay.jpg",
+    "isNew": false,
+    "isFeatured": false,
+    "tags": [
+      "Hypoallergenic",
+      "Light Luxury",
+      "French Style",
+      "Ear Clip"
+    ]
+  },
+  {
+    "id": "prod-ear-24",
+    "name": "Black Heart",
+    "slug": "earring-black-heart",
+    "description": "Exquisite French-style light luxury earring: Black Heart. Hypoallergenic, comfortable silicone cushion clip, designed for effortless everyday elegance.",
+    "category": "earrings",
+    "categoryName": "Earrings",
+    "priceBDT": 220,
+    "originalPriceBDT": 290,
+    "costPriceCNY": 93.47,
+    "stock": 6,
+    "imageUrl": "/products/earrings/Black%20Heart.jpg",
+    "isNew": false,
+    "isFeatured": false,
+    "tags": [
+      "Hypoallergenic",
+      "Light Luxury",
+      "French Style",
+      "Ear Clip"
+    ]
+  },
+  {
+    "id": "prod-ear-25",
+    "name": "Bows",
+    "slug": "earring-bows",
+    "description": "Exquisite French-style light luxury earring: Bows. Hypoallergenic, comfortable silicone cushion clip, designed for effortless everyday elegance.",
+    "category": "earrings",
+    "categoryName": "Earrings",
+    "priceBDT": 260,
+    "originalPriceBDT": 340,
+    "costPriceCNY": 124.63,
+    "stock": 6,
+    "imageUrl": "/products/earrings/Bows.jpg",
+    "isNew": false,
+    "isFeatured": false,
+    "tags": [
+      "Hypoallergenic",
+      "Light Luxury",
+      "French Style",
+      "Ear Clip"
+    ]
+  },
+  {
+    "id": "prod-ear-26",
+    "name": "Semicircle Drip",
+    "slug": "earring-semicircle-drip",
+    "description": "Exquisite French-style light luxury earring: Semicircle Drip. Hypoallergenic, comfortable silicone cushion clip, designed for effortless everyday elegance.",
+    "category": "earrings",
+    "categoryName": "Earrings",
+    "priceBDT": 220,
+    "originalPriceBDT": 290,
+    "costPriceCNY": 93.47,
+    "stock": 6,
+    "imageUrl": "/products/earrings/Semicircle%20Drip.jpg",
+    "isNew": false,
+    "isFeatured": false,
+    "tags": [
+      "Hypoallergenic",
+      "Light Luxury",
+      "French Style",
+      "Ear Clip"
+    ]
+  },
+  {
+    "id": "prod-ear-27",
+    "name": "Camellia",
+    "slug": "earring-camellia",
+    "description": "Exquisite French-style light luxury earring: Camellia. Hypoallergenic, comfortable silicone cushion clip, designed for effortless everyday elegance.",
+    "category": "earrings",
+    "categoryName": "Earrings",
+    "priceBDT": 230,
+    "originalPriceBDT": 300,
+    "costPriceCNY": 107.75,
+    "stock": 6,
+    "imageUrl": "/products/earrings/Camellia.jpg",
+    "isNew": false,
+    "isFeatured": false,
+    "tags": [
+      "Hypoallergenic",
+      "Light Luxury",
+      "French Style",
+      "Ear Clip"
+    ]
+  },
+  {
+    "id": "prod-ring-1",
+    "name": "Minimalist Band - J008 Gold",
+    "slug": "ring-j008-gold",
+    "description": "Premium stainless steel band ring with polished finish. Tarnish-resistant, comfortable fit for daily wear and stacking.",
+    "category": "rings",
+    "categoryName": "Rings",
+    "priceBDT": 320,
+    "originalPriceBDT": 450,
+    "costPriceCNY": 50,
+    "stock": 8,
+    "imageUrl": "/products/rings/J008%20gold.jpg",
+    "isNew": true,
+    "isFeatured": true,
+    "tags": [
+      "Stainless Steel",
+      "Tarnish-free",
+      "Stackable"
+    ]
+  },
+  {
+    "id": "prod-ring-2",
+    "name": "Minimalist Band - J008 Silver",
+    "slug": "ring-j008-silver",
+    "description": "Premium stainless steel band ring with polished finish. Tarnish-resistant, comfortable fit for daily wear and stacking.",
+    "category": "rings",
+    "categoryName": "Rings",
+    "priceBDT": 320,
+    "originalPriceBDT": 450,
+    "costPriceCNY": 50,
+    "stock": 8,
+    "imageUrl": "/products/rings/J008%20silver.jpg",
+    "isNew": true,
+    "isFeatured": true,
+    "tags": [
+      "Stainless Steel",
+      "Tarnish-free",
+      "Stackable"
+    ]
+  },
+  {
+    "id": "prod-ring-3",
+    "name": "Minimalist Band - J119 Gold",
+    "slug": "ring-j119-gold",
+    "description": "Premium stainless steel band ring with polished finish. Tarnish-resistant, comfortable fit for daily wear and stacking.",
+    "category": "rings",
+    "categoryName": "Rings",
+    "priceBDT": 320,
+    "originalPriceBDT": 450,
+    "costPriceCNY": 50,
+    "stock": 8,
+    "imageUrl": "/products/rings/J119%20gold.jpg",
+    "isNew": true,
+    "isFeatured": false,
+    "tags": [
+      "Stainless Steel",
+      "Tarnish-free",
+      "Stackable"
+    ]
+  },
+  {
+    "id": "prod-ring-4",
+    "name": "Minimalist Band - J604 Gold",
+    "slug": "ring-j604-gold",
+    "description": "Premium stainless steel band ring with polished finish. Tarnish-resistant, comfortable fit for daily wear and stacking.",
+    "category": "rings",
+    "categoryName": "Rings",
+    "priceBDT": 320,
+    "originalPriceBDT": 450,
+    "costPriceCNY": 50,
+    "stock": 8,
+    "imageUrl": "/products/rings/J604%20gold.jpg",
+    "isNew": false,
+    "isFeatured": true,
+    "tags": [
+      "Stainless Steel",
+      "Tarnish-free",
+      "Stackable"
+    ]
+  },
+  {
+    "id": "prod-ring-5",
+    "name": "Minimalist Band - J669 Silver",
+    "slug": "ring-j669-silver",
+    "description": "Premium stainless steel band ring with polished finish. Tarnish-resistant, comfortable fit for daily wear and stacking.",
+    "category": "rings",
+    "categoryName": "Rings",
+    "priceBDT": 320,
+    "originalPriceBDT": 450,
+    "costPriceCNY": 50,
+    "stock": 8,
+    "imageUrl": "/products/rings/J669%20silver.jpg",
+    "isNew": false,
+    "isFeatured": false,
+    "tags": [
+      "Stainless Steel",
+      "Tarnish-free",
+      "Stackable"
+    ]
+  },
+  {
+    "id": "prod-ring-6",
+    "name": "Minimalist Band - J751 Silver",
+    "slug": "ring-j751-silver",
+    "description": "Premium stainless steel band ring with polished finish. Tarnish-resistant, comfortable fit for daily wear and stacking.",
+    "category": "rings",
+    "categoryName": "Rings",
+    "priceBDT": 320,
+    "originalPriceBDT": 450,
+    "costPriceCNY": 50,
+    "stock": 8,
+    "imageUrl": "/products/rings/J751%20silver.jpg",
+    "isNew": false,
+    "isFeatured": false,
+    "tags": [
+      "Stainless Steel",
+      "Tarnish-free",
+      "Stackable"
+    ]
+  },
+  {
+    "id": "prod-ring-7",
+    "name": "Minimalist Band - J802 Gold",
+    "slug": "ring-j802-gold",
+    "description": "Premium stainless steel band ring with polished finish. Tarnish-resistant, comfortable fit for daily wear and stacking.",
+    "category": "rings",
+    "categoryName": "Rings",
+    "priceBDT": 320,
+    "originalPriceBDT": 450,
+    "costPriceCNY": 50,
+    "stock": 8,
+    "imageUrl": "/products/rings/J802%20gold.jpg",
+    "isNew": false,
+    "isFeatured": false,
+    "tags": [
+      "Stainless Steel",
+      "Tarnish-free",
+      "Stackable"
+    ]
+  },
+  {
+    "id": "prod-ring-8",
+    "name": "Minimalist Band - J928 Micro Inlay",
+    "slug": "ring-j928-micro-inlay",
+    "description": "Premium stainless steel band ring with polished finish. Tarnish-resistant, comfortable fit for daily wear and stacking.",
+    "category": "rings",
+    "categoryName": "Rings",
+    "priceBDT": 320,
+    "originalPriceBDT": 450,
+    "costPriceCNY": 50,
+    "stock": 8,
+    "imageUrl": "/products/rings/J928%20micro%20inlay.jpg",
+    "isNew": false,
+    "isFeatured": false,
+    "tags": [
+      "Stainless Steel",
+      "Tarnish-free",
+      "Stackable"
+    ]
+  },
+  {
+    "id": "prod-brac-1",
+    "name": "Dainty Bracelet - Blue Diamond",
+    "slug": "bracelet-blue-diamond",
+    "description": "Delicate, shimmering charm bracelet crafted with adjustable sizing. Complements both casual outfits and festive evening looks.",
+    "category": "bracelets",
+    "categoryName": "Bracelets",
+    "priceBDT": 380,
+    "originalPriceBDT": 520,
+    "costPriceCNY": 65,
+    "stock": 6,
+    "imageUrl": "/products/bracelets/blue%20diamond.jpg",
+    "isNew": true,
+    "isFeatured": true,
+    "tags": [
+      "Adjustable",
+      "Sparkle",
+      "Gift Ready"
+    ]
+  },
+  {
+    "id": "prod-brac-2",
+    "name": "Dainty Bracelet - White Drill",
+    "slug": "bracelet-white-drill",
+    "description": "Delicate, shimmering charm bracelet crafted with adjustable sizing. Complements both casual outfits and festive evening looks.",
+    "category": "bracelets",
+    "categoryName": "Bracelets",
+    "priceBDT": 380,
+    "originalPriceBDT": 520,
+    "costPriceCNY": 65,
+    "stock": 6,
+    "imageUrl": "/products/bracelets/white%20drill.jpg",
+    "isNew": true,
+    "isFeatured": true,
+    "tags": [
+      "Adjustable",
+      "Sparkle",
+      "Gift Ready"
+    ]
+  },
+  {
+    "id": "prod-brac-3",
+    "name": "Dainty Bracelet - Aurora Charm #8741",
+    "slug": "bracelet-aurora-charm-8741",
+    "description": "Delicate, shimmering charm bracelet crafted with adjustable sizing. Complements both casual outfits and festive evening looks.",
+    "category": "bracelets",
+    "categoryName": "Bracelets",
+    "priceBDT": 380,
+    "originalPriceBDT": 520,
+    "costPriceCNY": 65,
+    "stock": 6,
+    "imageUrl": "/products/bracelets/IMG_8741.jpg",
+    "isNew": false,
+    "isFeatured": false,
+    "tags": [
+      "Adjustable",
+      "Sparkle",
+      "Gift Ready"
+    ]
+  },
+  {
+    "id": "prod-brac-4",
+    "name": "Dainty Bracelet - Aurora Charm #8742",
+    "slug": "bracelet-aurora-charm-8742",
+    "description": "Delicate, shimmering charm bracelet crafted with adjustable sizing. Complements both casual outfits and festive evening looks.",
+    "category": "bracelets",
+    "categoryName": "Bracelets",
+    "priceBDT": 380,
+    "originalPriceBDT": 520,
+    "costPriceCNY": 65,
+    "stock": 6,
+    "imageUrl": "/products/bracelets/IMG_8742.jpg",
+    "isNew": false,
+    "isFeatured": false,
+    "tags": [
+      "Adjustable",
+      "Sparkle",
+      "Gift Ready"
+    ]
+  }
+];
