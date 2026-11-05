@@ -1,10 +1,8 @@
-import { describe, it, expect, beforeEach } from 'vitest';
 import { orderService } from './order.service';
 import { Order } from '../models/order.model';
 
 describe('OrderService', () => {
   beforeEach(() => {
-    // Clear mock localStorage before each test
     if (typeof window !== 'undefined') {
       localStorage.clear();
     }
@@ -66,4 +64,3 @@ describe('OrderService', () => {
     expect(retrieved?.status).toBe('dispatched');
   });
 });
-

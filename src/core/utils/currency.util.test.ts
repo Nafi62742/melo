@@ -1,4 +1,3 @@
-import { describe, it, expect } from 'vitest';
 import { formatBDT } from './currency.util';
 
 describe('formatBDT Currency Utility', () => {
@@ -17,4 +16,3 @@ describe('formatBDT Currency Utility', () => {
     expect(formatBDT(99.4)).toBe('৳99');
   });
 });
-

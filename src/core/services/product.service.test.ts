@@ -1,4 +1,3 @@
-import { describe, it, expect } from 'vitest';
 import { productService } from './product.service';
 
 describe('ProductService', () => {
@@ -48,4 +47,3 @@ describe('ProductService', () => {
     expect(product.stock).toBe(initialStock);
   });
 });
-

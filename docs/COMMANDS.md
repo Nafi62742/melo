@@ -19,16 +19,22 @@ npm run build
 npm run start
 ```
 
+### Deploy to Vercel (Cloud Hosting)
+```bash
+npm run deploy         # Deploy preview branch
+npm run deploy:prod    # Deploy to live production URL
+```
+
 ---
 
 ## 🧪 Testing Commands
 
 ### Test a Single Feature / Service Only (Recommended)
 ```bash
-npx vitest run src/core/services/product.service.test.ts
-npx vitest run src/core/services/order.service.test.ts
-npx vitest run src/core/utils/currency.util.test.ts
-npx vitest run src/core/utils/slug.util.test.ts
+npx jest src/core/services/product.service.test.ts
+npx jest src/core/services/order.service.test.ts
+npx jest src/core/utils/currency.util.test.ts
+npx jest src/core/utils/slug.util.test.ts
 ```
 
 ### Run All Tests Once

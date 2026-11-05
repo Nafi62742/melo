@@ -19,10 +19,10 @@ This document outlines mandatory operational and development rules for any AI ag
    * When developing or refactoring a feature, **ONLY run the specific test file** for that feature or service.
    * Example:
      ```bash
-     npx vitest run src/core/services/product.service.test.ts
+     npx jest src/core/services/product.service.test.ts
      ```
 2. **Do NOT Run All Tests Arbitrarily:**
-   * **Do NOT execute the full test suite (`npm test` or `npx vitest run`)** unless the user explicitly commands it (e.g. "run all tests").
+   * **Do NOT execute the full test suite (`npm test` or `npx jest`)** unless the user explicitly commands it (e.g. "run all tests").
    * Keep test feedback fast, targeted, and focused only on the files currently being modified.
 
 ---

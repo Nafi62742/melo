@@ -1,4 +1,3 @@
-import { describe, it, expect } from 'vitest';
 import { slugify } from './slug.util';
 
 describe('slugify Utility', () => {
@@ -16,4 +15,3 @@ describe('slugify Utility', () => {
     expect(slugify('  --Gold Ring--  ')).toBe('gold-ring');
   });
 });
-
