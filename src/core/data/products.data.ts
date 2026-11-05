@@ -12,7 +12,7 @@ export const INITIAL_PRODUCTS: Product[] = [
     "originalPriceBDT": 360,
     "costPriceCNY": 131.12,
     "stock": 6,
-    "imageUrl": "/products/earrings/Love%20Cross-Link%20all%20with%20transparent%20silicone%20cushion.jpg",
+    "imageUrl": "/products/earrings/Love%20Cross-Link%20all%20with%20transparent%20silicone%20cushion.webp",
     "isNew": true,
     "isFeatured": true,
     "tags": [
@@ -33,7 +33,7 @@ export const INITIAL_PRODUCTS: Product[] = [
     "originalPriceBDT": 530,
     "costPriceCNY": 195.59,
     "stock": 6,
-    "imageUrl": "/products/earrings/Wreath%20Flowers.jpg",
+    "imageUrl": "/products/earrings/Wreath%20Flowers.webp",
     "isNew": true,
     "isFeatured": true,
     "tags": [
@@ -54,7 +54,7 @@ export const INITIAL_PRODUCTS: Product[] = [
     "originalPriceBDT": 290,
     "costPriceCNY": 61.88,
     "stock": 6,
-    "imageUrl": "/products/earrings/8mm%20Pearl.jpg",
+    "imageUrl": "/products/earrings/8mm%20Pearl.webp",
     "isNew": true,
     "isFeatured": false,
     "tags": [
@@ -75,7 +75,7 @@ export const INITIAL_PRODUCTS: Product[] = [
     "originalPriceBDT": 290,
     "costPriceCNY": 64.91,
     "stock": 6,
-    "imageUrl": "/products/earrings/3-%2810mm%29%20Pearl.jpg",
+    "imageUrl": "/products/earrings/3-%2810mm%29%20Pearl.webp",
     "isNew": true,
     "isFeatured": false,
     "tags": [
@@ -96,7 +96,7 @@ export const INITIAL_PRODUCTS: Product[] = [
     "originalPriceBDT": 290,
     "costPriceCNY": 67.94,
     "stock": 6,
-    "imageUrl": "/products/earrings/4-%2812mm%29%20Pearl.jpg",
+    "imageUrl": "/products/earrings/4-%2812mm%29%20Pearl.webp",
     "isNew": true,
     "isFeatured": false,
     "tags": [
@@ -117,7 +117,7 @@ export const INITIAL_PRODUCTS: Product[] = [
     "originalPriceBDT": 290,
     "costPriceCNY": 70.97,
     "stock": 6,
-    "imageUrl": "/products/earrings/5-%2814mm%29%20Pearl.jpg",
+    "imageUrl": "/products/earrings/5-%2814mm%29%20Pearl.webp",
     "isNew": true,
     "isFeatured": false,
     "tags": [
@@ -138,7 +138,7 @@ export const INITIAL_PRODUCTS: Product[] = [
     "originalPriceBDT": 910,
     "costPriceCNY": 334.28,
     "stock": 15,
-    "imageUrl": "/products/earrings/Flowers.jpg",
+    "imageUrl": "/products/earrings/Flowers.webp",
     "isNew": false,
     "isFeatured": true,
     "tags": [
@@ -159,7 +159,7 @@ export const INITIAL_PRODUCTS: Product[] = [
     "originalPriceBDT": 650,
     "costPriceCNY": 240.17,
     "stock": 15,
-    "imageUrl": "/products/earrings/Golden%20Flowers.jpg",
+    "imageUrl": "/products/earrings/Golden%20Flowers.webp",
     "isNew": false,
     "isFeatured": true,
     "tags": [
@@ -180,7 +180,7 @@ export const INITIAL_PRODUCTS: Product[] = [
     "originalPriceBDT": 460,
     "costPriceCNY": 168.76,
     "stock": 12,
-    "imageUrl": "/products/earrings/Bud.jpg",
+    "imageUrl": "/products/earrings/Bud.webp",
     "isNew": false,
     "isFeatured": true,
     "tags": [
@@ -201,7 +201,7 @@ export const INITIAL_PRODUCTS: Product[] = [
     "originalPriceBDT": 400,
     "costPriceCNY": 145.4,
     "stock": 6,
-    "imageUrl": "/products/earrings/Bow%20Diamond.jpg",
+    "imageUrl": "/products/earrings/Bow%20Diamond.webp",
     "isNew": false,
     "isFeatured": true,
     "tags": [
@@ -222,7 +222,7 @@ export const INITIAL_PRODUCTS: Product[] = [
     "originalPriceBDT": 310,
     "costPriceCNY": 115.54,
     "stock": 6,
-    "imageUrl": "/products/earrings/Pink%20Cherries.jpg",
+    "imageUrl": "/products/earrings/Pink%20Cherries.webp",
     "isNew": false,
     "isFeatured": false,
     "tags": [
@@ -243,7 +243,7 @@ export const INITIAL_PRODUCTS: Product[] = [
     "originalPriceBDT": 290,
     "costPriceCNY": 99.96,
     "stock": 6,
-    "imageUrl": "/products/earrings/GARLAND%20PEARL.jpg",
+    "imageUrl": "/products/earrings/GARLAND%20PEARL.webp",
     "isNew": false,
     "isFeatured": false,
     "tags": [
@@ -264,7 +264,7 @@ export const INITIAL_PRODUCTS: Product[] = [
     "originalPriceBDT": 300,
     "costPriceCNY": 111.64,
     "stock": 6,
-    "imageUrl": "/products/earrings/Pearl%20Pendant.jpg",
+    "imageUrl": "/products/earrings/Pearl%20Pendant.webp",
     "isNew": false,
     "isFeatured": false,
     "tags": [
@@ -285,7 +285,7 @@ export const INITIAL_PRODUCTS: Product[] = [
     "originalPriceBDT": 340,
     "costPriceCNY": 124.63,
     "stock": 6,
-    "imageUrl": "/products/earrings/Bow%20Little%20Pearl.jpg",
+    "imageUrl": "/products/earrings/Bow%20Little%20Pearl.webp",
     "isNew": false,
     "isFeatured": false,
     "tags": [
@@ -306,7 +306,7 @@ export const INITIAL_PRODUCTS: Product[] = [
     "originalPriceBDT": 290,
     "costPriceCNY": 84.38,
     "stock": 6,
-    "imageUrl": "/products/earrings/Flower%20Pearls.jpg",
+    "imageUrl": "/products/earrings/Flower%20Pearls.webp",
     "isNew": false,
     "isFeatured": false,
     "tags": [
@@ -327,7 +327,7 @@ export const INITIAL_PRODUCTS: Product[] = [
     "originalPriceBDT": 420,
     "costPriceCNY": 151.46,
     "stock": 6,
-    "imageUrl": "/products/earrings/Pearl%20Tassel.jpg",
+    "imageUrl": "/products/earrings/Pearl%20Tassel.webp",
     "isNew": false,
     "isFeatured": false,
     "tags": [
@@ -348,7 +348,7 @@ export const INITIAL_PRODUCTS: Product[] = [
     "originalPriceBDT": 420,
     "costPriceCNY": 151.02,
     "stock": 6,
-    "imageUrl": "/products/earrings/Three%20Pearls.jpg",
+    "imageUrl": "/products/earrings/Three%20Pearls.webp",
     "isNew": false,
     "isFeatured": false,
     "tags": [
@@ -369,7 +369,7 @@ export const INITIAL_PRODUCTS: Product[] = [
     "originalPriceBDT": 610,
     "costPriceCNY": 222.64,
     "stock": 9,
-    "imageUrl": "/products/earrings/Asymmetric%20Flowers.jpg",
+    "imageUrl": "/products/earrings/Asymmetric%20Flowers.webp",
     "isNew": false,
     "isFeatured": false,
     "tags": [
@@ -390,7 +390,7 @@ export const INITIAL_PRODUCTS: Product[] = [
     "originalPriceBDT": 300,
     "costPriceCNY": 111.64,
     "stock": 6,
-    "imageUrl": "/products/earrings/Letter%20D.jpg",
+    "imageUrl": "/products/earrings/Letter%20D.webp",
     "isNew": false,
     "isFeatured": false,
     "tags": [
@@ -411,7 +411,7 @@ export const INITIAL_PRODUCTS: Product[] = [
     "originalPriceBDT": 340,
     "costPriceCNY": 125.06,
     "stock": 6,
-    "imageUrl": "/products/earrings/love%20hollow%20with%20drill.jpg",
+    "imageUrl": "/products/earrings/love%20hollow%20with%20drill.webp",
     "isNew": false,
     "isFeatured": false,
     "tags": [
@@ -432,7 +432,7 @@ export const INITIAL_PRODUCTS: Product[] = [
     "originalPriceBDT": 290,
     "costPriceCNY": 93.04,
     "stock": 6,
-    "imageUrl": "/products/earrings/Light%20Luxury%20Simple%20Tree.jpg",
+    "imageUrl": "/products/earrings/Light%20Luxury%20Simple%20Tree.webp",
     "isNew": false,
     "isFeatured": false,
     "tags": [
@@ -453,7 +453,7 @@ export const INITIAL_PRODUCTS: Product[] = [
     "originalPriceBDT": 420,
     "costPriceCNY": 151.24,
     "stock": 9,
-    "imageUrl": "/products/earrings/Black%20Rose.jpg",
+    "imageUrl": "/products/earrings/Black%20Rose.webp",
     "isNew": false,
     "isFeatured": false,
     "tags": [
@@ -474,7 +474,7 @@ export const INITIAL_PRODUCTS: Product[] = [
     "originalPriceBDT": 310,
     "costPriceCNY": 116.4,
     "stock": 6,
-    "imageUrl": "/products/earrings/Pearl%20Inlay.jpg",
+    "imageUrl": "/products/earrings/Pearl%20Inlay.webp",
     "isNew": false,
     "isFeatured": false,
     "tags": [
@@ -495,7 +495,7 @@ export const INITIAL_PRODUCTS: Product[] = [
     "originalPriceBDT": 290,
     "costPriceCNY": 93.47,
     "stock": 6,
-    "imageUrl": "/products/earrings/Black%20Heart.jpg",
+    "imageUrl": "/products/earrings/Black%20Heart.webp",
     "isNew": false,
     "isFeatured": false,
     "tags": [
@@ -516,7 +516,7 @@ export const INITIAL_PRODUCTS: Product[] = [
     "originalPriceBDT": 340,
     "costPriceCNY": 124.63,
     "stock": 6,
-    "imageUrl": "/products/earrings/Bows.jpg",
+    "imageUrl": "/products/earrings/Bows.webp",
     "isNew": false,
     "isFeatured": false,
     "tags": [
@@ -537,7 +537,7 @@ export const INITIAL_PRODUCTS: Product[] = [
     "originalPriceBDT": 290,
     "costPriceCNY": 93.47,
     "stock": 6,
-    "imageUrl": "/products/earrings/Semicircle%20Drip.jpg",
+    "imageUrl": "/products/earrings/Semicircle%20Drip.webp",
     "isNew": false,
     "isFeatured": false,
     "tags": [
@@ -558,7 +558,7 @@ export const INITIAL_PRODUCTS: Product[] = [
     "originalPriceBDT": 300,
     "costPriceCNY": 107.75,
     "stock": 6,
-    "imageUrl": "/products/earrings/Camellia.jpg",
+    "imageUrl": "/products/earrings/Camellia.webp",
     "isNew": false,
     "isFeatured": false,
     "tags": [
@@ -579,7 +579,7 @@ export const INITIAL_PRODUCTS: Product[] = [
     "originalPriceBDT": 450,
     "costPriceCNY": 50,
     "stock": 8,
-    "imageUrl": "/products/rings/J008%20gold.jpg",
+    "imageUrl": "/products/rings/J008%20gold.webp",
     "isNew": true,
     "isFeatured": true,
     "tags": [
@@ -599,7 +599,7 @@ export const INITIAL_PRODUCTS: Product[] = [
     "originalPriceBDT": 450,
     "costPriceCNY": 50,
     "stock": 8,
-    "imageUrl": "/products/rings/J008%20silver.jpg",
+    "imageUrl": "/products/rings/J008%20silver.webp",
     "isNew": true,
     "isFeatured": true,
     "tags": [
@@ -619,7 +619,7 @@ export const INITIAL_PRODUCTS: Product[] = [
     "originalPriceBDT": 450,
     "costPriceCNY": 50,
     "stock": 8,
-    "imageUrl": "/products/rings/J119%20gold.jpg",
+    "imageUrl": "/products/rings/J119%20gold.webp",
     "isNew": true,
     "isFeatured": false,
     "tags": [
@@ -639,9 +639,9 @@ export const INITIAL_PRODUCTS: Product[] = [
     "originalPriceBDT": 450,
     "costPriceCNY": 50,
     "stock": 8,
-    "imageUrl": "/products/rings/J604%20gold.jpg",
-    "isNew": false,
-    "isFeatured": true,
+    "imageUrl": "/products/rings/J604%20gold.webp",
+    "isNew": true,
+    "isFeatured": false,
     "tags": [
       "Stainless Steel",
       "Tarnish-free",
@@ -659,9 +659,9 @@ export const INITIAL_PRODUCTS: Product[] = [
     "originalPriceBDT": 450,
     "costPriceCNY": 50,
     "stock": 8,
-    "imageUrl": "/products/rings/J669%20silver.jpg",
+    "imageUrl": "/products/rings/J669%20silver.webp",
     "isNew": false,
-    "isFeatured": false,
+    "isFeatured": true,
     "tags": [
       "Stainless Steel",
       "Tarnish-free",
@@ -679,7 +679,7 @@ export const INITIAL_PRODUCTS: Product[] = [
     "originalPriceBDT": 450,
     "costPriceCNY": 50,
     "stock": 8,
-    "imageUrl": "/products/rings/J751%20silver.jpg",
+    "imageUrl": "/products/rings/J751%20silver.webp",
     "isNew": false,
     "isFeatured": false,
     "tags": [
@@ -690,8 +690,8 @@ export const INITIAL_PRODUCTS: Product[] = [
   },
   {
     "id": "prod-ring-7",
-    "name": "Minimalist Band - J802 Gold",
-    "slug": "ring-j802-gold",
+    "name": "Minimalist Band - J778 Silver",
+    "slug": "ring-j778-silver",
     "description": "Premium stainless steel band ring with polished finish. Tarnish-resistant, comfortable fit for daily wear and stacking.",
     "category": "rings",
     "categoryName": "Rings",
@@ -699,7 +699,7 @@ export const INITIAL_PRODUCTS: Product[] = [
     "originalPriceBDT": 450,
     "costPriceCNY": 50,
     "stock": 8,
-    "imageUrl": "/products/rings/J802%20gold.jpg",
+    "imageUrl": "/products/rings/J778%20silver.webp",
     "isNew": false,
     "isFeatured": false,
     "tags": [
@@ -710,6 +710,186 @@ export const INITIAL_PRODUCTS: Product[] = [
   },
   {
     "id": "prod-ring-8",
+    "name": "Minimalist Band - J802 Gold",
+    "slug": "ring-j802-gold",
+    "description": "Premium stainless steel band ring with polished finish. Tarnish-resistant, comfortable fit for daily wear and stacking.",
+    "category": "rings",
+    "categoryName": "Rings",
+    "priceBDT": 320,
+    "originalPriceBDT": 450,
+    "costPriceCNY": 50,
+    "stock": 8,
+    "imageUrl": "/products/rings/J802%20gold.webp",
+    "isNew": false,
+    "isFeatured": true,
+    "tags": [
+      "Stainless Steel",
+      "Tarnish-free",
+      "Stackable"
+    ]
+  },
+  {
+    "id": "prod-ring-9",
+    "name": "Minimalist Band - J838 Silver",
+    "slug": "ring-j838-silver",
+    "description": "Premium stainless steel band ring with polished finish. Tarnish-resistant, comfortable fit for daily wear and stacking.",
+    "category": "rings",
+    "categoryName": "Rings",
+    "priceBDT": 320,
+    "originalPriceBDT": 450,
+    "costPriceCNY": 50,
+    "stock": 8,
+    "imageUrl": "/products/rings/J838%20silver.webp",
+    "isNew": false,
+    "isFeatured": false,
+    "tags": [
+      "Stainless Steel",
+      "Tarnish-free",
+      "Stackable"
+    ]
+  },
+  {
+    "id": "prod-ring-10",
+    "name": "Minimalist Band - J845 Silver",
+    "slug": "ring-j845-silver",
+    "description": "Premium stainless steel band ring with polished finish. Tarnish-resistant, comfortable fit for daily wear and stacking.",
+    "category": "rings",
+    "categoryName": "Rings",
+    "priceBDT": 320,
+    "originalPriceBDT": 450,
+    "costPriceCNY": 50,
+    "stock": 8,
+    "imageUrl": "/products/rings/J845%20silver.webp",
+    "isNew": false,
+    "isFeatured": false,
+    "tags": [
+      "Stainless Steel",
+      "Tarnish-free",
+      "Stackable"
+    ]
+  },
+  {
+    "id": "prod-ring-11",
+    "name": "Minimalist Band - J872 Gold",
+    "slug": "ring-j872-gold",
+    "description": "Premium stainless steel band ring with polished finish. Tarnish-resistant, comfortable fit for daily wear and stacking.",
+    "category": "rings",
+    "categoryName": "Rings",
+    "priceBDT": 320,
+    "originalPriceBDT": 450,
+    "costPriceCNY": 50,
+    "stock": 8,
+    "imageUrl": "/products/rings/J872%20gold.webp",
+    "isNew": false,
+    "isFeatured": false,
+    "tags": [
+      "Stainless Steel",
+      "Tarnish-free",
+      "Stackable"
+    ]
+  },
+  {
+    "id": "prod-ring-12",
+    "name": "Minimalist Band - J897 Silver",
+    "slug": "ring-j897-silver",
+    "description": "Premium stainless steel band ring with polished finish. Tarnish-resistant, comfortable fit for daily wear and stacking.",
+    "category": "rings",
+    "categoryName": "Rings",
+    "priceBDT": 320,
+    "originalPriceBDT": 450,
+    "costPriceCNY": 50,
+    "stock": 8,
+    "imageUrl": "/products/rings/J897%20silver.webp",
+    "isNew": false,
+    "isFeatured": false,
+    "tags": [
+      "Stainless Steel",
+      "Tarnish-free",
+      "Stackable"
+    ]
+  },
+  {
+    "id": "prod-ring-13",
+    "name": "Minimalist Band - J911 Silver",
+    "slug": "ring-j911-silver",
+    "description": "Premium stainless steel band ring with polished finish. Tarnish-resistant, comfortable fit for daily wear and stacking.",
+    "category": "rings",
+    "categoryName": "Rings",
+    "priceBDT": 320,
+    "originalPriceBDT": 450,
+    "costPriceCNY": 50,
+    "stock": 8,
+    "imageUrl": "/products/rings/J911%20silver.webp",
+    "isNew": false,
+    "isFeatured": false,
+    "tags": [
+      "Stainless Steel",
+      "Tarnish-free",
+      "Stackable"
+    ]
+  },
+  {
+    "id": "prod-ring-14",
+    "name": "Minimalist Band - J917 Silver",
+    "slug": "ring-j917-silver",
+    "description": "Premium stainless steel band ring with polished finish. Tarnish-resistant, comfortable fit for daily wear and stacking.",
+    "category": "rings",
+    "categoryName": "Rings",
+    "priceBDT": 320,
+    "originalPriceBDT": 450,
+    "costPriceCNY": 50,
+    "stock": 8,
+    "imageUrl": "/products/rings/J917%20silver.webp",
+    "isNew": false,
+    "isFeatured": false,
+    "tags": [
+      "Stainless Steel",
+      "Tarnish-free",
+      "Stackable"
+    ]
+  },
+  {
+    "id": "prod-ring-15",
+    "name": "Minimalist Band - J925 Silver A",
+    "slug": "ring-j925-silver-a",
+    "description": "Premium stainless steel band ring with polished finish. Tarnish-resistant, comfortable fit for daily wear and stacking.",
+    "category": "rings",
+    "categoryName": "Rings",
+    "priceBDT": 320,
+    "originalPriceBDT": 450,
+    "costPriceCNY": 50,
+    "stock": 8,
+    "imageUrl": "/products/rings/J925%20silver%20a.webp",
+    "isNew": false,
+    "isFeatured": false,
+    "tags": [
+      "Stainless Steel",
+      "Tarnish-free",
+      "Stackable"
+    ]
+  },
+  {
+    "id": "prod-ring-16",
+    "name": "Minimalist Band - J927 Silver B",
+    "slug": "ring-j927-silver-b",
+    "description": "Premium stainless steel band ring with polished finish. Tarnish-resistant, comfortable fit for daily wear and stacking.",
+    "category": "rings",
+    "categoryName": "Rings",
+    "priceBDT": 320,
+    "originalPriceBDT": 450,
+    "costPriceCNY": 50,
+    "stock": 8,
+    "imageUrl": "/products/rings/J927%20silver%20b.webp",
+    "isNew": false,
+    "isFeatured": false,
+    "tags": [
+      "Stainless Steel",
+      "Tarnish-free",
+      "Stackable"
+    ]
+  },
+  {
+    "id": "prod-ring-17",
     "name": "Minimalist Band - J928 Micro Inlay",
     "slug": "ring-j928-micro-inlay",
     "description": "Premium stainless steel band ring with polished finish. Tarnish-resistant, comfortable fit for daily wear and stacking.",
@@ -719,7 +899,167 @@ export const INITIAL_PRODUCTS: Product[] = [
     "originalPriceBDT": 450,
     "costPriceCNY": 50,
     "stock": 8,
-    "imageUrl": "/products/rings/J928%20micro%20inlay.jpg",
+    "imageUrl": "/products/rings/J928%20micro%20inlay.webp",
+    "isNew": false,
+    "isFeatured": false,
+    "tags": [
+      "Stainless Steel",
+      "Tarnish-free",
+      "Stackable"
+    ]
+  },
+  {
+    "id": "prod-ring-18",
+    "name": "Minimalist Band - J939 Silver",
+    "slug": "ring-j939-silver",
+    "description": "Premium stainless steel band ring with polished finish. Tarnish-resistant, comfortable fit for daily wear and stacking.",
+    "category": "rings",
+    "categoryName": "Rings",
+    "priceBDT": 320,
+    "originalPriceBDT": 450,
+    "costPriceCNY": 50,
+    "stock": 8,
+    "imageUrl": "/products/rings/J939%20silver.webp",
+    "isNew": false,
+    "isFeatured": false,
+    "tags": [
+      "Stainless Steel",
+      "Tarnish-free",
+      "Stackable"
+    ]
+  },
+  {
+    "id": "prod-ring-19",
+    "name": "Minimalist Band - J942 Silver A",
+    "slug": "ring-j942-silver-a",
+    "description": "Premium stainless steel band ring with polished finish. Tarnish-resistant, comfortable fit for daily wear and stacking.",
+    "category": "rings",
+    "categoryName": "Rings",
+    "priceBDT": 320,
+    "originalPriceBDT": 450,
+    "costPriceCNY": 50,
+    "stock": 8,
+    "imageUrl": "/products/rings/J942%20silver%20a.webp",
+    "isNew": false,
+    "isFeatured": false,
+    "tags": [
+      "Stainless Steel",
+      "Tarnish-free",
+      "Stackable"
+    ]
+  },
+  {
+    "id": "prod-ring-20",
+    "name": "Minimalist Band - J954 Thick Silver B",
+    "slug": "ring-j954-thick-silver-b",
+    "description": "Premium stainless steel band ring with polished finish. Tarnish-resistant, comfortable fit for daily wear and stacking.",
+    "category": "rings",
+    "categoryName": "Rings",
+    "priceBDT": 320,
+    "originalPriceBDT": 450,
+    "costPriceCNY": 50,
+    "stock": 8,
+    "imageUrl": "/products/rings/J954%20thick%20silver%20b.webp",
+    "isNew": false,
+    "isFeatured": false,
+    "tags": [
+      "Stainless Steel",
+      "Tarnish-free",
+      "Stackable"
+    ]
+  },
+  {
+    "id": "prod-ring-21",
+    "name": "Minimalist Band - J956 Silver B",
+    "slug": "ring-j956-silver-b",
+    "description": "Premium stainless steel band ring with polished finish. Tarnish-resistant, comfortable fit for daily wear and stacking.",
+    "category": "rings",
+    "categoryName": "Rings",
+    "priceBDT": 320,
+    "originalPriceBDT": 450,
+    "costPriceCNY": 50,
+    "stock": 8,
+    "imageUrl": "/products/rings/J956%20silver%20b.webp",
+    "isNew": false,
+    "isFeatured": false,
+    "tags": [
+      "Stainless Steel",
+      "Tarnish-free",
+      "Stackable"
+    ]
+  },
+  {
+    "id": "prod-ring-22",
+    "name": "Minimalist Band - J961 Silver B",
+    "slug": "ring-j961-silver-b",
+    "description": "Premium stainless steel band ring with polished finish. Tarnish-resistant, comfortable fit for daily wear and stacking.",
+    "category": "rings",
+    "categoryName": "Rings",
+    "priceBDT": 320,
+    "originalPriceBDT": 450,
+    "costPriceCNY": 50,
+    "stock": 8,
+    "imageUrl": "/products/rings/J961%20silver%20b.webp",
+    "isNew": false,
+    "isFeatured": false,
+    "tags": [
+      "Stainless Steel",
+      "Tarnish-free",
+      "Stackable"
+    ]
+  },
+  {
+    "id": "prod-ring-23",
+    "name": "Minimalist Band - J970 Gold",
+    "slug": "ring-j970-gold",
+    "description": "Premium stainless steel band ring with polished finish. Tarnish-resistant, comfortable fit for daily wear and stacking.",
+    "category": "rings",
+    "categoryName": "Rings",
+    "priceBDT": 320,
+    "originalPriceBDT": 450,
+    "costPriceCNY": 50,
+    "stock": 8,
+    "imageUrl": "/products/rings/J970%20gold.webp",
+    "isNew": false,
+    "isFeatured": false,
+    "tags": [
+      "Stainless Steel",
+      "Tarnish-free",
+      "Stackable"
+    ]
+  },
+  {
+    "id": "prod-ring-24",
+    "name": "Minimalist Band - J972 Silver",
+    "slug": "ring-j972-silver",
+    "description": "Premium stainless steel band ring with polished finish. Tarnish-resistant, comfortable fit for daily wear and stacking.",
+    "category": "rings",
+    "categoryName": "Rings",
+    "priceBDT": 320,
+    "originalPriceBDT": 450,
+    "costPriceCNY": 50,
+    "stock": 8,
+    "imageUrl": "/products/rings/J972%20silver.webp",
+    "isNew": false,
+    "isFeatured": false,
+    "tags": [
+      "Stainless Steel",
+      "Tarnish-free",
+      "Stackable"
+    ]
+  },
+  {
+    "id": "prod-ring-25",
+    "name": "Minimalist Band - J997 Silver",
+    "slug": "ring-j997-silver",
+    "description": "Premium stainless steel band ring with polished finish. Tarnish-resistant, comfortable fit for daily wear and stacking.",
+    "category": "rings",
+    "categoryName": "Rings",
+    "priceBDT": 320,
+    "originalPriceBDT": 450,
+    "costPriceCNY": 50,
+    "stock": 8,
+    "imageUrl": "/products/rings/J997%20silver.webp",
     "isNew": false,
     "isFeatured": false,
     "tags": [
@@ -739,7 +1079,7 @@ export const INITIAL_PRODUCTS: Product[] = [
     "originalPriceBDT": 520,
     "costPriceCNY": 65,
     "stock": 6,
-    "imageUrl": "/products/bracelets/blue%20diamond.jpg",
+    "imageUrl": "/products/bracelets/blue%20diamond.webp",
     "isNew": true,
     "isFeatured": true,
     "tags": [
@@ -759,49 +1099,9 @@ export const INITIAL_PRODUCTS: Product[] = [
     "originalPriceBDT": 520,
     "costPriceCNY": 65,
     "stock": 6,
-    "imageUrl": "/products/bracelets/white%20drill.jpg",
+    "imageUrl": "/products/bracelets/white%20drill.webp",
     "isNew": true,
     "isFeatured": true,
-    "tags": [
-      "Adjustable",
-      "Sparkle",
-      "Gift Ready"
-    ]
-  },
-  {
-    "id": "prod-brac-3",
-    "name": "Dainty Bracelet - Aurora Charm #8741",
-    "slug": "bracelet-aurora-charm-8741",
-    "description": "Delicate, shimmering charm bracelet crafted with adjustable sizing. Complements both casual outfits and festive evening looks.",
-    "category": "bracelets",
-    "categoryName": "Bracelets",
-    "priceBDT": 380,
-    "originalPriceBDT": 520,
-    "costPriceCNY": 65,
-    "stock": 6,
-    "imageUrl": "/products/bracelets/IMG_8741.jpg",
-    "isNew": false,
-    "isFeatured": false,
-    "tags": [
-      "Adjustable",
-      "Sparkle",
-      "Gift Ready"
-    ]
-  },
-  {
-    "id": "prod-brac-4",
-    "name": "Dainty Bracelet - Aurora Charm #8742",
-    "slug": "bracelet-aurora-charm-8742",
-    "description": "Delicate, shimmering charm bracelet crafted with adjustable sizing. Complements both casual outfits and festive evening looks.",
-    "category": "bracelets",
-    "categoryName": "Bracelets",
-    "priceBDT": 380,
-    "originalPriceBDT": 520,
-    "costPriceCNY": 65,
-    "stock": 6,
-    "imageUrl": "/products/bracelets/IMG_8742.jpg",
-    "isNew": false,
-    "isFeatured": false,
     "tags": [
       "Adjustable",
       "Sparkle",

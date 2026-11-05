@@ -75,7 +75,9 @@ export function AdminFeature() {
             <Package className="w-4 h-4 text-violet-600" />
           </div>
           <div className="text-2xl font-black text-neutral-900">{products.length}</div>
-          <div className="text-[11px] text-neutral-400 mt-1">27 earrings, 8 rings, 4 bracelets</div>
+          <div className="text-[11px] text-neutral-400 mt-1">
+            {products.filter(p => p.category === 'earrings').length} earrings, {products.filter(p => p.category === 'rings').length} rings, {products.filter(p => p.category === 'bracelets').length} bracelets
+          </div>
         </div>
 
         <div className="rounded-2xl border border-neutral-200 bg-white p-5 shadow-sm">

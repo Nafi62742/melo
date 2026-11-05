@@ -16,10 +16,10 @@ export function CatalogFeature() {
   const [sortBy, setSortBy] = useState<'featured' | 'price-asc' | 'price-desc' | 'name'>('featured');
 
   const categories = [
-    { id: 'all', label: 'All Items' },
-    { id: 'earrings', label: 'Earrings (27)' },
-    { id: 'rings', label: 'Rings (8)' },
-    { id: 'bracelets', label: 'Bracelets (4)' },
+    { id: 'all', label: `All Items (${productService.getAllProducts().length})` },
+    { id: 'earrings', label: `Earrings (${productService.getProductsByCategory('earrings').length})` },
+    { id: 'rings', label: `Rings (${productService.getProductsByCategory('rings').length})` },
+    { id: 'bracelets', label: `Bracelets (${productService.getProductsByCategory('bracelets').length})` },
   ];
 
   const filteredProducts = useMemo(() => {
