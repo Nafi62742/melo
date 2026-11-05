@@ -7,6 +7,7 @@ import { CartProvider } from '@/core/services/cart.context';
 import { Navbar } from '@/shared/navbar/navbar.component';
 import { Footer } from '@/shared/footer/footer.component';
 import { CartDrawer } from '@/shared/cart-drawer/cart-drawer.component';
+import { FloatingChat } from '@/shared/floating-chat/floating-chat.component';
 
 const inter = Inter({
   subsets: ['latin'],
@@ -35,6 +36,7 @@ export default function RootLayout({
             <main className="flex-1">{children}</main>
             <Footer />
             <CartDrawer />
+            <FloatingChat />
           </CartProvider>
         </I18nProvider>
       </body>

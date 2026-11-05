@@ -111,26 +111,39 @@ export function ProductDetailFeature({ product }: ProductDetailFeatureProps) {
               </div>
             )}
 
-            {/* Quantity Selector */}
-            <div className="mt-6 flex items-center gap-4">
-              <span className="text-xs font-semibold text-neutral-700">Quantity:</span>
-              <div className="flex items-center rounded-xl border border-neutral-300 bg-white">
-                <button
-                  onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                  className="p-2 text-neutral-600 hover:text-neutral-900"
-                >
-                  <Minus className="w-4 h-4" />
-                </button>
-                <span className="w-10 text-center text-xs font-bold text-neutral-900">
-                  {quantity}
-                </span>
-                <button
-                  onClick={() => setQuantity(Math.min(product.stock, quantity + 1))}
-                  className="p-2 text-neutral-600 hover:text-neutral-900"
-                >
-                  <Plus className="w-4 h-4" />
-                </button>
+            {/* Quantity Selector & Live Calculated Price */}
+            <div className="mt-6 flex flex-wrap items-center gap-4">
+              <div className="flex items-center gap-3">
+                <span className="text-xs font-semibold text-neutral-700">Quantity:</span>
+                <div className="flex items-center rounded-xl border border-neutral-300 bg-white">
+                  <button
+                    onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                    className="p-2 text-neutral-600 hover:text-neutral-900"
+                    aria-label="Decrease quantity"
+                  >
+                    <Minus className="w-4 h-4" />
+                  </button>
+                  <span className="w-10 text-center text-xs font-bold text-neutral-900">
+                    {quantity}
+                  </span>
+                  <button
+                    onClick={() => setQuantity(Math.min(product.stock, quantity + 1))}
+                    className="p-2 text-neutral-600 hover:text-neutral-900"
+                    aria-label="Increase quantity"
+                  >
+                    <Plus className="w-4 h-4" />
+                  </button>
+                </div>
               </div>
+
+              {quantity > 1 && (
+                <div className="rounded-xl bg-violet-50 px-3.5 py-1.5 border border-violet-200 text-xs font-bold text-violet-800 animate-fadeIn">
+                  Total for {quantity} items: {formatBDT(product.priceBDT * quantity)}
+                  <span className="text-[10px] font-normal text-violet-600 ml-1.5">
+                    ({formatBDT(product.priceBDT)} each)
+                  </span>
+                </div>
+              )}
             </div>
 
             {/* Action Buttons */}
@@ -140,14 +153,14 @@ export function ProductDetailFeature({ product }: ProductDetailFeatureProps) {
                 className="flex flex-1 items-center justify-center gap-2 rounded-2xl bg-violet-600 py-3.5 px-6 text-sm font-semibold text-white shadow-lg shadow-violet-500/20 hover:bg-violet-700 active:scale-98 transition"
               >
                 <ShoppingBag className="w-4 h-4" />
-                <span>Add to Bag</span>
+                <span>Add to Bag • {formatBDT(product.priceBDT * quantity)}</span>
               </button>
 
               <button
                 onClick={handleBuyNow}
                 className="flex flex-1 items-center justify-center gap-2 rounded-2xl border-2 border-neutral-900 bg-neutral-900 py-3.5 px-6 text-sm font-semibold text-white hover:bg-neutral-800 active:scale-98 transition"
               >
-                <span>Buy Now (Instant Checkout)</span>
+                <span>Buy Now • {formatBDT(product.priceBDT * quantity)}</span>
               </button>
             </div>
 
