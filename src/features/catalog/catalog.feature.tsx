@@ -73,10 +73,10 @@ export function CatalogFeature() {
             <button
               key={cat.id}
               onClick={() => setSelectedCategory(cat.id)}
-              className={`rounded-full px-4 py-2 text-xs font-semibold whitespace-nowrap transition-all ${
+              className={`rounded-full px-4 py-2 text-xs font-bold whitespace-nowrap transition-all ${
                 selectedCategory === cat.id
-                  ? 'bg-violet-600 text-white shadow-sm'
-                  : 'bg-neutral-100 text-neutral-600 hover:bg-neutral-200'
+                  ? 'bg-stone-900 text-amber-200 shadow-sm'
+                  : 'bg-stone-100 text-stone-600 hover:bg-stone-200'
               }`}
             >
               {cat.label}
@@ -92,17 +92,17 @@ export function CatalogFeature() {
               placeholder="Filter by name..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full rounded-full border border-neutral-200 bg-white pl-8 pr-3 py-1.5 text-xs text-neutral-900 focus:outline-none focus:border-violet-500"
+              className="w-full rounded-full border border-stone-200 bg-white pl-8 pr-3 py-1.5 text-xs text-stone-900 focus:outline-none focus:border-amber-600"
             />
-            <Search className="absolute left-2.5 top-2 w-3.5 h-3.5 text-neutral-400" />
+            <Search className="absolute left-2.5 top-2 w-3.5 h-3.5 text-stone-400" />
           </div>
 
-          <div className="flex items-center gap-1.5 rounded-full border border-neutral-200 bg-white px-3 py-1 text-xs">
-            <SlidersHorizontal className="w-3.5 h-3.5 text-neutral-500" />
+          <div className="flex items-center gap-1.5 rounded-full border border-stone-200 bg-white px-3 py-1 text-xs">
+            <SlidersHorizontal className="w-3.5 h-3.5 text-stone-500" />
             <select
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value as 'featured' | 'price-asc' | 'price-desc' | 'name')}
-              className="bg-transparent text-xs font-medium text-neutral-700 focus:outline-none cursor-pointer"
+              className="bg-transparent text-xs font-semibold text-stone-700 focus:outline-none cursor-pointer"
             >
               <option value="featured">Featured</option>
               <option value="price-asc">Price: Low to High</option>
@@ -115,10 +115,10 @@ export function CatalogFeature() {
 
       {/* Products Grid */}
       {filteredProducts.length === 0 ? (
-        <div className="rounded-3xl border border-dashed border-neutral-300 p-12 text-center my-12">
-          <Sparkles className="mx-auto h-8 w-8 text-neutral-400 mb-2" />
-          <h3 className="text-sm font-semibold text-neutral-800">No products found</h3>
-          <p className="mt-1 text-xs text-neutral-500">
+        <div className="rounded-3xl border border-dashed border-stone-300 p-12 text-center my-12">
+          <Sparkles className="mx-auto h-8 w-8 text-stone-400 mb-2" />
+          <h3 className="text-sm font-bold text-stone-800">No products found</h3>
+          <p className="mt-1 text-xs text-stone-500">
             Try clearing your search query or switching categories.
           </p>
           <button
@@ -126,7 +126,7 @@ export function CatalogFeature() {
               setSelectedCategory('all');
               setSearchQuery('');
             }}
-            className="mt-4 rounded-full bg-violet-600 px-4 py-2 text-xs font-semibold text-white"
+            className="mt-4 rounded-full bg-stone-900 px-5 py-2 text-xs font-bold text-amber-200 hover:bg-amber-800 hover:text-white"
           >
             Reset Filters
           </button>

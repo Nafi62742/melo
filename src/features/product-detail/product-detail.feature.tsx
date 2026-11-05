@@ -36,7 +36,7 @@ export function ProductDetailFeature({ product }: ProductDetailFeatureProps) {
       <div className="mb-6">
         <Link
           href="/shop"
-          className="inline-flex items-center gap-1.5 text-xs font-semibold text-neutral-500 hover:text-violet-600 transition"
+          className="inline-flex items-center gap-1.5 text-xs font-bold text-stone-500 hover:text-amber-800 transition"
         >
           <ArrowLeft className="w-4 h-4" />
           <span>Back to Collection</span>
@@ -45,7 +45,7 @@ export function ProductDetailFeature({ product }: ProductDetailFeatureProps) {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-12">
         {/* Left: Product Image */}
-        <div className="relative aspect-square w-full overflow-hidden rounded-3xl bg-neutral-100 border border-neutral-200/80 shadow-sm">
+        <div className="relative aspect-square w-full overflow-hidden rounded-3xl bg-stone-100 border border-stone-200 shadow-sm">
           <Image
             src={product.imageUrl}
             alt={product.name}
@@ -55,7 +55,7 @@ export function ProductDetailFeature({ product }: ProductDetailFeatureProps) {
           />
 
           {product.isNew && (
-            <span className="absolute top-4 left-4 rounded-full bg-violet-600 px-3 py-1 text-xs font-bold text-white shadow-md">
+            <span className="absolute top-4 left-4 rounded-full bg-stone-900 px-3 py-1 text-xs font-bold text-amber-300 shadow-md">
               NEW ARRIVAL
             </span>
           )}
@@ -65,35 +65,35 @@ export function ProductDetailFeature({ product }: ProductDetailFeatureProps) {
         <div className="flex flex-col justify-between">
           <div>
             <div className="flex items-center gap-2 mb-2">
-              <span className="rounded-full bg-violet-100 px-3 py-0.5 text-xs font-semibold text-violet-700 uppercase">
+              <span className="rounded-full bg-amber-100 px-3 py-0.5 text-xs font-bold text-amber-900 uppercase">
                 {product.categoryName}
               </span>
-              <span className="flex items-center gap-1 text-xs text-emerald-600 font-medium">
+              <span className="flex items-center gap-1 text-xs text-emerald-700 font-semibold">
                 <CheckCircle className="w-3.5 h-3.5" />
                 In Stock ({product.stock} available)
               </span>
             </div>
 
-            <h1 className="text-2xl sm:text-4xl font-black text-neutral-900 tracking-tight">
+            <h1 className="text-2xl sm:text-4xl font-black text-stone-900 tracking-tight">
               {product.name}
             </h1>
 
             {/* Price */}
             <div className="mt-4 flex items-baseline gap-3">
-              <span className="text-3xl font-extrabold text-neutral-900">
+              <span className="text-3xl font-black text-stone-900">
                 {formatBDT(product.priceBDT)}
               </span>
               {product.originalPriceBDT && product.originalPriceBDT > product.priceBDT && (
-                <span className="text-base text-neutral-400 line-through">
+                <span className="text-base text-stone-400 line-through">
                   {formatBDT(product.originalPriceBDT)}
                 </span>
               )}
-              <span className="rounded-md bg-emerald-50 px-2 py-0.5 text-xs font-semibold text-emerald-700">
+              <span className="rounded-md bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 text-xs font-semibold text-emerald-800">
                 Cash on Delivery Available
               </span>
             </div>
 
-            <p className="mt-5 text-xs sm:text-sm text-neutral-600 leading-relaxed">
+            <p className="mt-5 text-xs sm:text-sm text-stone-600 leading-relaxed">
               {product.description}
             </p>
 
@@ -103,7 +103,7 @@ export function ProductDetailFeature({ product }: ProductDetailFeatureProps) {
                 {product.tags.map((tag) => (
                   <span
                     key={tag}
-                    className="rounded-lg bg-neutral-100 px-2.5 py-1 text-xs font-medium text-neutral-600"
+                    className="rounded-lg bg-stone-100 px-2.5 py-1 text-xs font-medium text-stone-600 border border-stone-200/60"
                   >
                     #{tag}
                   </span>
@@ -114,21 +114,21 @@ export function ProductDetailFeature({ product }: ProductDetailFeatureProps) {
             {/* Quantity Selector & Live Calculated Price */}
             <div className="mt-6 flex flex-wrap items-center gap-4">
               <div className="flex items-center gap-3">
-                <span className="text-xs font-semibold text-neutral-700">Quantity:</span>
-                <div className="flex items-center rounded-xl border border-neutral-300 bg-white">
+                <span className="text-xs font-bold text-stone-700">Quantity:</span>
+                <div className="flex items-center rounded-xl border border-stone-300 bg-white">
                   <button
                     onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                    className="p-2 text-neutral-600 hover:text-neutral-900"
+                    className="p-2 text-stone-600 hover:text-stone-900"
                     aria-label="Decrease quantity"
                   >
                     <Minus className="w-4 h-4" />
                   </button>
-                  <span className="w-10 text-center text-xs font-bold text-neutral-900">
+                  <span className="w-10 text-center text-xs font-bold text-stone-900">
                     {quantity}
                   </span>
                   <button
                     onClick={() => setQuantity(Math.min(product.stock, quantity + 1))}
-                    className="p-2 text-neutral-600 hover:text-neutral-900"
+                    className="p-2 text-stone-600 hover:text-stone-900"
                     aria-label="Increase quantity"
                   >
                     <Plus className="w-4 h-4" />
@@ -137,9 +137,9 @@ export function ProductDetailFeature({ product }: ProductDetailFeatureProps) {
               </div>
 
               {quantity > 1 && (
-                <div className="rounded-xl bg-violet-50 px-3.5 py-1.5 border border-violet-200 text-xs font-bold text-violet-800 animate-fadeIn">
+                <div className="rounded-xl bg-amber-50 px-3.5 py-1.5 border border-amber-200 text-xs font-bold text-amber-900 animate-fadeIn">
                   Total for {quantity} items: {formatBDT(product.priceBDT * quantity)}
-                  <span className="text-[10px] font-normal text-violet-600 ml-1.5">
+                  <span className="text-[10px] font-normal text-amber-700 ml-1.5">
                     ({formatBDT(product.priceBDT)} each)
                   </span>
                 </div>
@@ -150,7 +150,7 @@ export function ProductDetailFeature({ product }: ProductDetailFeatureProps) {
             <div className="mt-8 flex flex-col sm:flex-row gap-3">
               <button
                 onClick={handleAddToCart}
-                className="flex flex-1 items-center justify-center gap-2 rounded-2xl bg-violet-600 py-3.5 px-6 text-sm font-semibold text-white shadow-lg shadow-violet-500/20 hover:bg-violet-700 active:scale-98 transition"
+                className="flex flex-1 items-center justify-center gap-2 rounded-2xl bg-stone-900 py-3.5 px-6 text-sm font-bold text-amber-100 shadow-lg shadow-stone-900/15 hover:bg-amber-800 hover:text-white active:scale-98 transition"
               >
                 <ShoppingBag className="w-4 h-4" />
                 <span>Add to Bag • {formatBDT(product.priceBDT * quantity)}</span>
@@ -158,14 +158,14 @@ export function ProductDetailFeature({ product }: ProductDetailFeatureProps) {
 
               <button
                 onClick={handleBuyNow}
-                className="flex flex-1 items-center justify-center gap-2 rounded-2xl border-2 border-neutral-900 bg-neutral-900 py-3.5 px-6 text-sm font-semibold text-white hover:bg-neutral-800 active:scale-98 transition"
+                className="flex flex-1 items-center justify-center gap-2 rounded-2xl border-2 border-amber-700 bg-amber-700 py-3.5 px-6 text-sm font-bold text-white hover:bg-amber-800 active:scale-98 transition"
               >
                 <span>Buy Now • {formatBDT(product.priceBDT * quantity)}</span>
               </button>
             </div>
 
             {addedNotice && (
-              <div className="mt-3 flex items-center gap-2 rounded-xl bg-emerald-50 border border-emerald-200 px-3 py-2 text-xs font-semibold text-emerald-800">
+              <div className="mt-3 flex items-center gap-2 rounded-xl bg-emerald-50 border border-emerald-200 px-3 py-2 text-xs font-bold text-emerald-800">
                 <CheckCircle className="w-4 h-4 text-emerald-600" />
                 <span>Added to your bag successfully!</span>
               </div>
@@ -173,17 +173,17 @@ export function ProductDetailFeature({ product }: ProductDetailFeatureProps) {
           </div>
 
           {/* Delivery & Trust Box */}
-          <div className="mt-8 rounded-2xl bg-neutral-50 border border-neutral-200/80 p-4 space-y-3 text-xs text-neutral-600">
+          <div className="mt-8 rounded-2xl bg-stone-50 border border-stone-200/80 p-4 space-y-3 text-xs text-stone-600">
             <div className="flex items-start gap-2.5">
-              <Truck className="w-4 h-4 text-violet-600 mt-0.5 flex-shrink-0" />
+              <Truck className="w-4 h-4 text-amber-700 mt-0.5 flex-shrink-0" />
               <div>
-                <strong className="text-neutral-800">Nationwide Delivery:</strong> Inside Dhaka ৳60 (24-48 hours), Outside Dhaka ৳120 (3-4 days).
+                <strong className="text-stone-800">Nationwide Delivery:</strong> Inside Dhaka ৳60 (24-48 hours), Outside Dhaka ৳120 (3-4 days).
               </div>
             </div>
             <div className="flex items-start gap-2.5">
-              <ShieldCheck className="w-4 h-4 text-emerald-600 mt-0.5 flex-shrink-0" />
+              <ShieldCheck className="w-4 h-4 text-emerald-700 mt-0.5 flex-shrink-0" />
               <div>
-                <strong className="text-neutral-800">Cash on Delivery:</strong> Inspect the package when the delivery agent arrives.
+                <strong className="text-stone-800">Cash on Delivery:</strong> Inspect the package when the delivery agent arrives.
               </div>
             </div>
           </div>
@@ -192,4 +192,3 @@ export function ProductDetailFeature({ product }: ProductDetailFeatureProps) {
     </div>
   );
 }
-

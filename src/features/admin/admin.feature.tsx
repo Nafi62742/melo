@@ -25,31 +25,31 @@ export function AdminFeature() {
   return (
     <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8 md:py-12">
       {/* Top Bar */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-6 border-b border-neutral-200 gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-6 border-b border-stone-200 gap-4">
         <div>
           <Link
             href="/"
-            className="inline-flex items-center gap-1.5 text-xs font-semibold text-neutral-500 hover:text-violet-600 mb-1"
+            className="inline-flex items-center gap-1.5 text-xs font-semibold text-stone-500 hover:text-amber-800 transition mb-1"
           >
             <ArrowLeft className="w-4 h-4" />
             <span>Back to Storefront</span>
           </Link>
-          <h1 className="text-2xl sm:text-3xl font-black text-neutral-900 tracking-tight">
+          <h1 className="text-2xl sm:text-3xl font-black text-stone-900 tracking-tight font-serif">
             MELO Store Admin Dashboard
           </h1>
-          <p className="text-xs text-neutral-500">
+          <p className="text-xs text-stone-500">
             Manage your initial earrings, rings, bracelets inventory, and Bangladesh customer orders.
           </p>
         </div>
 
         {/* Tab switch */}
-        <div className="flex rounded-xl bg-neutral-100 p-1 text-xs font-semibold">
+        <div className="flex rounded-xl bg-stone-100 p-1 text-xs font-semibold">
           <button
             onClick={() => setActiveTab('products')}
             className={`rounded-lg px-4 py-2 transition ${
               activeTab === 'products'
-                ? 'bg-white text-violet-700 shadow-sm'
-                : 'text-neutral-600 hover:text-neutral-900'
+                ? 'bg-white text-amber-900 shadow-xs font-bold'
+                : 'text-stone-600 hover:text-stone-900'
             }`}
           >
             Products & Stock ({products.length})
@@ -58,8 +58,8 @@ export function AdminFeature() {
             onClick={() => setActiveTab('orders')}
             className={`rounded-lg px-4 py-2 transition ${
               activeTab === 'orders'
-                ? 'bg-white text-violet-700 shadow-sm'
-                : 'text-neutral-600 hover:text-neutral-900'
+                ? 'bg-white text-amber-900 shadow-xs font-bold'
+                : 'text-stone-600 hover:text-stone-900'
             }`}
           >
             Customer Orders ({orders.length})
@@ -69,58 +69,58 @@ export function AdminFeature() {
 
       {/* Metrics Row */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 my-8">
-        <div className="rounded-2xl border border-neutral-200 bg-white p-5 shadow-sm">
-          <div className="flex items-center justify-between text-neutral-400 mb-2">
-            <span className="text-xs font-bold uppercase tracking-wider text-neutral-500">Total Products</span>
-            <Package className="w-4 h-4 text-violet-600" />
+        <div className="rounded-2xl border border-stone-200 bg-white p-5 shadow-xs">
+          <div className="flex items-center justify-between text-stone-400 mb-2">
+            <span className="text-xs font-bold uppercase tracking-wider text-amber-950/80">Total Products</span>
+            <Package className="w-4 h-4 text-amber-800" />
           </div>
-          <div className="text-2xl font-black text-neutral-900">{products.length}</div>
-          <div className="text-[11px] text-neutral-400 mt-1">
+          <div className="text-2xl font-black text-stone-900">{products.length}</div>
+          <div className="text-[11px] text-stone-400 mt-1">
             {products.filter(p => p.category === 'earrings').length} earrings, {products.filter(p => p.category === 'rings').length} rings, {products.filter(p => p.category === 'bracelets').length} bracelets
           </div>
         </div>
 
-        <div className="rounded-2xl border border-neutral-200 bg-white p-5 shadow-sm">
-          <div className="flex items-center justify-between text-neutral-400 mb-2">
-            <span className="text-xs font-bold uppercase tracking-wider text-neutral-500">Total Inventory</span>
-            <Layers className="w-4 h-4 text-cyan-600" />
+        <div className="rounded-2xl border border-stone-200 bg-white p-5 shadow-xs">
+          <div className="flex items-center justify-between text-stone-400 mb-2">
+            <span className="text-xs font-bold uppercase tracking-wider text-amber-950/80">Total Inventory</span>
+            <Layers className="w-4 h-4 text-stone-700" />
           </div>
-          <div className="text-2xl font-black text-neutral-900">{totalStock} Units</div>
-          <div className="text-[11px] text-neutral-400 mt-1">Tracked in CSV tracker</div>
+          <div className="text-2xl font-black text-stone-900">{totalStock} Units</div>
+          <div className="text-[11px] text-stone-400 mt-1">Tracked in CSV tracker</div>
         </div>
 
-        <div className="rounded-2xl border border-neutral-200 bg-white p-5 shadow-sm">
-          <div className="flex items-center justify-between text-neutral-400 mb-2">
-            <span className="text-xs font-bold uppercase tracking-wider text-neutral-500">Active Orders</span>
-            <ShoppingBag className="w-4 h-4 text-emerald-600" />
+        <div className="rounded-2xl border border-stone-200 bg-white p-5 shadow-xs">
+          <div className="flex items-center justify-between text-stone-400 mb-2">
+            <span className="text-xs font-bold uppercase tracking-wider text-amber-950/80">Active Orders</span>
+            <ShoppingBag className="w-4 h-4 text-amber-700" />
           </div>
-          <div className="text-2xl font-black text-neutral-900">{orders.length}</div>
-          <div className="text-[11px] text-neutral-400 mt-1">Pending & confirmed</div>
+          <div className="text-2xl font-black text-stone-900">{orders.length}</div>
+          <div className="text-[11px] text-stone-400 mt-1">Pending & confirmed</div>
         </div>
 
-        <div className="rounded-2xl border border-neutral-200 bg-white p-5 shadow-sm">
-          <div className="flex items-center justify-between text-neutral-400 mb-2">
-            <span className="text-xs font-bold uppercase tracking-wider text-neutral-500">Database Status</span>
-            <CheckCircle className="w-4 h-4 text-emerald-500" />
+        <div className="rounded-2xl border border-stone-200 bg-white p-5 shadow-xs">
+          <div className="flex items-center justify-between text-stone-400 mb-2">
+            <span className="text-xs font-bold uppercase tracking-wider text-amber-950/80">Database Status</span>
+            <CheckCircle className="w-4 h-4 text-emerald-600" />
           </div>
-          <div className="text-sm font-bold text-neutral-800">Local + Supabase Ready</div>
-          <div className="text-[11px] text-neutral-400 mt-1">Schema mapped in core/models</div>
+          <div className="text-sm font-bold text-stone-800">Local + Supabase Ready</div>
+          <div className="text-[11px] text-stone-400 mt-1">Schema mapped in core/models</div>
         </div>
       </div>
 
       {/* Main Content: Products View */}
       {activeTab === 'products' && (
-        <div className="rounded-2xl border border-neutral-200 bg-white shadow-sm overflow-hidden">
-          <div className="px-6 py-4 border-b border-neutral-100 flex items-center justify-between">
-            <h2 className="text-sm font-bold uppercase tracking-wider text-neutral-900">
+        <div className="rounded-2xl border border-stone-200 bg-white shadow-xs overflow-hidden">
+          <div className="px-6 py-4 border-b border-stone-100 flex items-center justify-between">
+            <h2 className="text-xs font-bold uppercase tracking-wider text-amber-950/80">
               Product Catalogue & Inventory
             </h2>
-            <span className="text-xs text-neutral-500">{products.length} Items Listed</span>
+            <span className="text-xs text-stone-500">{products.length} Items Listed</span>
           </div>
 
           <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs text-neutral-600">
-              <thead className="bg-neutral-50 border-b border-neutral-200 text-neutral-700 uppercase font-bold text-[10px] tracking-wider">
+            <table className="w-full text-left text-xs text-stone-600">
+              <thead className="bg-stone-50 border-b border-stone-200 text-stone-700 uppercase font-bold text-[10px] tracking-wider">
                 <tr>
                   <th className="py-3 px-4">Item</th>
                   <th className="py-3 px-4">Category</th>
@@ -130,30 +130,30 @@ export function AdminFeature() {
                   <th className="py-3 px-4">Status</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-neutral-100">
+              <tbody className="divide-y divide-stone-100">
                 {products.map((p) => (
-                  <tr key={p.id} className="hover:bg-neutral-50/60">
+                  <tr key={p.id} className="hover:bg-stone-50/60">
                     <td className="py-3 px-4">
                       <div className="flex items-center gap-3">
-                        <div className="relative h-10 w-10 flex-shrink-0 overflow-hidden rounded-lg bg-neutral-100 border">
+                        <div className="relative h-10 w-10 flex-shrink-0 overflow-hidden rounded-lg bg-stone-100 border border-stone-200">
                           <Image src={p.imageUrl} alt={p.name} fill className="object-cover" />
                         </div>
                         <div>
-                          <div className="font-semibold text-neutral-900">{p.name}</div>
-                          <div className="text-[10px] text-neutral-400">{p.slug}</div>
+                          <div className="font-semibold text-stone-900">{p.name}</div>
+                          <div className="text-[10px] text-stone-400">{p.slug}</div>
                         </div>
                       </div>
                     </td>
-                    <td className="py-3 px-4 capitalize font-medium text-neutral-700">
+                    <td className="py-3 px-4 capitalize font-medium text-stone-700">
                       {p.category}
                     </td>
-                    <td className="py-3 px-4 text-neutral-500">
+                    <td className="py-3 px-4 text-stone-500">
                       {p.costPriceCNY ? `¥${p.costPriceCNY}` : '—'}
                     </td>
-                    <td className="py-3 px-4 font-bold text-neutral-900">
+                    <td className="py-3 px-4 font-bold text-amber-900">
                       {formatBDT(p.priceBDT)}
                     </td>
-                    <td className="py-3 px-4 font-semibold text-neutral-800">
+                    <td className="py-3 px-4 font-semibold text-stone-800">
                       {p.stock} pcs
                     </td>
                     <td className="py-3 px-4">
@@ -177,14 +177,14 @@ export function AdminFeature() {
 
       {/* Main Content: Orders View */}
       {activeTab === 'orders' && (
-        <div className="rounded-2xl border border-neutral-200 bg-white shadow-sm overflow-hidden">
-          <div className="px-6 py-4 border-b border-neutral-100 flex items-center justify-between">
-            <h2 className="text-sm font-bold uppercase tracking-wider text-neutral-900">
+        <div className="rounded-2xl border border-stone-200 bg-white shadow-xs overflow-hidden">
+          <div className="px-6 py-4 border-b border-stone-100 flex items-center justify-between">
+            <h2 className="text-xs font-bold uppercase tracking-wider text-amber-950/80">
               Customer Orders (Bangladesh)
             </h2>
             <button
               onClick={() => setOrders(orderService.getOrders())}
-              className="inline-flex items-center gap-1 text-xs font-semibold text-violet-600 hover:text-violet-800"
+              className="inline-flex items-center gap-1 text-xs font-semibold text-amber-800 hover:text-amber-950 transition"
             >
               <RefreshCw className="w-3.5 h-3.5" />
               <span>Refresh</span>
@@ -192,17 +192,17 @@ export function AdminFeature() {
           </div>
 
           {orders.length === 0 ? (
-            <div className="p-12 text-center text-neutral-500">
-              <Clock className="w-8 h-8 mx-auto text-neutral-300 mb-2" />
-              <div className="text-sm font-semibold">No orders placed yet</div>
-              <div className="text-xs text-neutral-400 mt-1">
+            <div className="p-12 text-center text-stone-500">
+              <Clock className="w-8 h-8 mx-auto text-stone-300 mb-2" />
+              <div className="text-sm font-semibold text-stone-800">No orders placed yet</div>
+              <div className="text-xs text-stone-400 mt-1">
                 When customers check out on the website, their orders will appear here automatically.
               </div>
             </div>
           ) : (
             <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs text-neutral-600">
-                <thead className="bg-neutral-50 border-b border-neutral-200 text-neutral-700 uppercase font-bold text-[10px] tracking-wider">
+              <table className="w-full text-left text-xs text-stone-600">
+                <thead className="bg-stone-50 border-b border-stone-200 text-stone-700 uppercase font-bold text-[10px] tracking-wider">
                   <tr>
                     <th className="py-3 px-4">Order Ref</th>
                     <th className="py-3 px-4">Customer</th>
@@ -213,33 +213,33 @@ export function AdminFeature() {
                     <th className="py-3 px-4">Status</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-neutral-100">
+                <tbody className="divide-y divide-stone-100">
                   {orders.map((o) => (
-                    <tr key={o.id} className="hover:bg-neutral-50/60">
-                      <td className="py-3 px-4 font-bold text-violet-700">
+                    <tr key={o.id} className="hover:bg-stone-50/60">
+                      <td className="py-3 px-4 font-bold text-amber-800">
                         {o.orderNumber}
                       </td>
-                      <td className="py-3 px-4 font-semibold text-neutral-900">
+                      <td className="py-3 px-4 font-semibold text-stone-900">
                         {o.customer.fullName}
                       </td>
                       <td className="py-3 px-4">
-                        <div className="font-medium text-neutral-800">{o.customer.phone}</div>
-                        <div className="text-[11px] text-neutral-400 truncate max-w-xs">{o.customer.address}</div>
+                        <div className="font-medium text-stone-800">{o.customer.phone}</div>
+                        <div className="text-[11px] text-stone-400 truncate max-w-xs">{o.customer.address}</div>
                       </td>
                       <td className="py-3 px-4">
                         {o.items.length} items
                       </td>
-                      <td className="py-3 px-4 font-bold text-neutral-900">
+                      <td className="py-3 px-4 font-bold text-stone-900">
                         {formatBDT(o.total)}
                       </td>
-                      <td className="py-3 px-4 uppercase font-semibold text-neutral-700">
+                      <td className="py-3 px-4 uppercase font-semibold text-stone-700">
                         {o.paymentMethod}
                       </td>
                       <td className="py-3 px-4">
                         <select
                           value={o.status}
                           onChange={(e) => handleStatusChange(o.id, e.target.value as OrderStatus)}
-                          className="rounded-lg border border-neutral-300 bg-white px-2 py-1 text-xs font-semibold text-neutral-800 focus:outline-none focus:border-violet-600 cursor-pointer"
+                          className="rounded-lg border border-stone-300 bg-white px-2 py-1 text-xs font-semibold text-stone-800 focus:outline-none focus:border-amber-700 cursor-pointer"
                         >
                           <option value="pending">Pending</option>
                           <option value="confirmed">Confirmed</option>

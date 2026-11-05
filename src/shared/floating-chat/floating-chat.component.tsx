@@ -19,15 +19,15 @@ export function FloatingChat() {
     <div className="fixed bottom-6 right-6 z-40 flex flex-col items-end">
       {/* Expanded Support Card */}
       {isOpen && (
-        <div className="mb-3 w-72 sm:w-80 rounded-2xl bg-white p-4 shadow-2xl border border-neutral-100 transition-all animate-fadeIn">
+        <div className="mb-3 w-72 sm:w-80 rounded-2xl bg-white p-4 shadow-2xl border border-stone-200/90 transition-all animate-fadeIn">
           {/* Header */}
-          <div className="flex items-center justify-between pb-3 border-b border-neutral-100">
+          <div className="flex items-center justify-between pb-3 border-b border-stone-100">
             <div className="flex items-center gap-2">
-              <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-violet-600 text-white font-bold text-xs shadow-sm">
+              <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-gradient-to-br from-amber-600 via-amber-700 to-stone-900 text-amber-100 font-bold text-xs shadow-xs">
                 M
               </div>
               <div>
-                <div className="text-xs font-bold text-neutral-900 flex items-center gap-1">
+                <div className="text-xs font-bold text-stone-900 flex items-center gap-1 font-serif">
                   <span>MELO Support</span>
                   <Sparkles className="w-3 h-3 text-amber-500" />
                 </div>
@@ -39,14 +39,14 @@ export function FloatingChat() {
             </div>
             <button
               onClick={() => setIsOpen(false)}
-              className="rounded-full p-1 text-neutral-400 hover:bg-neutral-100 hover:text-neutral-700 transition"
+              className="rounded-full p-1 text-stone-400 hover:bg-stone-100 hover:text-stone-700 transition"
               aria-label="Close chat support options"
             >
               <X className="w-4 h-4" />
             </button>
           </div>
 
-          <p className="my-3 text-xs text-neutral-600 leading-relaxed">
+          <p className="my-3 text-xs text-stone-600 leading-relaxed">
             Have a question about earring clips, ring sizing, or order delivery in Bangladesh? Chat with us directly:
           </p>
 
@@ -57,7 +57,7 @@ export function FloatingChat() {
               href={whatsappUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center gap-3 rounded-xl bg-[#25D366]/10 hover:bg-[#25D366]/20 p-2.5 transition border border-[#25D366]/20 text-neutral-900 group"
+              className="flex items-center gap-3 rounded-xl bg-[#25D366]/10 hover:bg-[#25D366]/20 p-2.5 transition border border-[#25D366]/20 text-stone-900 group"
             >
               <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#25D366] text-white shadow-sm group-hover:scale-105 transition-transform">
                 {/* WhatsApp SVG Icon */}
@@ -66,8 +66,8 @@ export function FloatingChat() {
                 </svg>
               </div>
               <div className="flex-1">
-                <div className="text-xs font-bold text-neutral-900">WhatsApp Chat</div>
-                <div className="text-[10px] text-neutral-500">Fast direct messaging</div>
+                <div className="text-xs font-bold text-stone-900">WhatsApp Chat</div>
+                <div className="text-[10px] text-stone-500">Fast direct messaging</div>
               </div>
               <span className="rounded-full bg-[#25D366] px-2 py-0.5 text-[10px] font-bold text-white">
                 Chat
@@ -79,7 +79,7 @@ export function FloatingChat() {
               href={messengerUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center gap-3 rounded-xl bg-[#0084FF]/10 hover:bg-[#0084FF]/20 p-2.5 transition border border-[#0084FF]/20 text-neutral-900 group"
+              className="flex items-center gap-3 rounded-xl bg-[#0084FF]/10 hover:bg-[#0084FF]/20 p-2.5 transition border border-[#0084FF]/20 text-stone-900 group"
             >
               <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-tr from-[#0084FF] to-[#00C6FF] text-white shadow-sm group-hover:scale-105 transition-transform">
                 {/* Messenger SVG Icon */}
@@ -88,8 +88,8 @@ export function FloatingChat() {
                 </svg>
               </div>
               <div className="flex-1">
-                <div className="text-xs font-bold text-neutral-900">Facebook Messenger</div>
-                <div className="text-[10px] text-neutral-500">Official Page Chat</div>
+                <div className="text-xs font-bold text-stone-900">Facebook Messenger</div>
+                <div className="text-[10px] text-stone-500">Official Page Chat</div>
               </div>
               <span className="rounded-full bg-[#0084FF] px-2 py-0.5 text-[10px] font-bold text-white">
                 Message
@@ -134,8 +134,8 @@ export function FloatingChat() {
           onClick={() => setIsOpen(!isOpen)}
           className={`flex h-12 items-center gap-2 rounded-full px-4 text-xs font-bold shadow-lg transition-all ${
             isOpen
-              ? 'bg-neutral-900 text-white hover:bg-neutral-800'
-              : 'bg-violet-600 text-white shadow-violet-500/30 hover:bg-violet-700 hover:scale-105 active:scale-95'
+              ? 'bg-stone-900 text-stone-200 hover:bg-stone-800'
+              : 'bg-stone-900 text-amber-100 shadow-stone-900/30 hover:bg-amber-800 hover:text-white hover:scale-105 active:scale-95'
           }`}
           aria-label="Toggle chat options menu"
         >
