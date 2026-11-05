@@ -1,18 +1,35 @@
 'use client';
 
 import React, { useState, useMemo } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams, useRouter, usePathname } from 'next/navigation';
 import { productService } from '@/core/services/product.service';
 import { ProductCard } from '@/shared/product-card/product-card.component';
 import { Search, SlidersHorizontal, Sparkles } from 'lucide-react';
 
 export function CatalogFeature() {
   const searchParams = useSearchParams();
-  const initialCategory = searchParams.get('category') || 'all';
-  const initialSearch = searchParams.get('search') || '';
+  const router = useRouter();
+  const pathname = usePathname();
 
-  const [selectedCategory, setSelectedCategory] = useState<string>(initialCategory);
-  const [searchQuery, setSearchQuery] = useState<string>(initialSearch);
+  // URL is the source of truth so navbar/footer links and tabs always stay in sync
+  const selectedCategory = searchParams.get('category') || 'all';
+  const urlSearch = searchParams.get('search') || '';
+
+  const [typedSearch, setTypedSearch] = useState<{ from: string; value: string }>({
+    from: urlSearch,
+    value: urlSearch,
+  });
+  // Reset typed text when the URL search changes (e.g. navbar search)
+  const searchQuery = typedSearch.from === urlSearch ? typedSearch.value : urlSearch;
+  const setSearchQuery = (value: string) => setTypedSearch({ from: urlSearch, value });
+
+  const setSelectedCategory = (id: string) => {
+    const params = new URLSearchParams(searchParams.toString());
+    if (id === 'all') params.delete('category');
+    else params.set('category', id);
+    const qs = params.toString();
+    router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
+  };
   const [sortBy, setSortBy] = useState<'featured' | 'price-asc' | 'price-desc' | 'name'>('featured');
 
   const categories = [
