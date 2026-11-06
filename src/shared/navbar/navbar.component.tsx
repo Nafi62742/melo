@@ -4,12 +4,13 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname, useSearchParams, useRouter } from 'next/navigation';
 import { useCart } from '@/core/services/cart.context';
+import { useWishlist } from '@/core/services/wishlist.context';
 import {
   productTypeService,
   PRODUCT_TYPES_UPDATED_EVENT,
 } from '@/core/services/product-type.service';
 import { useI18n } from '@/core/i18n/i18n.context';
-import { ShoppingBag, Search, Menu, X, Sparkles, User, ShieldCheck } from 'lucide-react';
+import { ShoppingBag, Search, Menu, X, Sparkles, User, ShieldCheck, Heart } from 'lucide-react';
 
 export function Navbar() {
   const router = useRouter();
@@ -17,6 +18,7 @@ export function Navbar() {
   const searchParams = useSearchParams();
   const currentCategory = searchParams.get('category');
   const { totalQuantity, setIsCartDrawerOpen } = useCart();
+  const { totalWishlist, setIsWishlistDrawerOpen } = useWishlist();
   const { language, toggleLanguage, t } = useI18n();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -176,6 +178,26 @@ export function Navbar() {
             <ShieldCheck className="w-3.5 h-3.5 text-[#9A7B3E]" />
             <span className="hidden xl:inline">{t.nav.admin}</span>
           </Link>
+
+          {/* Boutique Wishlist Trigger */}
+          <button
+            type="button"
+            onClick={() => setIsWishlistDrawerOpen(true)}
+            className="relative flex items-center justify-center p-2 border border-[#E7E0D6] bg-white/80 hover:border-[#C5A059] text-[#1C1917] hover:text-[#9A7B3E] active:scale-95 transition cursor-pointer"
+            aria-label="Open Saved Pieces"
+            title="Saved pieces"
+          >
+            <Heart
+              className={`w-4 h-4 ${
+                totalWishlist > 0 ? 'fill-[#9A7B3E] text-[#9A7B3E]' : 'text-[#1C1917]'
+              }`}
+            />
+            {totalWishlist > 0 && (
+              <span className="absolute -top-1.5 -right-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-[#1C1917] px-1 text-[9px] font-bold text-white shadow-xs">
+                {totalWishlist}
+              </span>
+            )}
+          </button>
 
           {/* Boutique Shopping Bag Trigger */}
           <button

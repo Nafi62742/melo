@@ -6,9 +6,12 @@ import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { Product } from '@/core/models/product.model';
 import { productService } from '@/core/services/product.service';
+import { storeLinkService } from '@/core/services/store-link.service';
 import { formatBDT } from '@/core/utils/currency.util';
 import { useCart } from '@/core/services/cart.context';
+import { useWishlist } from '@/core/services/wishlist.context';
 import { ProductCard } from '@/shared/product-card/product-card.component';
+import { ProductLightbox } from './components/product-lightbox.component';
 import {
   ShoppingBag,
   ArrowLeft,
@@ -20,6 +23,11 @@ import {
   Sparkles,
   Lock,
   AlertCircle,
+  Maximize2,
+  Copy,
+  Check,
+  Share2,
+  Heart,
 } from 'lucide-react';
 
 interface ProductDetailFeatureProps {
@@ -29,11 +37,17 @@ interface ProductDetailFeatureProps {
 export function ProductDetailFeature({ product: initialProduct }: ProductDetailFeatureProps) {
   const router = useRouter();
   const { addItem, getItemQuantity } = useCart();
+  const { isInWishlist, toggleWishlist } = useWishlist();
   const [product, setProduct] = useState<Product>(
     () => productService.getProductById(initialProduct.id) || initialProduct
   );
+  const isFavorite = isInWishlist(product.id);
+  const [selectedImage, setSelectedImage] = useState<string>(initialProduct.imageUrl);
   const [quantity, setQuantity] = useState<number>(1);
   const [addedNotice, setAddedNotice] = useState<boolean>(false);
+  const [copiedLink, setCopiedLink] = useState<boolean>(false);
+  const [isLightboxOpen, setIsLightboxOpen] = useState<boolean>(false);
+  const [lightboxIndex, setLightboxIndex] = useState<number>(0);
 
   // Sync live stock from Supabase on mount
   useEffect(() => {
@@ -41,6 +55,7 @@ export function ProductDetailFeature({ product: initialProduct }: ProductDetailF
       const updated = productService.getProductById(initialProduct.id);
       if (updated) {
         setProduct({ ...updated });
+        setSelectedImage(updated.imageUrl);
       }
     });
   }, [initialProduct.id]);
@@ -52,6 +67,11 @@ export function ProductDetailFeature({ product: initialProduct }: ProductDetailF
   const isBagAtMax = !isOutOfStock && remainingAvailable <= 0;
   const maxSelectableQty = Math.max(1, remainingAvailable);
   const isPlusLocked = isOutOfStock || isBagAtMax || quantity >= maxSelectableQty;
+
+  const galleryImages = [
+    product.imageUrl,
+    ...(product.images || []).filter((img) => img !== product.imageUrl),
+  ];
 
   const relatedProducts = productService
     .getProductsByCategory(product.category)
@@ -85,6 +105,76 @@ export function ProductDetailFeature({ product: initialProduct }: ProductDetailF
     router.push('/checkout');
   };
 
+  // 1. Direct "Order via WhatsApp" Handler
+  const handleWhatsAppOrder = () => {
+    const rawLink = storeLinkService.getLinkByKey('whatsapp')?.url || '';
+    // Normalize phone number (digits only or wa.me)
+    let cleanPhone = '8801700000000';
+    if (rawLink) {
+      const match = rawLink.match(/\d+/g);
+      if (match) {
+        const digits = match.join('');
+        cleanPhone = digits.startsWith('01') ? `88${digits}` : digits;
+      }
+    }
+
+    const currentUrl = typeof window !== 'undefined' ? window.location.href : '';
+    const message = `Hello MELO! I would like to order:
+💎 *${product.name}*
+💵 Price: ৳${product.priceBDT.toLocaleString()}
+📦 Quantity: ${quantity}
+🔗 Link: ${currentUrl}
+
+Please confirm availability and Cash on Delivery details. Thank you!`;
+
+    const waUrl = `https://wa.me/${cleanPhone}?text=${encodeURIComponent(message)}`;
+    window.open(waUrl, '_blank', 'noopener,noreferrer');
+  };
+
+  // 2. Social Sharing Handlers
+  const handleCopyLink = () => {
+    if (typeof window !== 'undefined') {
+      void navigator.clipboard.writeText(window.location.href);
+      setCopiedLink(true);
+      setTimeout(() => setCopiedLink(false), 2000);
+    }
+  };
+
+  const handleShareWhatsApp = () => {
+    const currentUrl = typeof window !== 'undefined' ? window.location.href : '';
+    const text = `Look at this beautiful piece from MELO: ${product.name} (৳${product.priceBDT.toLocaleString()}) — ${currentUrl}`;
+    window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`, '_blank');
+  };
+
+  const handleShareFacebook = () => {
+    const currentUrl = typeof window !== 'undefined' ? window.location.href : '';
+    window.open(
+      `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(currentUrl)}`,
+      '_blank',
+      'width=600,height=400'
+    );
+  };
+
+  const handleNativeShare = () => {
+    if (typeof navigator !== 'undefined' && navigator.share) {
+      navigator
+        .share({
+          title: `${product.name} | MELO Dhaka`,
+          text: `Check out ${product.name} at MELO Jewellery.`,
+          url: window.location.href,
+        })
+        .catch(() => {});
+    } else {
+      handleCopyLink();
+    }
+  };
+
+  const openLightboxWithImage = (imgUrl: string) => {
+    const idx = galleryImages.indexOf(imgUrl);
+    setLightboxIndex(idx >= 0 ? idx : 0);
+    setIsLightboxOpen(true);
+  };
+
   return (
     <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8 md:py-14">
       {/* Breadcrumb & Back link */}
@@ -98,7 +188,9 @@ export function ProductDetailFeature({ product: initialProduct }: ProductDetailF
         </Link>
 
         <div className="hidden sm:flex items-center gap-2 text-[11px] uppercase tracking-[0.16em] text-[#A8A29E]">
-          <Link href="/" className="hover:text-[#1C1917]">Home</Link>
+          <Link href="/" className="hover:text-[#1C1917]">
+            Home
+          </Link>
           <span>/</span>
           <Link href={`/shop?category=${product.category}`} className="hover:text-[#1C1917]">
             {product.categoryName}
@@ -110,19 +202,26 @@ export function ProductDetailFeature({ product: initialProduct }: ProductDetailF
 
       {/* Main Product 2-Column Editorial Layout */}
       <div className="grid grid-cols-1 md:grid-cols-12 gap-8 lg:gap-14">
-        {/* Left: Portrait 4:5 Product Image Frame */}
-        <div className="md:col-span-6">
-          <div className="relative aspect-[4/5] w-full overflow-hidden bg-[#F3EDE4] border border-[#E7E0D6]">
+        {/* Left Column: Portrait 4:5 Product Image Gallery & Lightbox Trigger */}
+        <div className="md:col-span-6 space-y-3">
+          {/* Main Large Image Frame */}
+          <div
+            onClick={() => openLightboxWithImage(selectedImage || product.imageUrl)}
+            className="group relative aspect-[4/5] w-full overflow-hidden bg-[#F3EDE4] border border-[#E7E0D6] cursor-zoom-in"
+          >
             <Image
-              src={product.imageUrl}
+              src={selectedImage || product.imageUrl}
               alt={product.name}
               fill
               priority
               sizes="(max-width: 768px) 100vw, 50vw"
-              className={`object-cover ${isOutOfStock ? 'opacity-65 grayscale-[30%]' : ''}`}
+              className={`object-cover transition-transform duration-500 group-hover:scale-105 ${
+                isOutOfStock ? 'opacity-65 grayscale-[30%]' : ''
+              }`}
             />
 
-            <div className="absolute top-4 left-4 flex flex-col gap-2">
+            {/* Badges Overlay */}
+            <div className="absolute top-4 left-4 flex flex-col gap-2 pointer-events-none">
               {isOutOfStock ? (
                 <span className="bg-red-900/95 border border-red-300/40 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-white">
                   Out of Stock
@@ -142,10 +241,38 @@ export function ProductDetailFeature({ product: initialProduct }: ProductDetailF
                 </>
               )}
             </div>
+
+            {/* Click to Zoom Hover Badge */}
+            <div className="absolute bottom-4 right-4 z-10 flex items-center gap-1.5 bg-[#181512]/85 backdrop-blur-xs text-[#FAF7F2] px-3 py-1.5 text-[10px] uppercase tracking-wider opacity-90 group-hover:opacity-100 transition shadow-sm pointer-events-none">
+              <Maximize2 className="w-3.5 h-3.5 text-[#C5A059]" />
+              <span className="hidden sm:inline">Click to Inspect &amp; Zoom</span>
+              <span className="sm:hidden">Tap to Zoom</span>
+            </div>
           </div>
+
+          {/* Thumbnail Strip (if multiple photos available) */}
+          {galleryImages.length > 1 && (
+            <div className="flex items-center gap-2.5 overflow-x-auto pb-1">
+              {galleryImages.map((img, idx) => (
+                <button
+                  key={`${img}-${idx}`}
+                  type="button"
+                  onClick={() => setSelectedImage(img)}
+                  className={`relative h-16 w-16 sm:h-20 sm:w-20 flex-shrink-0 overflow-hidden border-2 transition cursor-pointer ${
+                    selectedImage === img
+                      ? 'border-[#9A7B3E] ring-1 ring-[#9A7B3E]'
+                      : 'border-[#E7E0D6] opacity-70 hover:opacity-100'
+                  }`}
+                  aria-label={`Select product image view ${idx + 1}`}
+                >
+                  <Image src={img} alt={`View ${idx + 1}`} fill className="object-cover" />
+                </button>
+              ))}
+            </div>
+          )}
         </div>
 
-        {/* Right: Boutique Details & Purchase Controls */}
+        {/* Right Column: Boutique Details, Actions & Sharing */}
         <div className="md:col-span-6 flex flex-col justify-between">
           <div>
             <div className="flex flex-wrap items-center gap-3 mb-3">
@@ -251,13 +378,13 @@ export function ProductDetailFeature({ product: initialProduct }: ProductDetailF
               )}
             </div>
 
-            {/* Action Buttons */}
-            <div className="mt-8 flex flex-col sm:flex-row gap-3.5">
+            {/* Standard Purchase Action Buttons */}
+            <div className="mt-8 flex flex-col sm:flex-row gap-3">
               {isOutOfStock ? (
                 <button
                   type="button"
                   disabled
-                  className="flex flex-1 items-center justify-center gap-2.5 bg-stone-300 text-stone-600 py-4 px-6 text-xs font-semibold uppercase tracking-[0.16em] cursor-not-allowed"
+                  className="flex flex-1 items-center justify-center gap-2.5 bg-stone-300 text-stone-600 py-3.5 px-6 text-xs font-semibold uppercase tracking-[0.16em] cursor-not-allowed"
                 >
                   <span>Out of Stock</span>
                 </button>
@@ -265,7 +392,7 @@ export function ProductDetailFeature({ product: initialProduct }: ProductDetailF
                 <button
                   type="button"
                   disabled
-                  className="flex flex-1 items-center justify-center gap-2.5 bg-stone-800 text-[#E6D5B8] py-4 px-6 text-xs font-semibold uppercase tracking-[0.16em] cursor-not-allowed"
+                  className="flex flex-1 items-center justify-center gap-2.5 bg-stone-800 text-[#E6D5B8] py-3.5 px-6 text-xs font-semibold uppercase tracking-[0.16em] cursor-not-allowed"
                 >
                   <Lock className="w-4 h-4" />
                   <span>Max Limit in Bag</span>
@@ -274,7 +401,7 @@ export function ProductDetailFeature({ product: initialProduct }: ProductDetailF
                 <button
                   type="button"
                   onClick={handleAddToCart}
-                  className="flex flex-1 items-center justify-center gap-2.5 boutique-btn-primary py-4 px-6 cursor-pointer"
+                  className="flex flex-1 items-center justify-center gap-2.5 boutique-btn-primary py-3.5 px-6 cursor-pointer"
                 >
                   <ShoppingBag className="w-4 h-4" />
                   <span>Add to Bag</span>
@@ -285,7 +412,7 @@ export function ProductDetailFeature({ product: initialProduct }: ProductDetailF
                 type="button"
                 disabled={isOutOfStock}
                 onClick={handleBuyNow}
-                className={`flex flex-1 items-center justify-center gap-2 py-4 px-6 ${
+                className={`flex flex-1 items-center justify-center gap-2 py-3.5 px-6 ${
                   isOutOfStock
                     ? 'border border-stone-300 text-stone-400 cursor-not-allowed text-xs font-semibold uppercase tracking-[0.16em]'
                     : 'boutique-btn-outline cursor-pointer'
@@ -293,14 +420,133 @@ export function ProductDetailFeature({ product: initialProduct }: ProductDetailF
               >
                 <span>{isOutOfStock ? 'Unavailable' : 'Buy It Now (COD)'}</span>
               </button>
+
+              {/* Wishlist Button */}
+              <button
+                type="button"
+                onClick={() => toggleWishlist(product.id)}
+                className={`p-3.5 border transition flex items-center justify-center gap-2 cursor-pointer ${
+                  isFavorite
+                    ? 'border-[#C5A059] bg-[#1C1917] text-[#FAF7F2]'
+                    : 'border-[#E7E0D6] bg-white text-[#1C1917] hover:border-[#1C1917]'
+                }`}
+                title={isFavorite ? 'Remove from Wishlist' : 'Save to Wishlist'}
+                aria-label="Toggle Wishlist"
+              >
+                <Heart
+                  className={`w-4 h-4 ${isFavorite ? 'fill-[#C5A059] text-[#C5A059]' : ''}`}
+                />
+                <span className="sm:hidden text-xs font-semibold uppercase tracking-wider">
+                  {isFavorite ? 'Saved' : 'Save'}
+                </span>
+              </button>
             </div>
 
+            {/* Direct 1-Click "Order via WhatsApp" Button */}
+            {!isOutOfStock && (
+              <div className="mt-3">
+                <button
+                  type="button"
+                  onClick={handleWhatsAppOrder}
+                  className="w-full flex items-center justify-center gap-2.5 bg-[#0F5A47] hover:bg-[#0A4133] text-[#FAF7F2] py-3.5 px-6 text-xs font-semibold uppercase tracking-[0.16em] transition shadow-xs cursor-pointer border border-[#0F5A47]"
+                  title="Directly chat and place your order on WhatsApp"
+                >
+                  {/* WhatsApp SVG Icon */}
+                  <svg
+                    viewBox="0 0 24 24"
+                    className="w-4 h-4 fill-[#25D366]"
+                    aria-hidden="true"
+                  >
+                    <path d="M12.031 6.172c-3.181 0-5.767 2.586-5.768 5.766-.001 1.298.38 2.27 1.019 3.287l-.711 2.598 2.669-.699c.969.54 1.771.82 2.791.82 3.182 0 5.768-2.587 5.768-5.766.001-3.181-2.585-5.766-5.768-5.766zm9.969 5.766c0 5.505-4.495 10-10 10-1.745 0-3.376-.454-4.799-1.246l-5.201 1.362 1.39-5.078c-.902-1.488-1.39-3.208-1.39-5.038 0-5.505 4.495-10 10-10s10 4.495 10 10z" />
+                  </svg>
+                  <span>Order via WhatsApp (Instant Confirmation)</span>
+                </button>
+              </div>
+            )}
+
             {addedNotice && (
-              <div className="mt-4 flex items-center gap-2 border border-[#C5A059] bg-white px-4 py-2.5 text-xs font-medium text-[#1C1917]">
+              <div className="mt-3 flex items-center gap-2 border border-[#C5A059] bg-white px-4 py-2.5 text-xs font-medium text-[#1C1917]">
                 <CheckCircle className="w-4 h-4 text-[#9A7B3E]" />
                 <span>Added to your shopping bag.</span>
               </div>
             )}
+
+            {/* Social Share Toolbar (WhatsApp / Facebook / Copy Link) */}
+            <div className="mt-6 pt-5 border-t border-[#F3EDE4] flex flex-wrap items-center justify-between gap-3">
+              <span className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[#78716C]">
+                Share this piece:
+              </span>
+
+              <div className="flex items-center gap-2">
+                {/* Share on WhatsApp */}
+                <button
+                  type="button"
+                  onClick={handleShareWhatsApp}
+                  className="inline-flex items-center gap-1.5 border border-[#E7E0D6] bg-white hover:border-[#25D366] hover:text-[#0F5A47] px-3 py-1.5 text-xs text-[#1C1917] transition cursor-pointer"
+                  title="Share on WhatsApp"
+                >
+                  <svg
+                    viewBox="0 0 24 24"
+                    className="w-3.5 h-3.5 fill-[#25D366]"
+                    aria-hidden="true"
+                  >
+                    <path d="M12.031 6.172c-3.181 0-5.767 2.586-5.768 5.766-.001 1.298.38 2.27 1.019 3.287l-.711 2.598 2.669-.699c.969.54 1.771.82 2.791.82 3.182 0 5.768-2.587 5.768-5.766.001-3.181-2.585-5.766-5.768-5.766zm9.969 5.766c0 5.505-4.495 10-10 10-1.745 0-3.376-.454-4.799-1.246l-5.201 1.362 1.39-5.078c-.902-1.488-1.39-3.208-1.39-5.038 0-5.505 4.495-10 10-10s10 4.495 10 10z" />
+                  </svg>
+                  <span>WhatsApp</span>
+                </button>
+
+                {/* Share on Facebook */}
+                <button
+                  type="button"
+                  onClick={handleShareFacebook}
+                  className="inline-flex items-center gap-1.5 border border-[#E7E0D6] bg-white hover:border-[#1877F2] hover:text-[#1877F2] px-3 py-1.5 text-xs text-[#1C1917] transition cursor-pointer"
+                  title="Share on Facebook"
+                >
+                  <svg
+                    viewBox="0 0 24 24"
+                    className="w-3.5 h-3.5 fill-[#1877F2]"
+                    aria-hidden="true"
+                  >
+                    <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
+                  </svg>
+                  <span>Facebook</span>
+                </button>
+
+                {/* Copy Link Button */}
+                <button
+                  type="button"
+                  onClick={handleCopyLink}
+                  className={`inline-flex items-center gap-1.5 border px-3 py-1.5 text-xs transition cursor-pointer ${
+                    copiedLink
+                      ? 'border-[#9A7B3E] bg-[#FAF7F2] text-[#9A7B3E]'
+                      : 'border-[#E7E0D6] bg-white text-[#1C1917] hover:border-[#1C1917]'
+                  }`}
+                  title="Copy link to clipboard"
+                >
+                  {copiedLink ? (
+                    <>
+                      <Check className="w-3.5 h-3.5 text-emerald-600" />
+                      <span>Copied!</span>
+                    </>
+                  ) : (
+                    <>
+                      <Copy className="w-3.5 h-3.5 text-[#78716C]" />
+                      <span>Copy Link</span>
+                    </>
+                  )}
+                </button>
+
+                {/* Native Device Share Sheet (Mobile) */}
+                <button
+                  type="button"
+                  onClick={handleNativeShare}
+                  className="sm:hidden p-1.5 border border-[#E7E0D6] bg-white text-[#1C1917] hover:border-[#1C1917] cursor-pointer"
+                  title="More share options"
+                >
+                  <Share2 className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            </div>
           </div>
 
           {/* Boutique Craftsmanship & Delivery Box */}
@@ -367,6 +613,15 @@ export function ProductDetailFeature({ product: initialProduct }: ProductDetailF
           </div>
         </section>
       )}
+
+      {/* Fullscreen High-Resolution Lightbox & Detail Zoom */}
+      <ProductLightbox
+        images={galleryImages}
+        initialIndex={lightboxIndex}
+        productName={product.name}
+        isOpen={isLightboxOpen}
+        onClose={() => setIsLightboxOpen(false)}
+      />
     </div>
   );
 }
