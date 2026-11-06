@@ -160,12 +160,16 @@ export function AdminFeature() {
       : 0;
 
   // Realized Profit from Orders filtered by timeframe (today, week, month, all) and scope
-  const [nowMs] = useState<number>(() => Date.now());
+  const [nowMs, setNowMs] = useState<number | null>(null);
+  const handleChangeTimeframe = (tf: 'all' | 'today' | 'week' | 'month') => {
+    setNowMs(Date.now());
+    setAnalyticsTimeframe(tf);
+  };
   const analyticsFilteredOrders = orders.filter((o) => {
     const matchesScope =
       analyticsOrderScope === 'delivered' ? o.status === 'delivered' : o.status !== 'cancelled';
     if (!matchesScope) return false;
-    if (analyticsTimeframe === 'all') return true;
+    if (analyticsTimeframe === 'all' || nowMs === null) return true;
     const orderTimeMs = new Date(o.createdAt).getTime();
     if (Number.isNaN(orderTimeMs)) return true;
     const diffHours = (nowMs - orderTimeMs) / (1000 * 60 * 60);
@@ -918,7 +922,10 @@ export function AdminFeature() {
               Catalogue ({products.length})
             </button>
             <button
-              onClick={() => setActiveTab('analytics')}
+              onClick={() => {
+                setNowMs(Date.now());
+                setActiveTab('analytics');
+              }}
               className={`inline-flex items-center gap-1.5 px-3.5 py-2 text-[11px] uppercase tracking-[0.14em] transition cursor-pointer ${
                 activeTab === 'analytics'
                   ? 'bg-[#1C1917] text-[#FAF7F2]'
@@ -1095,7 +1102,7 @@ export function AdminFeature() {
           shippingCostPerPiece={shippingCostPerPiece}
           onChangeShippingCost={setShippingCostPerPiece}
           analyticsTimeframe={analyticsTimeframe}
-          onChangeTimeframe={setAnalyticsTimeframe}
+          onChangeTimeframe={handleChangeTimeframe}
           analyticsOrderScope={analyticsOrderScope}
           onChangeOrderScope={setAnalyticsOrderScope}
           totalStock={totalStock}

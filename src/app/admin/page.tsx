@@ -1,3 +1,4 @@
+import { Suspense } from 'react';
 import { AdminFeature } from '@/features/admin/admin.feature';
 
 export const metadata = {
@@ -6,6 +7,9 @@ export const metadata = {
 };
 
 export default function AdminPage() {
-  return <AdminFeature />;
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-[#FAF7F2]" />}>
+      <AdminFeature />
+    </Suspense>
+  );
 }
-
