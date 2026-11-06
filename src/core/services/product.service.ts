@@ -99,6 +99,29 @@ class ProductService {
     return true;
   }
 
+  updateProductPricing(
+    id: string,
+    priceBDT: number,
+    costPriceCNY?: number,
+    originalPriceBDT?: number
+  ): boolean {
+    this.ensureLoaded();
+    const product = this.getProductById(id);
+    if (!product) return false;
+    if (!Number.isNaN(priceBDT) && priceBDT > 0) {
+      product.priceBDT = Math.round(priceBDT);
+    }
+    if (costPriceCNY !== undefined && !Number.isNaN(costPriceCNY) && costPriceCNY >= 0) {
+      product.costPriceCNY = Number(costPriceCNY);
+    }
+    if (originalPriceBDT !== undefined && !Number.isNaN(originalPriceBDT) && originalPriceBDT > 0) {
+      product.originalPriceBDT = Math.round(originalPriceBDT);
+    }
+    this.persist();
+    void supabaseService.upsertProduct(product);
+    return true;
+  }
+
   addProduct(newProduct: Product): Product {
     this.ensureLoaded();
     this.products = [newProduct, ...this.products];
@@ -139,6 +162,19 @@ class ProductService {
   async pushAllToDatabase(): Promise<boolean> {
     this.ensureLoaded();
     return supabaseService.seedProducts(this.products);
+  }
+
+  async applyImportedProductsDiff(
+    mergedProducts: Product[],
+    changedProducts: Product[]
+  ): Promise<boolean> {
+    this.ensureLoaded();
+    this.products = [...mergedProducts];
+    this.persist();
+    if (changedProducts.length === 0) {
+      return true;
+    }
+    return supabaseService.seedProducts(changedProducts);
   }
 }
 

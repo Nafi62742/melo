@@ -4,6 +4,7 @@ export type DeliveryZone = 'inside_dhaka' | 'outside_dhaka';
 export type PaymentMethod = 'card' | 'bkash' | 'cod';
 export type OrderStatus = 'pending' | 'confirmed' | 'dispatched' | 'delivered' | 'cancelled';
 export type PaymentStatus = 'pending' | 'verified' | 'failed';
+export type OrderSource = 'website' | 'whatsapp' | 'messenger';
 
 export interface OrderCustomerInfo {
   fullName: string;
@@ -12,6 +13,7 @@ export interface OrderCustomerInfo {
   address: string;
   deliveryZone: DeliveryZone;
   notes?: string;
+  orderSource?: OrderSource;
 }
 
 export interface Order {
