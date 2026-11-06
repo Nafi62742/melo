@@ -4,10 +4,12 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { productService } from '@/core/services/product.service';
+import { productTypeService } from '@/core/services/product-type.service';
 import { orderService } from '@/core/services/order.service';
 import { storeLinkService } from '@/core/services/store-link.service';
 import { supabaseService } from '@/core/services/supabase.service';
 import { Product } from '@/core/models/product.model';
+import { ProductType } from '@/core/models/product-type.model';
 import { Order, OrderStatus, PaymentStatus } from '@/core/models/order.model';
 import { StoreLink, StoreLinkCategory } from '@/core/models/store-link.model';
 import { formatBDT } from '@/core/utils/currency.util';
@@ -38,7 +40,7 @@ const ADMIN_SESSION_KEY = 'melo_admin_authenticated';
 interface ProductFormState {
   id?: string;
   name: string;
-  category: 'earrings' | 'rings' | 'bracelets';
+  category: string;
   priceBDT: number;
   originalPriceBDT: number;
   stock: number;
@@ -81,6 +83,11 @@ export function AdminFeature() {
   // Dashboard State
   const [activeTab, setActiveTab] = useState<'products' | 'orders' | 'links'>('orders');
   const [products, setProducts] = useState<Product[]>(() => [...productService.getAllProducts()]);
+  const [productTypes, setProductTypes] = useState<ProductType[]>(() => [
+    ...productTypeService.getAllProductTypes(),
+  ]);
+  const [newTypeName, setNewTypeName] = useState('');
+  const [newTypeDesc, setNewTypeDesc] = useState('');
   const [orders, setOrders] = useState<Order[]>(() => orderService.getOrders());
   const [bkashNumber, setBkashNumber] = useState<string>(() => orderService.getBkashNumber());
   const [storeLinks, setStoreLinks] = useState<StoreLink[]>(() => [...storeLinkService.getAllLinks()]);
@@ -96,9 +103,7 @@ export function AdminFeature() {
   const [syncMessage, setSyncMessage] = useState<string | null>(null);
 
   // Catalogue Filter State
-  const [selectedCategory, setSelectedCategory] = useState<
-    'all' | 'earrings' | 'rings' | 'bracelets'
-  >('all');
+  const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [stockFilter, setStockFilter] = useState<'all' | 'in_stock' | 'low_stock' | 'sold_out'>(
     'all'
   );
@@ -135,10 +140,12 @@ export function AdminFeature() {
   useEffect(() => {
     if (!isAuthenticated) return;
     void Promise.all([
+      productTypeService.syncFromDatabase(),
       productService.syncFromDatabase(),
       orderService.syncFromDatabase(),
       storeLinkService.syncFromDatabase(),
-    ]).then(([remoteProducts, remoteOrders, remoteLinks]) => {
+    ]).then(([remoteTypes, remoteProducts, remoteOrders, remoteLinks]) => {
+      setProductTypes([...remoteTypes]);
       setProducts([...remoteProducts]);
       setOrders([...remoteOrders]);
       setStoreLinks([...remoteLinks]);
@@ -285,13 +292,46 @@ export function AdminFeature() {
     refreshProducts();
   };
 
+  const handleAddProductType = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newTypeName.trim()) return;
+    const created = productTypeService.addProductType(newTypeName.trim(), newTypeDesc.trim());
+    setProductTypes([...productTypeService.getAllProductTypes()]);
+    setNewTypeName('');
+    setNewTypeDesc('');
+    setSyncMessage(
+      `Product type "${created.name}" (${created.slug}) added to public.product_types! You can now add products of this type.`
+    );
+    setTimeout(() => setSyncMessage(null), 4000);
+  };
+
+  const handleDeleteProductType = (typeItem: ProductType) => {
+    const usedCount = products.filter((p) => p.category === typeItem.slug).length;
+    if (usedCount > 0) {
+      alert(
+        `Cannot remove product type "${typeItem.name}" because ${usedCount} product(s) currently belong to this type.`
+      );
+      return;
+    }
+    if (!confirm(`Remove product type "${typeItem.name}" (${typeItem.slug})?`)) return;
+    productTypeService.deleteProductType(typeItem.slug);
+    setProductTypes([...productTypeService.getAllProductTypes()]);
+    if (selectedCategory === typeItem.slug) {
+      setSelectedCategory('all');
+    }
+    setSyncMessage(`Removed product type "${typeItem.name}".`);
+    setTimeout(() => setSyncMessage(null), 3000);
+  };
+
   const handleSaveProduct = (e: React.FormEvent) => {
     e.preventDefault();
-    const categoryNameMap: Record<'earrings' | 'rings' | 'bracelets', string> = {
-      earrings: 'Earrings',
-      rings: 'Rings',
-      bracelets: 'Bracelets',
-    };
+    const matchedType = productTypeService.getProductTypeBySlug(form.category);
+    if (!matchedType) {
+      alert(
+        `Product type "${form.category}" does not exist yet! Please add it in the Product Types table first.`
+      );
+      return;
+    }
 
     if (editingId) {
       const existing = productService.getProductById(editingId);
@@ -299,8 +339,8 @@ export function AdminFeature() {
         productService.updateProduct({
           ...existing,
           name: form.name,
-          category: form.category,
-          categoryName: categoryNameMap[form.category],
+          category: matchedType.slug,
+          categoryName: matchedType.name,
           priceBDT: Number(form.priceBDT),
           originalPriceBDT: Number(form.originalPriceBDT),
           stock: Number(form.stock),
@@ -311,15 +351,15 @@ export function AdminFeature() {
         });
       }
     } else {
-      const slug = `${form.category.slice(0, -1)}-${slugify(form.name)}-${Date.now()
+      const slug = `${matchedType.slug}-${slugify(form.name)}-${Date.now()
         .toString()
         .slice(-4)}`;
       const newProd: Product = {
         id: `prod-${Date.now()}`,
         name: form.name,
         slug,
-        category: form.category,
-        categoryName: categoryNameMap[form.category],
+        category: matchedType.slug,
+        categoryName: matchedType.name,
         priceBDT: Number(form.priceBDT),
         originalPriceBDT: Number(form.originalPriceBDT),
         stock: Number(form.stock),
@@ -327,7 +367,10 @@ export function AdminFeature() {
         description: form.description,
         isFeatured: form.isFeatured,
         isNew: form.isNew,
-        tags: form.category === 'earrings' ? ['Hypoallergenic', 'Ear Clip'] : ['Light Luxury'],
+        tags:
+          matchedType.slug === 'earrings'
+            ? ['Hypoallergenic', 'Ear Clip']
+            : [matchedType.name, 'Light Luxury'],
       };
       productService.addProduct(newProd);
     }
@@ -346,17 +389,19 @@ export function AdminFeature() {
       setTimeout(() => setSyncMessage(null), 5000);
       return;
     }
-    setSyncMessage('Syncing products and store URLs to Supabase PostgreSQL...');
+    setSyncMessage('Syncing product types, products, and store URLs to Supabase PostgreSQL...');
+    // First push product_types so foreign keys on public.products are satisfied!
+    await productTypeService.pushAllToDatabase();
     const [okProducts, okLinks] = await Promise.all([
       productService.pushAllToDatabase(),
       storeLinkService.pushAllToDatabase(),
     ]);
     setSyncMessage(
       okProducts && okLinks
-        ? 'All products and store URLs synced to Supabase database successfully!'
+        ? 'All product types, products, and store URLs synced to Supabase database successfully!'
         : okProducts
-        ? 'Products synced! Run supabase/store_links.sql in Supabase to enable URL table sync.'
-        : 'Could not sync — verify tables exist in Supabase.'
+        ? 'Product types & products synced! Run supabase/store_links.sql in Supabase to enable URL table sync.'
+        : 'Could not sync — run supabase/product_types.sql and supabase/schema.sql in Supabase first.'
     );
     setTimeout(() => setSyncMessage(null), 4000);
   };
@@ -832,7 +877,91 @@ export function AdminFeature() {
 
       {/* Main Content: Products View */}
       {activeTab === 'products' && (
-        <div className="border border-[#E7E0D6] bg-white overflow-hidden">
+        <div className="space-y-6">
+          {/* Product Types Management Card (public.product_types) */}
+          <div className="border border-[#C5A059] bg-white p-5">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-4 border-b border-[#E7E0D6]">
+              <div>
+                <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[#9A7B3E] block">
+                  Step 1 · Product Types Table (public.product_types)
+                </span>
+                <h2 className="font-serif-display text-2xl font-medium text-[#1C1917]">
+                  Manage Product Types (Add New Type Here First)
+                </h2>
+                <p className="text-xs text-[#78716C] mt-0.5">
+                  Before adding products of a new category (e.g. Necklaces, Anklets, Hair Clips), add the product type here first so it is registered in <code className="bg-[#FAF7F2] px-1.5 py-0.5 text-[#1C1917]">public.product_types</code>.
+                </p>
+              </div>
+              <span className="text-xs font-semibold text-[#1C1917]">
+                {productTypes.length} Active Types
+              </span>
+            </div>
+
+            {/* Existing Product Types List */}
+            <div className="flex flex-wrap items-center gap-2.5 my-4">
+              {productTypes.map((pt) => {
+                const count = products.filter((p) => p.category === pt.slug).length;
+                return (
+                  <div
+                    key={pt.slug}
+                    className="inline-flex items-center gap-2 border border-[#E7E0D6] bg-[#FAF7F2] px-3 py-1.5 text-xs"
+                  >
+                    <span className="font-semibold text-[#1C1917]">{pt.name}</span>
+                    <span className="font-mono text-[10px] text-[#78716C]">({pt.slug})</span>
+                    <span className="bg-white border border-[#E6D5B8] px-1.5 py-0.5 text-[10px] font-semibold text-[#9A7B3E]">
+                      {count} pcs
+                    </span>
+                    {count === 0 && (
+                      <button
+                        type="button"
+                        onClick={() => handleDeleteProductType(pt)}
+                        className="text-[#A8A29E] hover:text-red-600 ml-1 cursor-pointer"
+                        title={`Remove unused type ${pt.name}`}
+                      >
+                        <X className="w-3.5 h-3.5" />
+                      </button>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Add New Product Type Form */}
+            <form
+              onSubmit={handleAddProductType}
+              className="grid grid-cols-1 sm:grid-cols-12 gap-3 pt-3 border-t border-[#F3EDE4] text-xs"
+            >
+              <div className="sm:col-span-4">
+                <input
+                  type="text"
+                  required
+                  value={newTypeName}
+                  onChange={(e) => setNewTypeName(e.target.value)}
+                  placeholder="New Product Type Name (e.g. Necklaces)"
+                  className="w-full border border-[#D6CFC5] bg-[#FAF7F2]/50 px-3 py-2 text-[#1C1917] focus:bg-white focus:outline-none focus:border-[#C5A059]"
+                />
+              </div>
+              <div className="sm:col-span-5">
+                <input
+                  type="text"
+                  value={newTypeDesc}
+                  onChange={(e) => setNewTypeDesc(e.target.value)}
+                  placeholder="Optional description (e.g. Light luxury chains and pendants)"
+                  className="w-full border border-[#D6CFC5] bg-[#FAF7F2]/50 px-3 py-2 text-[#1C1917] focus:bg-white focus:outline-none focus:border-[#C5A059]"
+                />
+              </div>
+              <div className="sm:col-span-3">
+                <button
+                  type="submit"
+                  className="w-full boutique-btn-primary py-2 px-4 text-[11px] cursor-pointer"
+                >
+                  + Add Product Type
+                </button>
+              </div>
+            </form>
+          </div>
+
+          <div className="border border-[#E7E0D6] bg-white overflow-hidden">
           <div className="px-6 py-4 border-b border-[#E7E0D6] flex flex-col gap-4">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
               <div>
@@ -851,39 +980,34 @@ export function AdminFeature() {
 
             {/* Category, Stock Filter & Search Bar */}
             <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 pt-2 border-t border-[#F3EDE4]">
-              {/* Category Filter Pills */}
+              {/* Category Filter Pills (Dynamically loaded from public.product_types) */}
               <div className="flex flex-wrap items-center gap-1.5">
                 <span className="text-[10px] font-semibold uppercase tracking-wider text-[#78716C] mr-1">
-                  Category:
+                  Product Type:
                 </span>
-                {(
-                  [
-                    { key: 'all', label: `All (${products.length})` },
-                    {
-                      key: 'earrings',
-                      label: `Earrings (${products.filter((p) => p.category === 'earrings').length})`,
-                    },
-                    {
-                      key: 'rings',
-                      label: `Rings (${products.filter((p) => p.category === 'rings').length})`,
-                    },
-                    {
-                      key: 'bracelets',
-                      label: `Bracelets (${products.filter((p) => p.category === 'bracelets').length})`,
-                    },
-                  ] as const
-                ).map((cat) => (
+                <button
+                  type="button"
+                  onClick={() => setSelectedCategory('all')}
+                  className={`px-3 py-1.5 text-[11px] font-semibold uppercase tracking-wider border transition cursor-pointer ${
+                    selectedCategory === 'all'
+                      ? 'border-[#1C1917] bg-[#1C1917] text-[#FAF7F2]'
+                      : 'border-[#E7E0D6] bg-[#FAF7F2]/60 text-[#78716C] hover:border-[#C5A059] hover:text-[#1C1917]'
+                  }`}
+                >
+                  All ({products.length})
+                </button>
+                {productTypes.map((pt) => (
                   <button
-                    key={cat.key}
+                    key={pt.slug}
                     type="button"
-                    onClick={() => setSelectedCategory(cat.key)}
+                    onClick={() => setSelectedCategory(pt.slug)}
                     className={`px-3 py-1.5 text-[11px] font-semibold uppercase tracking-wider border transition cursor-pointer ${
-                      selectedCategory === cat.key
+                      selectedCategory === pt.slug
                         ? 'border-[#1C1917] bg-[#1C1917] text-[#FAF7F2]'
                         : 'border-[#E7E0D6] bg-[#FAF7F2]/60 text-[#78716C] hover:border-[#C5A059] hover:text-[#1C1917]'
                     }`}
                   >
-                    {cat.label}
+                    {pt.name} ({products.filter((p) => p.category === pt.slug).length})
                   </button>
                 ))}
               </div>
@@ -1067,6 +1191,7 @@ export function AdminFeature() {
                 )}
               </tbody>
             </table>
+          </div>
           </div>
         </div>
       )}
@@ -1282,21 +1407,23 @@ export function AdminFeature() {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-[11px] font-semibold uppercase tracking-wider text-[#1C1917] mb-1">
-                    Category *
+                    Product Type (from public.product_types) *
                   </label>
                   <select
                     value={form.category}
                     onChange={(e) =>
                       setForm({
                         ...form,
-                        category: e.target.value as 'earrings' | 'rings' | 'bracelets',
+                        category: e.target.value,
                       })
                     }
                     className="w-full border border-[#D6CFC5] bg-white px-3 py-2 text-[#1C1917] focus:outline-none focus:border-[#C5A059]"
                   >
-                    <option value="earrings">Earrings</option>
-                    <option value="rings">Rings</option>
-                    <option value="bracelets">Bracelets</option>
+                    {productTypes.map((pt) => (
+                      <option key={pt.slug} value={pt.slug}>
+                        {pt.name} ({pt.slug})
+                      </option>
+                    ))}
                   </select>
                 </div>
 

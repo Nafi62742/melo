@@ -18,13 +18,31 @@ VALUES ('melo@gmail.com', 'hippo#aurora', 'superadmin')
 ON CONFLICT (email) DO UPDATE
 SET password = EXCLUDED.password;
 
--- 2. Products Table
+-- 2. Product Types Table (new product categories must be added here first)
+CREATE TABLE IF NOT EXISTS public.product_types (
+  slug TEXT PRIMARY KEY,
+  name TEXT UNIQUE NOT NULL,
+  description TEXT NOT NULL DEFAULT '',
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+INSERT INTO public.product_types (slug, name, description)
+VALUES
+  ('earrings',  'Earrings',  'Hypoallergenic French-style ear clips and pearl earrings'),
+  ('rings',     'Rings',     'Korean-style adjustable open rings and zircon bands'),
+  ('bracelets', 'Bracelets', 'Light luxury crystal and four-leaf clover bracelets')
+ON CONFLICT (slug) DO UPDATE
+SET
+  name = EXCLUDED.name,
+  description = EXCLUDED.description;
+
+-- 3. Products Table (category references public.product_types.slug)
 CREATE TABLE IF NOT EXISTS public.products (
   id TEXT PRIMARY KEY,
   name TEXT NOT NULL,
   slug TEXT UNIQUE NOT NULL,
   description TEXT NOT NULL,
-  category TEXT NOT NULL CHECK (category IN ('earrings', 'rings', 'bracelets')),
+  category TEXT NOT NULL REFERENCES public.product_types (slug) ON UPDATE CASCADE ON DELETE RESTRICT,
   "categoryName" TEXT NOT NULL,
   "priceBDT" INTEGER NOT NULL,
   "originalPriceBDT" INTEGER,
@@ -58,10 +76,14 @@ CREATE TABLE IF NOT EXISTS public.orders (
 
 -- 4. Enable Row Level Security (RLS) & Policies for Storefront & Admin Access
 ALTER TABLE public.admins ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.product_types ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.products ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.orders ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY "Allow admin login verification" ON public.admins FOR SELECT USING (true);
+
+CREATE POLICY "Public can read product types" ON public.product_types FOR SELECT USING (true);
+CREATE POLICY "Admin can manage product types" ON public.product_types FOR ALL USING (true) WITH CHECK (true);
 
 CREATE POLICY "Allow public read products" ON public.products FOR SELECT USING (true);
 CREATE POLICY "Allow admin upsert products" ON public.products FOR ALL USING (true) WITH CHECK (true);

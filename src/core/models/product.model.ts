@@ -3,7 +3,7 @@ export interface Product {
   name: string;
   slug: string;
   description: string;
-  category: 'earrings' | 'rings' | 'bracelets';
+  category: string;
   categoryName: string;
   priceBDT: number;
   originalPriceBDT?: number;

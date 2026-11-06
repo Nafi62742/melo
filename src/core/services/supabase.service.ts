@@ -1,7 +1,15 @@
 import { Product } from '../models/product.model';
+import { ProductType } from '../models/product-type.model';
 import { Order, OrderStatus, PaymentStatus, DeliveryZone } from '../models/order.model';
 import { StoreLink, StoreLinkCategory } from '../models/store-link.model';
 import { CustomerProfile } from '../models/customer.model';
+
+interface ProductTypeRow {
+  slug: string;
+  name: string;
+  description: string;
+  created_at?: string;
+}
 
 interface CustomerRow {
   id?: string;
@@ -104,6 +112,86 @@ class SupabaseService {
     }
 
     return false;
+  }
+
+  async fetchProductTypes(): Promise<ProductType[] | null> {
+    if (!this.isConfigured()) return null;
+    try {
+      const res = await fetch(`${SUPABASE_URL}/rest/v1/product_types?select=*&order=created_at.asc`, {
+        headers: this.getHeaders(),
+        cache: 'no-store',
+      });
+      if (!res.ok) return null;
+      const rows = (await res.json()) as ProductTypeRow[];
+      return rows.map((r) => ({
+        slug: r.slug,
+        name: r.name,
+        description: r.description || '',
+        createdAt: r.created_at,
+      }));
+    } catch {
+      return null;
+    }
+  }
+
+  async upsertProductType(productType: ProductType): Promise<boolean> {
+    if (!this.isConfigured()) return false;
+    try {
+      const payload: ProductTypeRow = {
+        slug: productType.slug,
+        name: productType.name,
+        description: productType.description || '',
+      };
+      const res = await fetch(`${SUPABASE_URL}/rest/v1/product_types`, {
+        method: 'POST',
+        headers: {
+          ...this.getHeaders(),
+          Prefer: 'resolution=merge-duplicates,return=representation',
+        },
+        body: JSON.stringify(payload),
+      });
+      return res.ok;
+    } catch {
+      return false;
+    }
+  }
+
+  async seedProductTypes(productTypes: ProductType[]): Promise<boolean> {
+    if (!this.isConfigured()) return false;
+    try {
+      const payload: ProductTypeRow[] = productTypes.map((pt) => ({
+        slug: pt.slug,
+        name: pt.name,
+        description: pt.description || '',
+      }));
+      const res = await fetch(`${SUPABASE_URL}/rest/v1/product_types`, {
+        method: 'POST',
+        headers: {
+          ...this.getHeaders(),
+          Prefer: 'resolution=merge-duplicates',
+        },
+        body: JSON.stringify(payload),
+      });
+      return res.ok;
+    } catch {
+      return false;
+    }
+  }
+
+  async deleteProductType(slug: string): Promise<boolean> {
+    if (!this.isConfigured()) return false;
+    try {
+      const res = await fetch(
+        `${SUPABASE_URL}/rest/v1/product_types?slug=eq.${encodeURIComponent(slug)}`,
+        {
+          method: 'DELETE',
+          headers: this.getHeaders(),
+        }
+      );
+      return res.ok;
+    } catch {
+      return false;
+    }
   }
 
   async fetchProducts(): Promise<Product[] | null> {

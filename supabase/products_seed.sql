@@ -6,6 +6,24 @@
 --   3. Hippo tracker - bracelets.csv (2 items)
 -- ============================================================================
 
+-- Ensure product_types table and initial 3 types exist first
+CREATE TABLE IF NOT EXISTS public.product_types (
+  slug TEXT PRIMARY KEY,
+  name TEXT UNIQUE NOT NULL,
+  description TEXT NOT NULL DEFAULT '',
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+INSERT INTO public.product_types (slug, name, description)
+VALUES
+  ('earrings',  'Earrings',  'Hypoallergenic French-style ear clips and pearl earrings'),
+  ('rings',     'Rings',     'Korean-style adjustable open rings and zircon bands'),
+  ('bracelets', 'Bracelets', 'Light luxury crystal and four-leaf clover bracelets')
+ON CONFLICT (slug) DO UPDATE
+SET
+  name = EXCLUDED.name,
+  description = EXCLUDED.description;
+
 TRUNCATE TABLE public.products;
 
 INSERT INTO public.products (

@@ -4,6 +4,7 @@ import React, { useState, useMemo, useEffect } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { productService } from '@/core/services/product.service';
+import { productTypeService } from '@/core/services/product-type.service';
 import { ProductCard } from '@/shared/product-card/product-card.component';
 import { Search, SlidersHorizontal, Sparkles } from 'lucide-react';
 
@@ -13,21 +14,27 @@ export function CatalogFeature() {
   const initialSearch = searchParams.get('search') || '';
 
   const [allProducts, setAllProducts] = useState(() => productService.getAllProducts());
+  const [productTypes, setProductTypes] = useState(() => productTypeService.getAllProductTypes());
   const [selectedCategory, setSelectedCategory] = useState<string>(initialCategory);
   const [searchQuery, setSearchQuery] = useState<string>(initialSearch);
   const [sortBy, setSortBy] = useState<'featured' | 'price-asc' | 'price-desc' | 'name'>('featured');
 
   useEffect(() => {
-    void productService.syncFromDatabase().then((remote) => {
-      setAllProducts([...remote]);
+    void Promise.all([
+      productTypeService.syncFromDatabase(),
+      productService.syncFromDatabase(),
+    ]).then(([remoteTypes, remoteProducts]) => {
+      setProductTypes([...remoteTypes]);
+      setAllProducts([...remoteProducts]);
     });
   }, []);
 
   const categories = [
     { id: 'all', label: `All Pieces (${allProducts.length})` },
-    { id: 'earrings', label: `French Ear Clips (${allProducts.filter((p) => p.category === 'earrings').length})` },
-    { id: 'rings', label: `Minimalist Rings (${allProducts.filter((p) => p.category === 'rings').length})` },
-    { id: 'bracelets', label: `Bracelets (${allProducts.filter((p) => p.category === 'bracelets').length})` },
+    ...productTypes.map((pt) => ({
+      id: pt.slug,
+      label: `${pt.name} (${allProducts.filter((p) => p.category === pt.slug).length})`,
+    })),
   ];
 
   const filteredProducts = useMemo(() => {
