@@ -13,16 +13,25 @@ import { Sparkles, ArrowRight, ShieldCheck, Truck, Heart, Gem } from 'lucide-rea
 export function HomeFeature() {
   const { t } = useI18n();
   const [activeTab, setActiveTab] = useState<'all' | 'earrings' | 'rings' | 'bracelets'>('all');
+  const [allProducts, setAllProducts] = useState(() => productService.getAllProducts());
 
-  const allProducts = productService.getAllProducts();
-  const newArrivals = productService.getNewArrivals().slice(0, 4);
+  useEffect(() => {
+    void productService.syncFromDatabase().then((remote) => {
+      setAllProducts([...remote]);
+    });
+  }, []);
+
+  const newArrivals = useMemo(
+    () => allProducts.filter((p) => p.isNew).slice(0, 4),
+    [allProducts]
+  );
 
   const curatedProducts = useMemo(() => {
     if (activeTab === 'all') {
-      return productService.getFeaturedProducts().slice(0, 8);
+      return allProducts.filter((p) => p.isFeatured).slice(0, 8);
     }
-    return productService.getProductsByCategory(activeTab).slice(0, 8);
-  }, [activeTab]);
+    return allProducts.filter((p) => p.category === activeTab).slice(0, 8);
+  }, [activeTab, allProducts]);
 
   useEffect(() => {
     const observer = initRevealObserver();

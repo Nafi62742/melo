@@ -7,6 +7,7 @@ import { CartProvider } from '@/core/services/cart.context';
 import { Navbar } from '@/shared/navbar/navbar.component';
 import { Footer } from '@/shared/footer/footer.component';
 import { CartDrawer } from '@/shared/cart-drawer/cart-drawer.component';
+import { ChatWidget } from '@/shared/chat-widget/chat-widget.component';
 
 const cormorant = Cormorant_Garamond({
   subsets: ['latin'],
@@ -26,7 +27,7 @@ const jakarta = Plus_Jakarta_Sans({
 export const metadata: Metadata = {
   title: 'MELO | Curated French Light Luxury Jewellery — Dhaka, Bangladesh',
   description:
-    'MELO is your boutique destination for hypoallergenic French ear clips, tarnish-resistant 316L stainless steel rings, and delicate bracelets in Bangladesh. Nationwide Cash on Delivery.',
+    'MELO is your boutique destination for hypoallergenic French ear clips, tarnish-resistant 316L stainless steel rings, and delicate bracelets in Bangladesh. Card, bKash & Cash on Delivery.',
 };
 
 export default function RootLayout({
@@ -45,6 +46,7 @@ export default function RootLayout({
             <main className="flex-1">{children}</main>
             <Footer />
             <CartDrawer />
+            <ChatWidget />
           </CartProvider>
         </I18nProvider>
       </body>

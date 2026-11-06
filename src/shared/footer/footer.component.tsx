@@ -1,13 +1,29 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Truck, ShieldCheck, HeartHandshake, PhoneCall, Sparkles } from 'lucide-react';
+import { Truck, ShieldCheck, HeartHandshake, PhoneCall, Sparkles, CreditCard, ExternalLink } from 'lucide-react';
+import { storeLinkService, STORE_LINKS_UPDATED_EVENT } from '@/core/services/store-link.service';
+import { StoreLink, DEFAULT_STORE_LINKS } from '@/core/models/store-link.model';
 
 export function Footer() {
+  const [links, setLinks] = useState<StoreLink[]>(DEFAULT_STORE_LINKS);
+
+  useEffect(() => {
+    const refreshLinks = () => {
+      setLinks([...storeLinkService.getAllLinks()]);
+    };
+    refreshLinks();
+    window.addEventListener(STORE_LINKS_UPDATED_EVENT, refreshLinks);
+    return () => {
+      window.removeEventListener(STORE_LINKS_UPDATED_EVENT, refreshLinks);
+    };
+  }, []);
+
+  const activeSocialAndCustomLinks = links.filter((l) => l.isActive && Boolean(l.url));
   return (
     <footer className="bg-[#181512] text-[#FAF7F2] border-t border-[#2E2925]">
-      {/* Top Boutique Service Guarantees Bar (Blingg 04 / Jewelix / Deweler Style) */}
+      {/* Top Boutique Service Guarantees Bar */}
       <div className="border-b border-[#2E2925]">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-10">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 lg:divide-x lg:divide-[#2E2925]">
@@ -27,14 +43,14 @@ export function Footer() {
 
             <div className="flex items-start gap-4 lg:px-6">
               <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center border border-[#C5A059]/40 bg-[#C5A059]/10 text-[#C5A059]">
-                <ShieldCheck className="w-4 h-4" />
+                <CreditCard className="w-4 h-4" />
               </div>
               <div>
                 <div className="font-serif-display text-lg font-medium text-[#FAF7F2]">
-                  Cash on Delivery
+                  Card, bKash &amp; COD
                 </div>
                 <div className="mt-0.5 text-xs text-[#A8A29E]">
-                  Inspect your jewellery at your doorstep
+                  Card &amp; bKash preferred • Doorstep COD available
                 </div>
               </div>
             </div>
@@ -59,10 +75,10 @@ export function Footer() {
               </div>
               <div>
                 <div className="font-serif-display text-lg font-medium text-[#FAF7F2]">
-                  Concierge Support
+                  WhatsApp &amp; Messenger
                 </div>
                 <div className="mt-0.5 text-xs text-[#A8A29E]">
-                  Direct styling help via WhatsApp &amp; Instagram
+                  Instant live chat via bottom-right concierge
                 </div>
               </div>
             </div>
@@ -90,6 +106,23 @@ export function Footer() {
               <Sparkles className="w-3.5 h-3.5 text-[#C5A059]" />
               <span>&ldquo;Where Little Wonders Light Up — Discover. Love. Repeat.&rdquo;</span>
             </div>
+
+            {activeSocialAndCustomLinks.length > 0 && (
+              <div className="pt-2 flex flex-wrap items-center gap-2.5">
+                {activeSocialAndCustomLinks.map((item) => (
+                  <a
+                    key={item.key}
+                    href={item.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1.5 border border-[#2E2925] bg-[#221E1A] px-3 py-1.5 text-[11px] text-[#E6D5B8] hover:border-[#C5A059] hover:text-[#FAF7F2] transition"
+                  >
+                    <span>{item.label}</span>
+                    <ExternalLink className="w-3 h-3 text-[#C5A059]" />
+                  </a>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Curated Collections */}
@@ -122,62 +155,71 @@ export function Footer() {
           </div>
 
           {/* Client Care */}
-          <div className="md:col-span-3">
+          <div className="md:col-span-2">
             <div className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[#E6D5B8] mb-4">
               Client Care
             </div>
             <ul className="space-y-2.5 text-xs text-[#A8A29E]">
               <li>
                 <span className="hover:text-[#FAF7F2] transition cursor-pointer">
-                  Bangladesh Delivery Rates (৳60 / ৳120)
+                  Delivery Rates (৳60 / ৳120)
                 </span>
               </li>
               <li>
                 <span className="hover:text-[#FAF7F2] transition cursor-pointer">
-                  Easy Inspection &amp; Replacement
+                  Doorstep Inspection
                 </span>
               </li>
               <li>
                 <span className="hover:text-[#FAF7F2] transition cursor-pointer">
-                  Silicone Cushion Ear Clip Care Guide
+                  Silicone Clip Guide
                 </span>
               </li>
               <li>
                 <span className="hover:text-[#FAF7F2] transition cursor-pointer">
-                  316L Stainless Steel Jewellery Care
+                  316L Steel Care
                 </span>
               </li>
             </ul>
           </div>
 
-          {/* Payment Badges */}
-          <div className="md:col-span-2">
+          {/* Payment Badges: Card & bKash Preferred + COD */}
+          <div className="md:col-span-3">
             <div className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[#E6D5B8] mb-4">
-              Payment Options
+              Payments Accepted
             </div>
-            <div className="flex flex-wrap gap-2 text-[11px] font-medium">
-              <span className="border border-[#3E3832] bg-[#221E1A] px-2.5 py-1 text-[#FAF7F2]">
-                Cash on Delivery
-              </span>
-              <span className="border border-pink-900/60 bg-pink-950/40 px-2.5 py-1 text-pink-300">
-                bKash
-              </span>
-              <span className="border border-amber-900/60 bg-amber-950/40 px-2.5 py-1 text-amber-300">
-                Nagad
-              </span>
+            <div className="flex flex-col gap-2 text-[11px] font-medium">
+              <div className="flex items-center justify-between border border-[#C5A059]/50 bg-[#221E1A] px-3 py-1.5 text-[#FAF7F2]">
+                <span className="flex items-center gap-1.5">
+                  <ShieldCheck className="w-3.5 h-3.5 text-[#C5A059]" />
+                  <span>Visa / Mastercard</span>
+                </span>
+                <span className="text-[9px] uppercase tracking-wider text-[#C5A059] font-semibold">
+                  Preferred
+                </span>
+              </div>
+              <div className="flex items-center justify-between border border-pink-900/60 bg-pink-950/40 px-3 py-1.5 text-pink-200">
+                <span>bKash Payment</span>
+                <span className="text-[9px] uppercase tracking-wider text-pink-300 font-semibold">
+                  Preferred
+                </span>
+              </div>
+              <div className="flex items-center justify-between border border-[#3E3832] bg-[#1C1917] px-3 py-1.5 text-[#A8A29E]">
+                <span>Cash on Delivery (COD)</span>
+                <span className="text-[9px] uppercase tracking-wider text-[#78716C]">
+                  Available
+                </span>
+              </div>
             </div>
           </div>
         </div>
 
-        {/* Bottom Copyright & Admin Link */}
+        {/* Bottom Copyright */}
         <div className="mt-8 flex flex-col sm:flex-row items-center justify-between text-xs text-[#78716C] gap-4">
           <div>© 2026 MELO Bangladesh. Crafted for Everyday Elegance.</div>
           <div className="flex items-center gap-6">
             <Link href="/shop" className="hover:text-[#C5A059] transition">
               Catalogue
-            </Link>
-            <Link href="/admin" className="hover:text-[#C5A059] transition">
-              Store Admin
             </Link>
           </div>
         </div>

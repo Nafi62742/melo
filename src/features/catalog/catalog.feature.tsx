@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { productService } from '@/core/services/product.service';
@@ -12,19 +12,26 @@ export function CatalogFeature() {
   const initialCategory = searchParams.get('category') || 'all';
   const initialSearch = searchParams.get('search') || '';
 
+  const [allProducts, setAllProducts] = useState(() => productService.getAllProducts());
   const [selectedCategory, setSelectedCategory] = useState<string>(initialCategory);
   const [searchQuery, setSearchQuery] = useState<string>(initialSearch);
   const [sortBy, setSortBy] = useState<'featured' | 'price-asc' | 'price-desc' | 'name'>('featured');
 
+  useEffect(() => {
+    void productService.syncFromDatabase().then((remote) => {
+      setAllProducts([...remote]);
+    });
+  }, []);
+
   const categories = [
-    { id: 'all', label: `All Pieces (${productService.getAllProducts().length})` },
-    { id: 'earrings', label: `French Ear Clips (${productService.getProductsByCategory('earrings').length})` },
-    { id: 'rings', label: `Minimalist Rings (${productService.getProductsByCategory('rings').length})` },
-    { id: 'bracelets', label: `Bracelets (${productService.getProductsByCategory('bracelets').length})` },
+    { id: 'all', label: `All Pieces (${allProducts.length})` },
+    { id: 'earrings', label: `French Ear Clips (${allProducts.filter((p) => p.category === 'earrings').length})` },
+    { id: 'rings', label: `Minimalist Rings (${allProducts.filter((p) => p.category === 'rings').length})` },
+    { id: 'bracelets', label: `Bracelets (${allProducts.filter((p) => p.category === 'bracelets').length})` },
   ];
 
   const filteredProducts = useMemo(() => {
-    let list = productService.getAllProducts();
+    let list = [...allProducts];
 
     if (selectedCategory !== 'all') {
       list = list.filter((p) => p.category === selectedCategory);
@@ -52,7 +59,7 @@ export function CatalogFeature() {
       default:
         return [...list].sort((a, b) => (b.isFeatured ? 1 : 0) - (a.isFeatured ? 1 : 0));
     }
-  }, [selectedCategory, searchQuery, sortBy]);
+  }, [allProducts, selectedCategory, searchQuery, sortBy]);
 
   return (
     <div className="pb-20">

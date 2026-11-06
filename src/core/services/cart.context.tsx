@@ -10,6 +10,7 @@ interface CartContextType {
   addItem: (product: Product, quantity?: number) => void;
   removeItem: (productId: string) => void;
   updateQuantity: (productId: string, quantity: number) => void;
+  getItemQuantity: (productId: string) => number;
   clearCart: () => void;
   totalQuantity: number;
   subtotal: number;
@@ -29,36 +30,70 @@ export function CartProvider({ children }: { children: ReactNode }) {
       try {
         const stored = localStorage.getItem('melo_cart');
         if (stored) {
-          return JSON.parse(stored);
+          const parsed = JSON.parse(stored) as CartItem[];
+          if (Array.isArray(parsed)) {
+            return parsed
+              .filter((item) => item && item.product && item.product.id)
+              .map((item) => {
+                const maxStock = Math.max(0, Number(item.product.stock ?? 0));
+                const validQty = Math.max(1, Number(item.quantity) || 1);
+                return {
+                  product: item.product,
+                  quantity: maxStock > 0 ? Math.min(maxStock, validQty) : validQty,
+                };
+              })
+              .filter((item) => Number(item.product.stock ?? 1) > 0);
+          }
         }
       } catch {
-        // ignore
+        // ignore corrupted storage
       }
     }
     return [];
   });
-
   const [deliveryZone, setDeliveryZone] = useState<DeliveryZone>('inside_dhaka');
   const [isCartDrawerOpen, setIsCartDrawerOpen] = useState<boolean>(false);
 
   // Save cart to localStorage on changes
   useEffect(() => {
-    if (typeof window !== 'undefined') {
+    if (typeof window === 'undefined') return;
+    try {
       localStorage.setItem('melo_cart', JSON.stringify(items));
+    } catch {
+      // ignore storage errors
     }
   }, [items]);
 
+  const getItemQuantity = (productId: string): number => {
+    const found = items.find((item) => item.product.id === productId);
+    return found ? found.quantity : 0;
+  };
+
   const addItem = (product: Product, quantity: number = 1) => {
+    const maxStock = Math.max(0, Number(product.stock ?? 0));
+    if (maxStock <= 0) {
+      return;
+    }
+
+    const addQty = Math.max(1, Number(quantity) || 1);
+
     setItems((prev) => {
       const existing = prev.find((item) => item.product.id === product.id);
       if (existing) {
+        const nextQty = Math.min(maxStock, existing.quantity + addQty);
         return prev.map((item) =>
           item.product.id === product.id
-            ? { ...item, quantity: item.quantity + quantity }
+            ? { product: { ...product, stock: maxStock }, quantity: nextQty }
             : item
         );
       }
-      return [...prev, { product, quantity }];
+      return [
+        ...prev,
+        {
+          product: { ...product, stock: maxStock },
+          quantity: Math.min(maxStock, addQty),
+        },
+      ];
     });
     setIsCartDrawerOpen(true);
   };
@@ -68,14 +103,20 @@ export function CartProvider({ children }: { children: ReactNode }) {
   };
 
   const updateQuantity = (productId: string, quantity: number) => {
-    if (quantity <= 0) {
+    const targetQty = Number(quantity);
+    if (isNaN(targetQty) || targetQty <= 0) {
       removeItem(productId);
       return;
     }
     setItems((prev) =>
-      prev.map((item) =>
-        item.product.id === productId ? { ...item, quantity } : item
-      )
+      prev.map((item) => {
+        if (item.product.id !== productId) return item;
+        const maxStock = Math.max(1, Number(item.product.stock ?? 1));
+        return {
+          ...item,
+          quantity: Math.min(maxStock, Math.max(1, targetQty)),
+        };
+      })
     );
   };
 
@@ -83,9 +124,9 @@ export function CartProvider({ children }: { children: ReactNode }) {
     setItems([]);
   };
 
-  const totalQuantity = items.reduce((sum, item) => sum + item.quantity, 0);
+  const totalQuantity = items.reduce((sum, item) => sum + (Number(item.quantity) || 0), 0);
   const subtotal = items.reduce(
-    (sum, item) => sum + item.product.priceBDT * item.quantity,
+    (sum, item) => sum + (Number(item.product.priceBDT) || 0) * (Number(item.quantity) || 0),
     0
   );
   const deliveryFee = items.length === 0 ? 0 : deliveryZone === 'inside_dhaka' ? 60 : 120;
@@ -98,6 +139,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
         addItem,
         removeItem,
         updateQuantity,
+        getItemQuantity,
         clearCart,
         totalQuantity,
         subtotal,

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
@@ -18,31 +18,70 @@ import {
   Minus,
   CheckCircle,
   Sparkles,
+  Lock,
+  AlertCircle,
 } from 'lucide-react';
 
 interface ProductDetailFeatureProps {
   product: Product;
 }
 
-export function ProductDetailFeature({ product }: ProductDetailFeatureProps) {
+export function ProductDetailFeature({ product: initialProduct }: ProductDetailFeatureProps) {
   const router = useRouter();
-  const { addItem } = useCart();
+  const { addItem, getItemQuantity } = useCart();
+  const [product, setProduct] = useState<Product>(
+    () => productService.getProductById(initialProduct.id) || initialProduct
+  );
   const [quantity, setQuantity] = useState<number>(1);
   const [addedNotice, setAddedNotice] = useState<boolean>(false);
+
+  // Sync live stock from Supabase on mount
+  useEffect(() => {
+    void productService.syncFromDatabase().then(() => {
+      const updated = productService.getProductById(initialProduct.id);
+      if (updated) {
+        setProduct({ ...updated });
+      }
+    });
+  }, [initialProduct.id]);
+
+  const maxStock = Math.max(0, Number(product.stock ?? 0));
+  const isOutOfStock = maxStock <= 0;
+  const inBagQty = getItemQuantity(product.id);
+  const remainingAvailable = Math.max(0, maxStock - inBagQty);
+  const isBagAtMax = !isOutOfStock && remainingAvailable <= 0;
+  const maxSelectableQty = Math.max(1, remainingAvailable);
+  const isPlusLocked = isOutOfStock || isBagAtMax || quantity >= maxSelectableQty;
 
   const relatedProducts = productService
     .getProductsByCategory(product.category)
     .filter((p) => p.id !== product.id)
     .slice(0, 4);
 
+  const handleDecrease = () => {
+    setQuantity((prev) => Math.max(1, prev - 1));
+  };
+
+  const handleIncrease = () => {
+    if (isPlusLocked) return;
+    setQuantity((prev) => Math.min(maxSelectableQty, prev + 1));
+  };
+
   const handleAddToCart = () => {
-    addItem(product, quantity);
+    if (isOutOfStock || isBagAtMax) return;
+    const toAdd = Math.min(remainingAvailable, Math.max(1, quantity));
+    addItem(product, toAdd);
+    setQuantity(1);
     setAddedNotice(true);
     setTimeout(() => setAddedNotice(false), 2500);
   };
 
   const handleBuyNow = () => {
-    addItem(product, quantity);
+    if (isOutOfStock) return;
+    if (!isBagAtMax) {
+      const toAdd = Math.min(remainingAvailable, Math.max(1, quantity));
+      addItem(product, toAdd);
+    }
     router.push('/checkout');
   };
 
@@ -80,19 +119,27 @@ export function ProductDetailFeature({ product }: ProductDetailFeatureProps) {
               fill
               priority
               sizes="(max-width: 768px) 100vw, 50vw"
-              className="object-cover"
+              className={`object-cover ${isOutOfStock ? 'opacity-65 grayscale-[30%]' : ''}`}
             />
 
             <div className="absolute top-4 left-4 flex flex-col gap-2">
-              {product.isNew && (
-                <span className="bg-[#FAF7F2]/95 border border-[#E6D5B8] px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-[#1C1917]">
-                  New Arrival
+              {isOutOfStock ? (
+                <span className="bg-red-900/95 border border-red-300/40 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-white">
+                  Out of Stock
                 </span>
-              )}
-              {product.category === 'earrings' && (
-                <span className="bg-[#181512]/90 px-3 py-1 text-[10px] font-medium uppercase tracking-[0.18em] text-[#E6D5B8]">
-                  French Silicone Ear Clip
-                </span>
+              ) : (
+                <>
+                  {product.isNew && (
+                    <span className="bg-[#FAF7F2]/95 border border-[#E6D5B8] px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-[#1C1917]">
+                      New Arrival
+                    </span>
+                  )}
+                  {product.category === 'earrings' && (
+                    <span className="bg-[#181512]/90 px-3 py-1 text-[10px] font-medium uppercase tracking-[0.18em] text-[#E6D5B8]">
+                      French Silicone Ear Clip
+                    </span>
+                  )}
+                </>
               )}
             </div>
           </div>
@@ -105,10 +152,20 @@ export function ProductDetailFeature({ product }: ProductDetailFeatureProps) {
               <span className="border border-[#E6D5B8] bg-[#FAF7F2] px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-[#9A7B3E]">
                 {product.categoryName}
               </span>
-              <span className="flex items-center gap-1.5 text-xs text-emerald-700 font-medium">
-                <CheckCircle className="w-3.5 h-3.5" />
-                <span>In Stock ({product.stock} pieces ready to ship)</span>
-              </span>
+              {isOutOfStock ? (
+                <span className="flex items-center gap-1.5 text-xs text-red-700 font-semibold">
+                  <AlertCircle className="w-3.5 h-3.5" />
+                  <span>Out of Stock</span>
+                </span>
+              ) : (
+                <span className="flex items-center gap-1.5 text-xs text-emerald-700 font-medium">
+                  <CheckCircle className="w-3.5 h-3.5" />
+                  <span>
+                    In Stock ({maxStock} pieces available
+                    {inBagQty > 0 ? ` • ${inBagQty} in your bag` : ''})
+                  </span>
+                </span>
+              )}
             </div>
 
             <h1 className="font-serif-display text-3xl sm:text-5xl font-medium text-[#1C1917] leading-tight">
@@ -148,47 +205,97 @@ export function ProductDetailFeature({ product }: ProductDetailFeatureProps) {
               </div>
             )}
 
-            {/* Quantity Selector */}
-            <div className="mt-7 flex items-center gap-4">
+            {/* Quantity Selector with Stock Lock */}
+            <div className="mt-7 flex flex-wrap items-center gap-4">
               <span className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#1C1917]">
                 Quantity
               </span>
               <div className="flex items-center border border-[#1C1917] bg-white">
                 <button
-                  onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                  className="p-2.5 text-[#78716C] hover:text-[#1C1917] cursor-pointer"
+                  type="button"
+                  disabled={isOutOfStock || quantity <= 1}
+                  onClick={handleDecrease}
+                  className={`p-2.5 transition ${
+                    isOutOfStock || quantity <= 1
+                      ? 'text-[#A8A29E] bg-[#F3EDE4] cursor-not-allowed opacity-50'
+                      : 'text-[#78716C] hover:text-[#1C1917] cursor-pointer'
+                  }`}
                   aria-label="Decrease quantity"
                 >
                   <Minus className="w-3.5 h-3.5" />
                 </button>
                 <span className="w-10 text-center text-xs font-bold text-[#1C1917]">
-                  {quantity}
+                  {isOutOfStock ? 0 : isBagAtMax ? 0 : quantity}
                 </span>
                 <button
-                  onClick={() => setQuantity(Math.min(product.stock, quantity + 1))}
-                  className="p-2.5 text-[#78716C] hover:text-[#1C1917] cursor-pointer"
+                  type="button"
+                  disabled={isPlusLocked}
+                  onClick={handleIncrease}
+                  title={
+                    isPlusLocked
+                      ? `Maximum available stock (${maxStock}) reached`
+                      : 'Increase quantity'
+                  }
+                  className={`p-2.5 transition ${
+                    isPlusLocked
+                      ? 'text-[#A8A29E] bg-[#F3EDE4] cursor-not-allowed opacity-50'
+                      : 'text-[#78716C] hover:text-[#1C1917] cursor-pointer'
+                  }`}
                   aria-label="Increase quantity"
                 >
                   <Plus className="w-3.5 h-3.5" />
                 </button>
               </div>
+
+              {!isOutOfStock && isPlusLocked && (
+                <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-amber-800 bg-amber-50 border border-amber-200 px-2.5 py-1">
+                  <Lock className="w-3 h-3" />
+                  <span>Max available ({maxStock}) locked</span>
+                </span>
+              )}
             </div>
 
             {/* Action Buttons */}
             <div className="mt-8 flex flex-col sm:flex-row gap-3.5">
-              <button
-                onClick={handleAddToCart}
-                className="flex flex-1 items-center justify-center gap-2.5 boutique-btn-primary py-4 px-6 cursor-pointer"
-              >
-                <ShoppingBag className="w-4 h-4" />
-                <span>Add to Bag</span>
-              </button>
+              {isOutOfStock ? (
+                <button
+                  type="button"
+                  disabled
+                  className="flex flex-1 items-center justify-center gap-2.5 bg-stone-300 text-stone-600 py-4 px-6 text-xs font-semibold uppercase tracking-[0.16em] cursor-not-allowed"
+                >
+                  <span>Out of Stock</span>
+                </button>
+              ) : isBagAtMax ? (
+                <button
+                  type="button"
+                  disabled
+                  className="flex flex-1 items-center justify-center gap-2.5 bg-stone-800 text-[#E6D5B8] py-4 px-6 text-xs font-semibold uppercase tracking-[0.16em] cursor-not-allowed"
+                >
+                  <Lock className="w-4 h-4" />
+                  <span>Max Available in Bag ({maxStock})</span>
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={handleAddToCart}
+                  className="flex flex-1 items-center justify-center gap-2.5 boutique-btn-primary py-4 px-6 cursor-pointer"
+                >
+                  <ShoppingBag className="w-4 h-4" />
+                  <span>Add to Bag</span>
+                </button>
+              )}
 
               <button
+                type="button"
+                disabled={isOutOfStock}
                 onClick={handleBuyNow}
-                className="flex flex-1 items-center justify-center gap-2 boutique-btn-outline py-4 px-6 cursor-pointer"
+                className={`flex flex-1 items-center justify-center gap-2 py-4 px-6 ${
+                  isOutOfStock
+                    ? 'border border-stone-300 text-stone-400 cursor-not-allowed text-xs font-semibold uppercase tracking-[0.16em]'
+                    : 'boutique-btn-outline cursor-pointer'
+                }`}
               >
-                <span>Buy It Now (COD)</span>
+                <span>{isOutOfStock ? 'Unavailable' : 'Buy It Now (COD)'}</span>
               </button>
             </div>
 

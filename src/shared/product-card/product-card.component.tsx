@@ -6,7 +6,7 @@ import Image from 'next/image';
 import { Product } from '@/core/models/product.model';
 import { formatBDT } from '@/core/utils/currency.util';
 import { useCart } from '@/core/services/cart.context';
-import { ShoppingBag, Eye } from 'lucide-react';
+import { ShoppingBag, Eye, Plus, Minus, Lock } from 'lucide-react';
 
 interface ProductCardProps {
   product: Product;
@@ -14,13 +14,25 @@ interface ProductCardProps {
 }
 
 export function ProductCard({ product, className = '' }: ProductCardProps) {
-  const { addItem } = useCart();
+  const { addItem, updateQuantity, getItemQuantity } = useCart();
+
+  const maxStock = Math.max(0, Number(product.stock ?? 0));
+  const isOutOfStock = maxStock <= 0;
+  const inBagQty = getItemQuantity(product.id);
+  const isMaxReached = !isOutOfStock && inBagQty >= maxStock;
+
+  const handleAdd = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (isOutOfStock || isMaxReached) return;
+    addItem(product, 1);
+  };
 
   return (
     <div
       className={`group relative flex flex-col overflow-hidden bg-white border border-[#E7E0D6] transition-all duration-500 hover:border-[#C5A059] hover:shadow-[0_18px_38px_-12px_rgba(28,25,23,0.1)] ${className}`}
     >
-      {/* Portrait 4:5 Editorial Image Container (Blingg 04 / Jewelix / Deweler style) */}
+      {/* Portrait 4:5 Editorial Image Container */}
       <div className="relative aspect-[4/5] w-full overflow-hidden bg-[#F3EDE4]/60">
         <Link href={`/product/${product.slug}`} className="block h-full w-full">
           <Image
@@ -28,21 +40,31 @@ export function ProductCard({ product, className = '' }: ProductCardProps) {
             alt={product.name}
             fill
             sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
-            className="object-cover object-center transition-transform duration-700 ease-out group-hover:scale-108"
+            className={`object-cover object-center transition-transform duration-700 ease-out group-hover:scale-108 ${
+              isOutOfStock ? 'opacity-60 grayscale-[35%]' : ''
+            }`}
           />
         </Link>
 
         {/* Boutique Minimal Badges */}
         <div className="absolute top-3 left-3 flex flex-col items-start gap-1.5 z-10 pointer-events-none">
-          {product.isNew && (
-            <span className="bg-[#FAF7F2]/95 border border-[#E6D5B8] px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-[#1C1917] shadow-xs">
-              New
+          {isOutOfStock ? (
+            <span className="bg-red-900/95 border border-red-300/40 px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-white shadow-xs">
+              Out of Stock
             </span>
-          )}
-          {product.category === 'earrings' && (
-            <span className="bg-[#181512]/85 backdrop-blur-xs px-2.5 py-0.5 text-[9px] font-medium uppercase tracking-[0.16em] text-[#E6D5B8]">
-              Ear Clip
-            </span>
+          ) : (
+            <>
+              {product.isNew && (
+                <span className="bg-[#FAF7F2]/95 border border-[#E6D5B8] px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-[#1C1917] shadow-xs">
+                  New
+                </span>
+              )}
+              {product.category === 'earrings' && (
+                <span className="bg-[#181512]/85 backdrop-blur-xs px-2.5 py-0.5 text-[9px] font-medium uppercase tracking-[0.16em] text-[#E6D5B8]">
+                  Ear Clip
+                </span>
+              )}
+            </>
           )}
         </div>
 
@@ -55,24 +77,47 @@ export function ProductCard({ product, className = '' }: ProductCardProps) {
           <Eye className="w-3.5 h-3.5" />
         </Link>
 
-        {/* Slide-Up Editorial Action Bar on Desktop Hover (Jewelix / Deweler Signature) */}
-        <div className="hidden sm:block absolute inset-x-0 bottom-0 p-3 translate-y-full opacity-0 transition-all duration-300 ease-out group-hover:translate-y-0 group-hover:opacity-100 z-10">
-          <button
-            onClick={() => addItem(product, 1)}
-            aria-label={`Add ${product.name} to bag`}
-            className="flex w-full items-center justify-center gap-2 bg-[#181512]/95 backdrop-blur-xs py-2.5 px-4 text-[11px] font-semibold uppercase tracking-[0.18em] text-[#FAF7F2] hover:bg-[#9A7B3E] transition-colors cursor-pointer"
-          >
-            <ShoppingBag className="w-3.5 h-3.5" />
-            <span>Add to Bag</span>
-          </button>
+        {/* Slide-Up Editorial Action Bar on Desktop Hover */}
+        <div className="hidden sm:block absolute inset-x-0 bottom-0 p-3 translate-y-full opacity-0 transition-all duration-300 ease-out group-hover:translate-y-0 group-hover:opacity-100 z-20">
+          {isOutOfStock ? (
+            <button
+              type="button"
+              disabled
+              className="flex w-full items-center justify-center gap-2 bg-stone-800/90 py-2.5 px-4 text-[11px] font-semibold uppercase tracking-[0.18em] text-stone-300 cursor-not-allowed"
+            >
+              <span>Out of Stock</span>
+            </button>
+          ) : isMaxReached ? (
+            <button
+              type="button"
+              disabled
+              className="flex w-full items-center justify-center gap-2 bg-stone-800/95 py-2.5 px-4 text-[10px] font-semibold uppercase tracking-[0.14em] text-[#E6D5B8] cursor-not-allowed"
+            >
+              <Lock className="w-3.5 h-3.5" />
+              <span>Max Available in Bag ({maxStock})</span>
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={handleAdd}
+              aria-label={`Add ${product.name} to bag`}
+              className="flex w-full items-center justify-center gap-2 bg-[#181512]/95 backdrop-blur-xs py-2.5 px-4 text-[11px] font-semibold uppercase tracking-[0.18em] text-[#FAF7F2] hover:bg-[#9A7B3E] transition-colors cursor-pointer"
+            >
+              <ShoppingBag className="w-3.5 h-3.5" />
+              <span>{inBagQty > 0 ? `Add Another (${inBagQty}/${maxStock})` : 'Add to Bag'}</span>
+            </button>
+          )}
         </div>
       </div>
 
       {/* Editorial Product Meta */}
       <div className="flex flex-1 flex-col justify-between p-3.5 sm:p-4 text-left">
         <div>
-          <div className="mb-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-[#9A7B3E]">
-            {product.categoryName}
+          <div className="mb-1 flex items-center justify-between text-[10px] font-semibold uppercase tracking-[0.18em]">
+            <span className="text-[#9A7B3E]">{product.categoryName}</span>
+            <span className={isOutOfStock ? 'text-red-700 font-bold' : 'text-[#78716C]'}>
+              {isOutOfStock ? 'Out of Stock' : `${maxStock} left`}
+            </span>
           </div>
 
           <Link
@@ -84,9 +129,9 @@ export function ProductCard({ product, className = '' }: ProductCardProps) {
           </Link>
         </div>
 
-        {/* Price Row & Mobile One-Tap Bag Trigger */}
-        <div className="mt-3 flex items-center justify-between pt-2.5 border-t border-[#F3EDE4]">
-          <div className="flex items-baseline gap-2">
+        {/* Price Row & Interactive Bag / Quantity Controls */}
+        <div className="mt-3 flex items-center justify-between pt-2.5 border-t border-[#F3EDE4] gap-2">
+          <div className="flex items-baseline gap-1.5">
             <span className="text-sm sm:text-base font-semibold text-[#1C1917]">
               {formatBDT(product.priceBDT)}
             </span>
@@ -97,14 +142,58 @@ export function ProductCard({ product, className = '' }: ProductCardProps) {
             )}
           </div>
 
-          {/* Always accessible on mobile; subtle quick-add icon on desktop */}
-          <button
-            onClick={() => addItem(product, 1)}
-            aria-label={`Add ${product.name} to cart`}
-            className="flex h-8 w-8 items-center justify-center border border-[#E7E0D6] bg-[#FAF7F2] text-[#1C1917] hover:bg-[#1C1917] hover:text-[#FAF7F2] hover:border-[#1C1917] active:scale-95 transition-all cursor-pointer"
-          >
-            <ShoppingBag className="w-3.5 h-3.5" />
-          </button>
+          {isOutOfStock ? (
+            <span className="border border-red-200 bg-red-50 px-2 py-1 text-[10px] font-semibold uppercase tracking-wider text-red-800">
+              Out of Stock
+            </span>
+          ) : inBagQty > 0 ? (
+            <div className="flex items-center border border-[#1C1917] bg-[#FAF7F2]">
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  updateQuantity(product.id, inBagQty - 1);
+                }}
+                aria-label="Decrease quantity"
+                className="p-1.5 text-[#1C1917] hover:bg-[#E7E0D6] transition cursor-pointer"
+              >
+                <Minus className="w-3 h-3" />
+              </button>
+              <span className="px-2 text-xs font-bold text-[#1C1917] min-w-6 text-center">
+                {inBagQty}
+              </span>
+              <button
+                type="button"
+                disabled={isMaxReached}
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  if (!isMaxReached) {
+                    updateQuantity(product.id, inBagQty + 1);
+                  }
+                }}
+                aria-label="Increase quantity"
+                title={isMaxReached ? `Maximum stock (${maxStock}) reached` : 'Increase quantity'}
+                className={`p-1.5 transition ${
+                  isMaxReached
+                    ? 'text-[#A8A29E] bg-[#F3EDE4] cursor-not-allowed opacity-50'
+                    : 'text-[#1C1917] hover:bg-[#E7E0D6] cursor-pointer'
+                }`}
+              >
+                <Plus className="w-3 h-3" />
+              </button>
+            </div>
+          ) : (
+            <button
+              type="button"
+              onClick={handleAdd}
+              aria-label={`Add ${product.name} to cart`}
+              className="flex h-8 w-8 items-center justify-center border border-[#E7E0D6] bg-[#FAF7F2] text-[#1C1917] hover:bg-[#1C1917] hover:text-[#FAF7F2] hover:border-[#1C1917] active:scale-95 transition-all cursor-pointer"
+            >
+              <ShoppingBag className="w-3.5 h-3.5" />
+            </button>
+          )}
         </div>
       </div>
     </div>

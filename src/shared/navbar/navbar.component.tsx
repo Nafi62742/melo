@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { usePathname, useSearchParams } from 'next/navigation';
 import { useCart } from '@/core/services/cart.context';
 import { useI18n } from '@/core/i18n/i18n.context';
-import { ShoppingBag, Search, Menu, X, Sparkles, ShieldCheck } from 'lucide-react';
+import { ShoppingBag, Search, Menu, X, Sparkles, User } from 'lucide-react';
 
 export function Navbar() {
   const pathname = usePathname();
@@ -120,14 +120,14 @@ export function Navbar() {
             <span>{language === 'en' ? 'বাংলা' : 'EN'}</span>
           </button>
 
-          {/* Admin Link */}
+          {/* Customer Account & Order Tracking Link */}
           <Link
-            href="/admin"
-            className="hidden xl:flex items-center gap-1 text-[#78716C] hover:text-[#1C1917] text-[11px] uppercase tracking-wider font-medium px-1.5 py-1 transition"
-            title="Store Admin Dashboard"
+            href="/account"
+            className="hidden sm:flex items-center gap-1.5 border border-[#E7E0D6] bg-white/80 px-3 py-1.5 text-[11px] font-semibold uppercase tracking-wider text-[#1C1917] hover:border-[#C5A059] transition"
+            title="Track Order & My Account"
           >
-            <ShieldCheck className="w-3.5 h-3.5 text-[#9A7B3E]" />
-            <span>{t.nav.admin}</span>
+            <User className="w-3.5 h-3.5 text-[#9A7B3E]" />
+            <span className="hidden xl:inline">Track Order</span>
           </Link>
 
           {/* Boutique Shopping Bag Trigger */}
@@ -178,12 +178,12 @@ export function Navbar() {
           </div>
 
           <Link
-            href="/admin"
+            href="/account"
             onClick={() => setMobileMenuOpen(false)}
             className="flex items-center gap-2 border border-[#E7E0D6] bg-white px-3.5 py-2.5 text-xs font-semibold uppercase tracking-wider text-[#1C1917]"
           >
-            <ShieldCheck className="w-4 h-4 text-[#9A7B3E]" />
-            <span>Store Admin Dashboard</span>
+            <User className="w-4 h-4 text-[#9A7B3E]" />
+            <span>My Account &amp; Order Tracking</span>
           </Link>
         </div>
       )}

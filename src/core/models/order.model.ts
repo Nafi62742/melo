@@ -1,8 +1,9 @@
 import { CartItem } from './cart.model';
 
 export type DeliveryZone = 'inside_dhaka' | 'outside_dhaka';
-export type PaymentMethod = 'cod' | 'bkash' | 'nagad';
+export type PaymentMethod = 'card' | 'bkash' | 'cod';
 export type OrderStatus = 'pending' | 'confirmed' | 'dispatched' | 'delivered' | 'cancelled';
+export type PaymentStatus = 'pending' | 'verified' | 'failed';
 
 export interface OrderCustomerInfo {
   fullName: string;
@@ -18,13 +19,15 @@ export interface Order {
   orderNumber: string;
   createdAt: string;
   customer: OrderCustomerInfo;
+  customerPhone?: string;
   items: CartItem[];
   subtotal: number;
   deliveryFee: number;
   total: number;
   paymentMethod: PaymentMethod;
   status: OrderStatus;
-  paymentStatus: 'pending' | 'verified' | 'failed';
+  paymentStatus: PaymentStatus;
   trxId?: string;
+  bkashSenderNumber?: string;
+  cardLast4?: string;
 }
-

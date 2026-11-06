@@ -26,12 +26,12 @@ export const EN = {
   features: {
     curatedTitle: 'Handpicked Quality',
     curatedDesc: 'Every piece is personally selected for comfort, shine, and durability.',
-    codTitle: 'Cash on Delivery',
-    codDesc: 'Pay conveniently at your doorstep across Bangladesh.',
+    codTitle: 'Card, bKash & COD',
+    codDesc: 'Fast checkout with Card & bKash (Preferred) or Cash on Delivery.',
     fastDeliveryTitle: 'Fast Courier',
     fastDeliveryDesc: 'Inside Dhaka in 24-48 hours, anywhere in BD in 3-4 days.',
     easySupportTitle: 'Friendly Support',
-    easySupportDesc: 'WhatsApp & Instagram support for sizing and questions.',
+    easySupportDesc: 'WhatsApp & Messenger live chat for sizing and questions.',
   },
   cart: {
     title: 'Your Shopping Bag',
@@ -53,9 +53,9 @@ export const EN = {
     insideDhaka: 'Inside Dhaka (৳60)',
     outsideDhaka: 'Outside Dhaka (৳120)',
     paymentMethod: 'Payment Method',
+    card: 'Credit / Debit Card (Visa, Mastercard, Amex)',
+    bkash: 'bKash (Instant Mobile Payment)',
     cod: 'Cash on Delivery (COD)',
-    bkash: 'bKash (Send Money / Merchant)',
-    nagad: 'Nagad',
     orderNotes: 'Special delivery notes (optional)',
     placeOrder: 'Place Order',
     orderSummary: 'Order Summary',
@@ -63,4 +63,3 @@ export const EN = {
 };
 
 export type TranslationType = typeof EN;
-

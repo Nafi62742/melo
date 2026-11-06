@@ -110,24 +110,43 @@ export function CartDrawer() {
                     </div>
 
                     <div className="mt-2 flex items-center justify-between">
-                      <div className="flex items-center border border-[#E7E0D6] bg-white">
-                        <button
-                          onClick={() => updateQuantity(product.id, quantity - 1)}
-                          className="p-1.5 text-[#78716C] hover:text-[#1C1917]"
-                          aria-label="Decrease quantity"
-                        >
-                          <Minus className="w-3 h-3" />
-                        </button>
-                        <span className="w-7 text-center text-xs font-semibold text-[#1C1917]">
-                          {quantity}
-                        </span>
-                        <button
-                          onClick={() => updateQuantity(product.id, quantity + 1)}
-                          className="p-1.5 text-[#78716C] hover:text-[#1C1917]"
-                          aria-label="Increase quantity"
-                        >
-                          <Plus className="w-3 h-3" />
-                        </button>
+                      <div className="flex items-center gap-2">
+                        <div className="flex items-center border border-[#E7E0D6] bg-white">
+                          <button
+                            type="button"
+                            onClick={() => updateQuantity(product.id, quantity - 1)}
+                            className="p-1.5 text-[#78716C] hover:text-[#1C1917] cursor-pointer"
+                            aria-label="Decrease quantity"
+                          >
+                            <Minus className="w-3 h-3" />
+                          </button>
+                          <span className="w-7 text-center text-xs font-semibold text-[#1C1917]">
+                            {quantity}
+                          </span>
+                          <button
+                            type="button"
+                            disabled={quantity >= Math.max(1, Number(product.stock ?? 1))}
+                            onClick={() => updateQuantity(product.id, quantity + 1)}
+                            title={
+                              quantity >= Math.max(1, Number(product.stock ?? 1))
+                                ? `Max available stock (${product.stock}) reached`
+                                : 'Increase quantity'
+                            }
+                            className={`p-1.5 transition ${
+                              quantity >= Math.max(1, Number(product.stock ?? 1))
+                                ? 'text-[#A8A29E] bg-[#F3EDE4] cursor-not-allowed opacity-50'
+                                : 'text-[#78716C] hover:text-[#1C1917] cursor-pointer'
+                            }`}
+                            aria-label="Increase quantity"
+                          >
+                            <Plus className="w-3 h-3" />
+                          </button>
+                        </div>
+                        {quantity >= Math.max(1, Number(product.stock ?? 1)) && (
+                          <span className="text-[10px] font-semibold text-amber-800 bg-amber-50 border border-amber-200 px-1.5 py-0.5">
+                            Max ({product.stock})
+                          </span>
+                        )}
                       </div>
 
                       <span className="text-sm font-semibold text-[#1C1917]">
