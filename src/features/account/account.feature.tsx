@@ -6,7 +6,7 @@ import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { customerService } from '@/core/services/customer.service';
 import { orderService } from '@/core/services/order.service';
-import { supabaseService } from '@/core/services/supabase.service';
+import { adminService } from '@/core/services/admin.service';
 import { CustomerProfile } from '@/core/models/customer.model';
 import { Order, DeliveryZone } from '@/core/models/order.model';
 import { formatBDT } from '@/core/utils/currency.util';
@@ -69,13 +69,9 @@ export function AccountFeature() {
 
     try {
       if (authMode === 'login') {
-        // Check if logging in with Admin credentials (e.g. melo@gmail.com / hippo#aurora)
-        const isAdmin = await supabaseService.verifyAdminCredentials(phone, password);
+        // Check if logging in with Admin credentials via AdminService
+        const isAdmin = await adminService.login(phone, password);
         if (isAdmin) {
-          if (typeof window !== 'undefined') {
-            sessionStorage.setItem('melo_admin_authenticated', 'true');
-            localStorage.setItem('melo_admin_authenticated', 'true');
-          }
           router.push('/admin');
           return;
         }

@@ -1,29 +1,20 @@
 import { Order, OrderStatus, PaymentStatus } from '../models/order.model';
-import { supabaseService } from './supabase.service';
+import { orderRepository } from '../repositories/order.repository';
 
-const STORAGE_KEY = 'melo_orders';
-const BKASH_NUMBER_KEY = 'melo_bkash_number';
-const DEFAULT_BKASH_NUMBER = process.env.NEXT_PUBLIC_BKASH_NUMBER || '01760887297';
-
+/**
+ * OrderService — Domain service for website and manual (WhatsApp / Messenger) orders.
+ * Delegates all DB & storage I/O to OrderRepository.
+ */
 class OrderService {
   getOrders(): Order[] {
-    if (typeof window === 'undefined') return [];
-    try {
-      const stored = localStorage.getItem(STORAGE_KEY);
-      if (stored) {
-        return JSON.parse(stored);
-      }
-    } catch {
-      // ignore
-    }
-    return [];
+    return orderRepository.loadLocal();
   }
 
   async syncFromDatabase(): Promise<Order[]> {
-    const remote = await supabaseService.fetchOrders();
+    const remote = await orderRepository.fetchAllFromDb();
     if (remote && Array.isArray(remote)) {
-      if (typeof window !== 'undefined' && remote.length > 0) {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(remote));
+      if (remote.length > 0) {
+        orderRepository.saveLocal(remote);
       }
       return remote.length > 0 ? remote : this.getOrders();
     }
@@ -52,10 +43,8 @@ class OrderService {
     };
     const orders = this.getOrders();
     const updated = [normalizedOrder, ...orders];
-    if (typeof window !== 'undefined') {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
-    }
-    void supabaseService.insertOrder(normalizedOrder);
+    orderRepository.saveLocal(updated);
+    void orderRepository.insertInDb(normalizedOrder);
     return normalizedOrder;
   }
 
@@ -68,10 +57,8 @@ class OrderService {
     if (bkashSenderNumber?.trim()) {
       orders[index].bkashSenderNumber = bkashSenderNumber.trim();
     }
-    if (typeof window !== 'undefined') {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(orders));
-    }
-    void supabaseService.updateOrderTrxId(
+    orderRepository.saveLocal(orders);
+    void orderRepository.updateTrxIdInDb(
       orderId,
       orders[index].trxId!,
       orders[index].bkashSenderNumber
@@ -85,10 +72,8 @@ class OrderService {
     if (index === -1) return false;
 
     orders[index].status = status;
-    if (typeof window !== 'undefined') {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(orders));
-    }
-    void supabaseService.updateOrderStatus(orderId, status);
+    orderRepository.saveLocal(orders);
+    void orderRepository.updateStatusInDb(orderId, status);
     return true;
   }
 
@@ -98,29 +83,17 @@ class OrderService {
     if (index === -1) return false;
 
     orders[index].paymentStatus = paymentStatus;
-    if (typeof window !== 'undefined') {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(orders));
-    }
-    void supabaseService.updatePaymentStatus(orderId, paymentStatus);
+    orderRepository.saveLocal(orders);
+    void orderRepository.updatePaymentStatusInDb(orderId, paymentStatus);
     return true;
   }
 
   getBkashNumber(): string {
-    if (typeof window === 'undefined') return DEFAULT_BKASH_NUMBER;
-    try {
-      return localStorage.getItem(BKASH_NUMBER_KEY) || DEFAULT_BKASH_NUMBER;
-    } catch {
-      return DEFAULT_BKASH_NUMBER;
-    }
+    return orderRepository.getBkashNumber();
   }
 
   setBkashNumber(phone: string): void {
-    if (typeof window === 'undefined') return;
-    try {
-      localStorage.setItem(BKASH_NUMBER_KEY, phone.trim() || DEFAULT_BKASH_NUMBER);
-    } catch {
-      // ignore
-    }
+    orderRepository.setBkashNumber(phone);
   }
 }
 
