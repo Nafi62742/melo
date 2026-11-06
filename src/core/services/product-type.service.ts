@@ -1,9 +1,12 @@
 import { ProductType } from '../models/product-type.model';
 import { DEFAULT_PRODUCT_TYPES } from '../data/product-types.data';
-import { productTypeRepository } from '../repositories/product-type.repository';
+import {
+  productTypeRepository,
+  PRODUCT_TYPES_UPDATED_EVENT,
+} from '../repositories/product-type.repository';
 import { slugify } from '../utils/slug.util';
 
-export { DEFAULT_PRODUCT_TYPES };
+export { DEFAULT_PRODUCT_TYPES, PRODUCT_TYPES_UPDATED_EVENT };
 
 /**
  * ProductTypeService — Domain service for managing product types (`public.product_types`).
