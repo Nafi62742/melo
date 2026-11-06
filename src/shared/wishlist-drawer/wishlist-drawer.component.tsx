@@ -1,11 +1,12 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
+import { Product } from '@/core/models/product.model';
 import { useWishlist } from '@/core/services/wishlist.context';
 import { useCart } from '@/core/services/cart.context';
-import { productService } from '@/core/services/product.service';
+import { productService, PRODUCTS_UPDATED_EVENT } from '@/core/services/product.service';
 import { formatBDT } from '@/core/utils/currency.util';
 import {
   Heart,
@@ -25,11 +26,22 @@ export function WishlistDrawer() {
   } = useWishlist();
 
   const { addItem, setIsCartDrawerOpen } = useCart();
+  const [allProducts, setAllProducts] = useState<Product[]>(() =>
+    productService.getAllProducts()
+  );
+
+  // Products live only in Supabase — load them when the drawer opens and stay in sync.
+  useEffect(() => {
+    if (!isWishlistDrawerOpen) return;
+    const refresh = () => setAllProducts([...productService.getAllProducts()]);
+    window.addEventListener(PRODUCTS_UPDATED_EVENT, refresh);
+    void productService.syncFromDatabase().then(refresh);
+    return () => window.removeEventListener(PRODUCTS_UPDATED_EVENT, refresh);
+  }, [isWishlistDrawerOpen]);
 
   if (!isWishlistDrawerOpen) return null;
 
   // Retrieve full product objects for wishlisted IDs
-  const allProducts = productService.getAllProducts();
   const wishlistedProducts = wishlistIds
     .map((id) => allProducts.find((p) => p.id === id))
     .filter((p): p is NonNullable<typeof p> => Boolean(p));
