@@ -129,7 +129,7 @@ export function CartDrawer() {
                             onClick={() => updateQuantity(product.id, quantity + 1)}
                             title={
                               quantity >= Math.max(1, Number(product.stock ?? 1))
-                                ? `Max available stock (${product.stock}) reached`
+                                ? 'Maximum limit reached'
                                 : 'Increase quantity'
                             }
                             className={`p-1.5 transition ${
@@ -144,7 +144,7 @@ export function CartDrawer() {
                         </div>
                         {quantity >= Math.max(1, Number(product.stock ?? 1)) && (
                           <span className="text-[10px] font-semibold text-amber-800 bg-amber-50 border border-amber-200 px-1.5 py-0.5">
-                            Max ({product.stock})
+                            Max Limit
                           </span>
                         )}
                       </div>

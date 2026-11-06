@@ -94,7 +94,7 @@ export function ProductCard({ product, className = '' }: ProductCardProps) {
               className="flex w-full items-center justify-center gap-2 bg-stone-800/95 py-2.5 px-4 text-[10px] font-semibold uppercase tracking-[0.14em] text-[#E6D5B8] cursor-not-allowed"
             >
               <Lock className="w-3.5 h-3.5" />
-              <span>Max Available in Bag ({maxStock})</span>
+              <span>Max Limit in Bag</span>
             </button>
           ) : (
             <button
@@ -104,7 +104,7 @@ export function ProductCard({ product, className = '' }: ProductCardProps) {
               className="flex w-full items-center justify-center gap-2 bg-[#181512]/95 backdrop-blur-xs py-2.5 px-4 text-[11px] font-semibold uppercase tracking-[0.18em] text-[#FAF7F2] hover:bg-[#9A7B3E] transition-colors cursor-pointer"
             >
               <ShoppingBag className="w-3.5 h-3.5" />
-              <span>{inBagQty > 0 ? `Add Another (${inBagQty}/${maxStock})` : 'Add to Bag'}</span>
+              <span>{inBagQty > 0 ? `In Bag (${inBagQty})` : 'Add to Bag'}</span>
             </button>
           )}
         </div>
@@ -115,9 +115,11 @@ export function ProductCard({ product, className = '' }: ProductCardProps) {
         <div>
           <div className="mb-1 flex items-center justify-between text-[10px] font-semibold uppercase tracking-[0.18em]">
             <span className="text-[#9A7B3E]">{product.categoryName}</span>
-            <span className={isOutOfStock ? 'text-red-700 font-bold' : 'text-[#78716C]'}>
-              {isOutOfStock ? 'Out of Stock' : `${maxStock} left`}
-            </span>
+            {isOutOfStock && (
+              <span className="text-red-700 font-bold">
+                Out of Stock
+              </span>
+            )}
           </div>
 
           <Link
@@ -174,7 +176,7 @@ export function ProductCard({ product, className = '' }: ProductCardProps) {
                   }
                 }}
                 aria-label="Increase quantity"
-                title={isMaxReached ? `Maximum stock (${maxStock}) reached` : 'Increase quantity'}
+                title={isMaxReached ? 'Maximum quantity reached' : 'Increase quantity'}
                 className={`p-1.5 transition ${
                   isMaxReached
                     ? 'text-[#A8A29E] bg-[#F3EDE4] cursor-not-allowed opacity-50'
