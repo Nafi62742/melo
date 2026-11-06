@@ -161,8 +161,8 @@ export function ProductDetailFeature({ product: initialProduct }: ProductDetailF
                 <span className="flex items-center gap-1.5 text-xs text-emerald-700 font-medium">
                   <CheckCircle className="w-3.5 h-3.5" />
                   <span>
-                    In Stock ({maxStock} pieces available
-                    {inBagQty > 0 ? ` • ${inBagQty} in your bag` : ''})
+                    In Stock
+                    {inBagQty > 0 ? ` • ${inBagQty} in your bag` : ''}
                   </span>
                 </span>
               )}
@@ -231,11 +231,7 @@ export function ProductDetailFeature({ product: initialProduct }: ProductDetailF
                   type="button"
                   disabled={isPlusLocked}
                   onClick={handleIncrease}
-                  title={
-                    isPlusLocked
-                      ? `Maximum available stock (${maxStock}) reached`
-                      : 'Increase quantity'
-                  }
+                  title={isPlusLocked ? 'Maximum limit reached' : 'Increase quantity'}
                   className={`p-2.5 transition ${
                     isPlusLocked
                       ? 'text-[#A8A29E] bg-[#F3EDE4] cursor-not-allowed opacity-50'
@@ -250,7 +246,7 @@ export function ProductDetailFeature({ product: initialProduct }: ProductDetailF
               {!isOutOfStock && isPlusLocked && (
                 <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-amber-800 bg-amber-50 border border-amber-200 px-2.5 py-1">
                   <Lock className="w-3 h-3" />
-                  <span>Max available ({maxStock}) locked</span>
+                  <span>Max limit reached</span>
                 </span>
               )}
             </div>
@@ -272,7 +268,7 @@ export function ProductDetailFeature({ product: initialProduct }: ProductDetailF
                   className="flex flex-1 items-center justify-center gap-2.5 bg-stone-800 text-[#E6D5B8] py-4 px-6 text-xs font-semibold uppercase tracking-[0.16em] cursor-not-allowed"
                 >
                   <Lock className="w-4 h-4" />
-                  <span>Max Available in Bag ({maxStock})</span>
+                  <span>Max Limit in Bag</span>
                 </button>
               ) : (
                 <button
