@@ -18,77 +18,92 @@ export function ProductCard({ product, className = '' }: ProductCardProps) {
 
   return (
     <div
-      className={`group relative flex flex-col overflow-hidden rounded-2xl glass-card bg-white transition-all duration-300 hover:border-amber-300/60 ${className}`}
+      className={`group relative flex flex-col overflow-hidden bg-white border border-[#E7E0D6] transition-all duration-500 hover:border-[#C5A059] hover:shadow-[0_18px_38px_-12px_rgba(28,25,23,0.1)] ${className}`}
     >
-      {/* Product Image Container */}
-      <Link
-        href={`/product/${product.slug}`}
-        className="relative block aspect-square w-full overflow-hidden bg-stone-100"
-      >
-        <Image
-          src={product.imageUrl}
-          alt={product.name}
-          fill
-          sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
-          className="object-cover object-center transition-transform duration-500 group-hover:scale-105"
-        />
+      {/* Portrait 4:5 Editorial Image Container (Blingg 04 / Jewelix / Deweler style) */}
+      <div className="relative aspect-[4/5] w-full overflow-hidden bg-[#F3EDE4]/60">
+        <Link href={`/product/${product.slug}`} className="block h-full w-full">
+          <Image
+            src={product.imageUrl}
+            alt={product.name}
+            fill
+            sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+            className="object-cover object-center transition-transform duration-700 ease-out group-hover:scale-108"
+          />
+        </Link>
 
-        {/* Badges */}
-        <div className="absolute top-2.5 left-2.5 flex flex-col gap-1 z-10">
+        {/* Boutique Minimal Badges */}
+        <div className="absolute top-3 left-3 flex flex-col items-start gap-1.5 z-10 pointer-events-none">
           {product.isNew && (
-            <span className="rounded-full bg-stone-900 px-2.5 py-0.5 text-[10px] font-bold text-amber-300 shadow-sm">
-              NEW
+            <span className="bg-[#FAF7F2]/95 border border-[#E6D5B8] px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-[#1C1917] shadow-xs">
+              New
             </span>
           )}
           {product.category === 'earrings' && (
-            <span className="rounded-full bg-amber-600/90 backdrop-blur-md px-2 py-0.5 text-[10px] font-semibold text-white shadow-sm">
+            <span className="bg-[#181512]/85 backdrop-blur-xs px-2.5 py-0.5 text-[9px] font-medium uppercase tracking-[0.16em] text-[#E6D5B8]">
               Ear Clip
             </span>
           )}
         </div>
 
-        {/* Quick View Hover Overlay */}
-        <div className="absolute inset-0 bg-stone-900/15 opacity-0 transition-opacity duration-300 group-hover:opacity-100 flex items-center justify-center pointer-events-none">
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-white/95 px-3.5 py-1.5 text-xs font-semibold text-stone-900 shadow-md">
-            <Eye className="w-3.5 h-3.5 text-amber-700" />
-            Quick View
-          </span>
-        </div>
-      </Link>
-
-      {/* Product Info */}
-      <div className="flex flex-1 flex-col p-3.5 sm:p-4">
-        <div className="mb-1 text-[11px] font-semibold text-amber-700 uppercase tracking-wider">
-          {product.categoryName}
-        </div>
-
+        {/* Top-Right Quick View Icon on Hover */}
         <Link
           href={`/product/${product.slug}`}
-          className="line-clamp-1 text-sm font-bold text-stone-900 hover:text-amber-800 transition-colors"
-          title={product.name}
+          aria-label={`View ${product.name}`}
+          className="absolute top-3 right-3 z-10 flex h-8 w-8 items-center justify-center bg-white/90 text-[#1C1917] opacity-0 translate-y-1 transition-all duration-300 group-hover:opacity-100 group-hover:translate-y-0 hover:bg-[#1C1917] hover:text-white shadow-xs"
         >
-          {product.name}
+          <Eye className="w-3.5 h-3.5" />
         </Link>
 
-        {/* Price and Add button */}
-        <div className="mt-3 flex items-center justify-between pt-2 border-t border-stone-100">
-          <div className="flex items-baseline gap-1.5">
-            <span className="text-base font-extrabold text-stone-900">
+        {/* Slide-Up Editorial Action Bar on Desktop Hover (Jewelix / Deweler Signature) */}
+        <div className="hidden sm:block absolute inset-x-0 bottom-0 p-3 translate-y-full opacity-0 transition-all duration-300 ease-out group-hover:translate-y-0 group-hover:opacity-100 z-10">
+          <button
+            onClick={() => addItem(product, 1)}
+            aria-label={`Add ${product.name} to bag`}
+            className="flex w-full items-center justify-center gap-2 bg-[#181512]/95 backdrop-blur-xs py-2.5 px-4 text-[11px] font-semibold uppercase tracking-[0.18em] text-[#FAF7F2] hover:bg-[#9A7B3E] transition-colors cursor-pointer"
+          >
+            <ShoppingBag className="w-3.5 h-3.5" />
+            <span>Add to Bag</span>
+          </button>
+        </div>
+      </div>
+
+      {/* Editorial Product Meta */}
+      <div className="flex flex-1 flex-col justify-between p-3.5 sm:p-4 text-left">
+        <div>
+          <div className="mb-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-[#9A7B3E]">
+            {product.categoryName}
+          </div>
+
+          <Link
+            href={`/product/${product.slug}`}
+            className="line-clamp-1 font-serif-display text-base sm:text-lg font-medium text-[#1C1917] hover:text-[#9A7B3E] transition-colors"
+            title={product.name}
+          >
+            {product.name}
+          </Link>
+        </div>
+
+        {/* Price Row & Mobile One-Tap Bag Trigger */}
+        <div className="mt-3 flex items-center justify-between pt-2.5 border-t border-[#F3EDE4]">
+          <div className="flex items-baseline gap-2">
+            <span className="text-sm sm:text-base font-semibold text-[#1C1917]">
               {formatBDT(product.priceBDT)}
             </span>
             {product.originalPriceBDT && product.originalPriceBDT > product.priceBDT && (
-              <span className="text-xs text-stone-400 line-through">
+              <span className="text-xs text-[#A8A29E] line-through">
                 {formatBDT(product.originalPriceBDT)}
               </span>
             )}
           </div>
 
+          {/* Always accessible on mobile; subtle quick-add icon on desktop */}
           <button
             onClick={() => addItem(product, 1)}
             aria-label={`Add ${product.name} to cart`}
-            className="flex items-center justify-center rounded-xl bg-stone-900 p-2 text-amber-200 shadow-sm hover:bg-amber-700 hover:text-white active:scale-95 transition-all"
+            className="flex h-8 w-8 items-center justify-center border border-[#E7E0D6] bg-[#FAF7F2] text-[#1C1917] hover:bg-[#1C1917] hover:text-[#FAF7F2] hover:border-[#1C1917] active:scale-95 transition-all cursor-pointer"
           >
-            <ShoppingBag className="w-4 h-4" />
+            <ShoppingBag className="w-3.5 h-3.5" />
           </button>
         </div>
       </div>

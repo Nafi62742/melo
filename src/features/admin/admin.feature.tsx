@@ -23,146 +23,166 @@ export function AdminFeature() {
   };
 
   return (
-    <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8 md:py-12">
+    <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8 md:py-14">
       {/* Top Bar */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-6 border-b border-stone-200 gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-end justify-between pb-6 border-b border-[#E7E0D6] gap-4">
         <div>
           <Link
             href="/"
-            className="inline-flex items-center gap-1.5 text-xs font-semibold text-stone-500 hover:text-amber-800 transition mb-1"
+            className="inline-flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-[#78716C] hover:text-[#1C1917] mb-2"
           >
-            <ArrowLeft className="w-4 h-4" />
+            <ArrowLeft className="w-3.5 h-3.5" />
             <span>Back to Storefront</span>
           </Link>
-          <h1 className="text-2xl sm:text-3xl font-black text-stone-900 tracking-tight font-serif">
+          <h1 className="font-serif-display text-3xl sm:text-4xl font-medium text-[#1C1917]">
             MELO Store Admin Dashboard
           </h1>
-          <p className="text-xs text-stone-500">
-            Manage your initial earrings, rings, bracelets inventory, and Bangladesh customer orders.
+          <p className="text-xs text-[#78716C] mt-1">
+            Manage your curated French ear clips, rings, bracelets inventory, and Bangladesh customer orders.
           </p>
         </div>
 
         {/* Tab switch */}
-        <div className="flex rounded-xl bg-stone-100 p-1 text-xs font-semibold">
+        <div className="flex border border-[#E7E0D6] bg-white p-1 text-xs font-semibold">
           <button
             onClick={() => setActiveTab('products')}
-            className={`rounded-lg px-4 py-2 transition ${
+            className={`px-4 py-2 text-[11px] uppercase tracking-[0.14em] transition cursor-pointer ${
               activeTab === 'products'
-                ? 'bg-white text-amber-900 shadow-xs font-bold'
-                : 'text-stone-600 hover:text-stone-900'
+                ? 'bg-[#1C1917] text-[#FAF7F2]'
+                : 'text-[#78716C] hover:text-[#1C1917]'
             }`}
           >
-            Products & Stock ({products.length})
+            Catalogue ({products.length})
           </button>
           <button
             onClick={() => setActiveTab('orders')}
-            className={`rounded-lg px-4 py-2 transition ${
+            className={`px-4 py-2 text-[11px] uppercase tracking-[0.14em] transition cursor-pointer ${
               activeTab === 'orders'
-                ? 'bg-white text-amber-900 shadow-xs font-bold'
-                : 'text-stone-600 hover:text-stone-900'
+                ? 'bg-[#1C1917] text-[#FAF7F2]'
+                : 'text-[#78716C] hover:text-[#1C1917]'
             }`}
           >
-            Customer Orders ({orders.length})
+            Orders ({orders.length})
           </button>
         </div>
       </div>
 
       {/* Metrics Row */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 my-8">
-        <div className="rounded-2xl border border-stone-200 bg-white p-5 shadow-xs">
-          <div className="flex items-center justify-between text-stone-400 mb-2">
-            <span className="text-xs font-bold uppercase tracking-wider text-amber-950/80">Total Products</span>
-            <Package className="w-4 h-4 text-amber-800" />
+        <div className="border border-[#E7E0D6] bg-white p-5">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#78716C]">
+              Total Products
+            </span>
+            <Package className="w-4 h-4 text-[#9A7B3E]" />
           </div>
-          <div className="text-2xl font-black text-stone-900">{products.length}</div>
-          <div className="text-[11px] text-stone-400 mt-1">
-            {products.filter(p => p.category === 'earrings').length} earrings, {products.filter(p => p.category === 'rings').length} rings, {products.filter(p => p.category === 'bracelets').length} bracelets
+          <div className="font-serif-display text-3xl font-semibold text-[#1C1917]">
+            {products.length}
+          </div>
+          <div className="text-[11px] text-[#78716C] mt-1">
+            {products.filter((p) => p.category === 'earrings').length} earrings,{' '}
+            {products.filter((p) => p.category === 'rings').length} rings,{' '}
+            {products.filter((p) => p.category === 'bracelets').length} bracelets
           </div>
         </div>
 
-        <div className="rounded-2xl border border-stone-200 bg-white p-5 shadow-xs">
-          <div className="flex items-center justify-between text-stone-400 mb-2">
-            <span className="text-xs font-bold uppercase tracking-wider text-amber-950/80">Total Inventory</span>
-            <Layers className="w-4 h-4 text-stone-700" />
+        <div className="border border-[#E7E0D6] bg-white p-5">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#78716C]">
+              Total Inventory
+            </span>
+            <Layers className="w-4 h-4 text-[#9A7B3E]" />
           </div>
-          <div className="text-2xl font-black text-stone-900">{totalStock} Units</div>
-          <div className="text-[11px] text-stone-400 mt-1">Tracked in CSV tracker</div>
+          <div className="font-serif-display text-3xl font-semibold text-[#1C1917]">
+            {totalStock} Units
+          </div>
+          <div className="text-[11px] text-[#78716C] mt-1">Synced with Hippo CSV tracker</div>
         </div>
 
-        <div className="rounded-2xl border border-stone-200 bg-white p-5 shadow-xs">
-          <div className="flex items-center justify-between text-stone-400 mb-2">
-            <span className="text-xs font-bold uppercase tracking-wider text-amber-950/80">Active Orders</span>
-            <ShoppingBag className="w-4 h-4 text-amber-700" />
+        <div className="border border-[#E7E0D6] bg-white p-5">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#78716C]">
+              Active Orders
+            </span>
+            <ShoppingBag className="w-4 h-4 text-[#9A7B3E]" />
           </div>
-          <div className="text-2xl font-black text-stone-900">{orders.length}</div>
-          <div className="text-[11px] text-stone-400 mt-1">Pending & confirmed</div>
+          <div className="font-serif-display text-3xl font-semibold text-[#1C1917]">
+            {orders.length}
+          </div>
+          <div className="text-[11px] text-[#78716C] mt-1">Pending &amp; confirmed</div>
         </div>
 
-        <div className="rounded-2xl border border-stone-200 bg-white p-5 shadow-xs">
-          <div className="flex items-center justify-between text-stone-400 mb-2">
-            <span className="text-xs font-bold uppercase tracking-wider text-amber-950/80">Database Status</span>
+        <div className="border border-[#E7E0D6] bg-white p-5">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#78716C]">
+              Store Status
+            </span>
             <CheckCircle className="w-4 h-4 text-emerald-600" />
           </div>
-          <div className="text-sm font-bold text-stone-800">Local + Supabase Ready</div>
-          <div className="text-[11px] text-stone-400 mt-1">Schema mapped in core/models</div>
+          <div className="font-serif-display text-xl font-semibold text-[#1C1917]">
+            Boutique Live
+          </div>
+          <div className="text-[11px] text-[#78716C] mt-1">3-tier architecture verified</div>
         </div>
       </div>
 
       {/* Main Content: Products View */}
       {activeTab === 'products' && (
-        <div className="rounded-2xl border border-stone-200 bg-white shadow-xs overflow-hidden">
-          <div className="px-6 py-4 border-b border-stone-100 flex items-center justify-between">
-            <h2 className="text-xs font-bold uppercase tracking-wider text-amber-950/80">
-              Product Catalogue & Inventory
+        <div className="border border-[#E7E0D6] bg-white overflow-hidden">
+          <div className="px-6 py-4 border-b border-[#E7E0D6] flex items-center justify-between">
+            <h2 className="text-xs font-semibold uppercase tracking-[0.2em] text-[#1C1917]">
+              Product Catalogue &amp; Inventory
             </h2>
-            <span className="text-xs text-stone-500">{products.length} Items Listed</span>
+            <span className="text-xs text-[#78716C]">{products.length} Pieces Listed</span>
           </div>
 
           <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs text-stone-600">
-              <thead className="bg-stone-50 border-b border-stone-200 text-stone-700 uppercase font-bold text-[10px] tracking-wider">
+            <table className="w-full text-left text-xs text-[#78716C]">
+              <thead className="bg-[#FAF7F2] border-b border-[#E7E0D6] text-[#1C1917] uppercase font-semibold text-[10px] tracking-[0.16em]">
                 <tr>
-                  <th className="py-3 px-4">Item</th>
-                  <th className="py-3 px-4">Category</th>
-                  <th className="py-3 px-4">Cost</th>
-                  <th className="py-3 px-4">Selling Price (BDT)</th>
-                  <th className="py-3 px-4">Stock</th>
-                  <th className="py-3 px-4">Status</th>
+                  <th className="py-3.5 px-4">Piece</th>
+                  <th className="py-3.5 px-4">Category</th>
+                  <th className="py-3.5 px-4">Cost</th>
+                  <th className="py-3.5 px-4">Selling Price (BDT)</th>
+                  <th className="py-3.5 px-4">Stock</th>
+                  <th className="py-3.5 px-4">Status</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-stone-100">
+              <tbody className="divide-y divide-[#F3EDE4]">
                 {products.map((p) => (
-                  <tr key={p.id} className="hover:bg-stone-50/60">
+                  <tr key={p.id} className="hover:bg-[#FAF7F2]/60">
                     <td className="py-3 px-4">
                       <div className="flex items-center gap-3">
-                        <div className="relative h-10 w-10 flex-shrink-0 overflow-hidden rounded-lg bg-stone-100 border border-stone-200">
+                        <div className="relative h-11 w-9 flex-shrink-0 overflow-hidden bg-[#F3EDE4] border border-[#E7E0D6]">
                           <Image src={p.imageUrl} alt={p.name} fill className="object-cover" />
                         </div>
                         <div>
-                          <div className="font-semibold text-stone-900">{p.name}</div>
-                          <div className="text-[10px] text-stone-400">{p.slug}</div>
+                          <div className="font-serif-display text-base font-medium text-[#1C1917]">
+                            {p.name}
+                          </div>
+                          <div className="text-[10px] text-[#A8A29E]">{p.slug}</div>
                         </div>
                       </div>
                     </td>
-                    <td className="py-3 px-4 capitalize font-medium text-stone-700">
+                    <td className="py-3 px-4 capitalize font-medium text-[#1C1917]">
                       {p.category}
                     </td>
-                    <td className="py-3 px-4 text-stone-500">
+                    <td className="py-3 px-4 text-[#78716C]">
                       {p.costPriceCNY ? `¥${p.costPriceCNY}` : '—'}
                     </td>
-                    <td className="py-3 px-4 font-bold text-amber-900">
+                    <td className="py-3 px-4 font-semibold text-[#1C1917]">
                       {formatBDT(p.priceBDT)}
                     </td>
-                    <td className="py-3 px-4 font-semibold text-stone-800">
+                    <td className="py-3 px-4 font-semibold text-[#1C1917]">
                       {p.stock} pcs
                     </td>
                     <td className="py-3 px-4">
                       {p.stock > 0 ? (
-                        <span className="inline-flex items-center rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-semibold text-emerald-700">
+                        <span className="inline-flex items-center border border-emerald-200 bg-emerald-50 px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-emerald-800">
                           In Stock
                         </span>
                       ) : (
-                        <span className="inline-flex items-center rounded-full bg-red-50 px-2 py-0.5 text-[10px] font-semibold text-red-700">
+                        <span className="inline-flex items-center border border-red-200 bg-red-50 px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-red-800">
                           Out of Stock
                         </span>
                       )}
@@ -177,14 +197,14 @@ export function AdminFeature() {
 
       {/* Main Content: Orders View */}
       {activeTab === 'orders' && (
-        <div className="rounded-2xl border border-stone-200 bg-white shadow-xs overflow-hidden">
-          <div className="px-6 py-4 border-b border-stone-100 flex items-center justify-between">
-            <h2 className="text-xs font-bold uppercase tracking-wider text-amber-950/80">
+        <div className="border border-[#E7E0D6] bg-white overflow-hidden">
+          <div className="px-6 py-4 border-b border-[#E7E0D6] flex items-center justify-between">
+            <h2 className="text-xs font-semibold uppercase tracking-[0.2em] text-[#1C1917]">
               Customer Orders (Bangladesh)
             </h2>
             <button
               onClick={() => setOrders(orderService.getOrders())}
-              className="inline-flex items-center gap-1 text-xs font-semibold text-amber-800 hover:text-amber-950 transition"
+              className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#9A7B3E] hover:text-[#1C1917] cursor-pointer"
             >
               <RefreshCw className="w-3.5 h-3.5" />
               <span>Refresh</span>
@@ -192,54 +212,54 @@ export function AdminFeature() {
           </div>
 
           {orders.length === 0 ? (
-            <div className="p-12 text-center text-stone-500">
-              <Clock className="w-8 h-8 mx-auto text-stone-300 mb-2" />
-              <div className="text-sm font-semibold text-stone-800">No orders placed yet</div>
-              <div className="text-xs text-stone-400 mt-1">
-                When customers check out on the website, their orders will appear here automatically.
+            <div className="p-14 text-center text-[#78716C]">
+              <Clock className="w-8 h-8 mx-auto text-[#C5A059] mb-2 stroke-[1.25]" />
+              <div className="font-serif-display text-2xl text-[#1C1917]">No orders placed yet</div>
+              <div className="text-xs text-[#78716C] mt-1">
+                When customers check out on the storefront, their orders will appear here automatically.
               </div>
             </div>
           ) : (
             <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs text-stone-600">
-                <thead className="bg-stone-50 border-b border-stone-200 text-stone-700 uppercase font-bold text-[10px] tracking-wider">
+              <table className="w-full text-left text-xs text-[#78716C]">
+                <thead className="bg-[#FAF7F2] border-b border-[#E7E0D6] text-[#1C1917] uppercase font-semibold text-[10px] tracking-[0.16em]">
                   <tr>
-                    <th className="py-3 px-4">Order Ref</th>
-                    <th className="py-3 px-4">Customer</th>
-                    <th className="py-3 px-4">Phone & Address</th>
-                    <th className="py-3 px-4">Items</th>
-                    <th className="py-3 px-4">Total</th>
-                    <th className="py-3 px-4">Payment</th>
-                    <th className="py-3 px-4">Status</th>
+                    <th className="py-3.5 px-4">Order Ref</th>
+                    <th className="py-3.5 px-4">Customer</th>
+                    <th className="py-3.5 px-4">Phone &amp; Address</th>
+                    <th className="py-3.5 px-4">Items</th>
+                    <th className="py-3.5 px-4">Total</th>
+                    <th className="py-3.5 px-4">Payment</th>
+                    <th className="py-3.5 px-4">Status</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-stone-100">
+                <tbody className="divide-y divide-[#F3EDE4]">
                   {orders.map((o) => (
-                    <tr key={o.id} className="hover:bg-stone-50/60">
-                      <td className="py-3 px-4 font-bold text-amber-800">
+                    <tr key={o.id} className="hover:bg-[#FAF7F2]/60">
+                      <td className="py-3 px-4 font-bold text-[#9A7B3E]">
                         {o.orderNumber}
                       </td>
-                      <td className="py-3 px-4 font-semibold text-stone-900">
+                      <td className="py-3 px-4 font-semibold text-[#1C1917]">
                         {o.customer.fullName}
                       </td>
                       <td className="py-3 px-4">
-                        <div className="font-medium text-stone-800">{o.customer.phone}</div>
-                        <div className="text-[11px] text-stone-400 truncate max-w-xs">{o.customer.address}</div>
+                        <div className="font-medium text-[#1C1917]">{o.customer.phone}</div>
+                        <div className="text-[11px] text-[#78716C] truncate max-w-xs">
+                          {o.customer.address}
+                        </div>
                       </td>
-                      <td className="py-3 px-4">
-                        {o.items.length} items
-                      </td>
-                      <td className="py-3 px-4 font-bold text-stone-900">
+                      <td className="py-3 px-4">{o.items.length} pcs</td>
+                      <td className="py-3 px-4 font-bold text-[#1C1917]">
                         {formatBDT(o.total)}
                       </td>
-                      <td className="py-3 px-4 uppercase font-semibold text-stone-700">
+                      <td className="py-3 px-4 uppercase font-semibold text-[#1C1917]">
                         {o.paymentMethod}
                       </td>
                       <td className="py-3 px-4">
                         <select
                           value={o.status}
                           onChange={(e) => handleStatusChange(o.id, e.target.value as OrderStatus)}
-                          className="rounded-lg border border-stone-300 bg-white px-2 py-1 text-xs font-semibold text-stone-800 focus:outline-none focus:border-amber-700 cursor-pointer"
+                          className="border border-[#D6CFC5] bg-white px-2.5 py-1 text-xs font-semibold text-[#1C1917] focus:outline-none focus:border-[#C5A059] cursor-pointer"
                         >
                           <option value="pending">Pending</option>
                           <option value="confirmed">Confirmed</option>

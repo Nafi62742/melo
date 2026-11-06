@@ -1,21 +1,26 @@
 @import "tailwindcss";
 
 :root {
-  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  
-  /* MELO Warm Champagne Gold & Light Luxury Rose Theme */
-  --color-primary: #b45309;          /* Luxe Amber Gold */
-  --color-primary-light: #f59e0b;    /* Warm Gold Highlight */
-  --color-secondary: #e11d48;        /* Soft Rose Gold */
-  --color-accent: #d97706;           /* Radiant Champagne */
-  
-  --bg-base: #fcfbf8;               /* Warm Alabaster Silk */
-  --bg-surface: #ffffff;
+  --font-sans: var(--font-sans), 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-serif: var(--font-serif), 'Cormorant Garamond', Georgia, serif;
+
+  /* MELO Editorial Boutique & Light Luxury Theme (Blingg 04 / Jewelix / Deweler Inspired) */
+  --bg-base: #FAF7F2;
+  --bg-surface: #FFFFFF;
+  --bg-muted: #F3EDE4;
+  --bg-dark: #181512;
   --bg-card: rgba(255, 255, 255, 0.92);
 
-  --text-main: #1c1917;             /* Warm Onyx Charcoal */
-  --text-muted: #78716c;            /* Warm Stone Gray */
-  --border-subtle: #e7e5e4;
+  --text-main: #1C1917;
+  --text-muted: #78716C;
+  --text-subtle: #A8A29E;
+
+  --color-primary: #1C1917;
+  --color-gold: #C5A059;
+  --color-gold-dark: #9A7B3E;
+  --color-gold-light: #E6D5B8;
+
+  --border-subtle: #E7E0D6;
 }
 
 body {
@@ -26,43 +31,83 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* Glassmorphism Styles (as per architecture guidelines) */
+/* Editorial Display Typography */
+.font-serif-display {
+  font-family: var(--font-serif);
+}
+
+/* Wix Studio / Blingg Inspired Arch Framing */
+.arch-frame {
+  border-radius: 9999px 9999px 12px 12px;
+}
+
+/* Boutique Glass & Card Surfaces */
 .glass-nav {
-  background: rgba(253, 251, 247, 0.88);
+  background: rgba(250, 247, 242, 0.92);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
-  border-bottom: 1px solid rgba(231, 229, 228, 0.7);
+  border-bottom: 1px solid rgba(231, 224, 214, 0.9);
 }
 
 .glass-card {
-  background: rgba(255, 255, 255, 0.9);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(231, 229, 228, 0.8);
-  box-shadow: 0 4px 20px -2px rgba(180, 83, 9, 0.05);
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  background: #FFFFFF;
+  border: 1px solid #E7E0D6;
+  box-shadow: 0 6px 24px -6px rgba(28, 25, 23, 0.04);
+  transition: all 0.4s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .glass-card:hover {
   transform: translateY(-4px);
-  box-shadow: 0 14px 32px -4px rgba(180, 83, 9, 0.12);
-  border-color: rgba(217, 119, 6, 0.35);
+  box-shadow: 0 16px 36px -8px rgba(28, 25, 23, 0.09);
+  border-color: #C5A059;
 }
 
-/* Luxury Aurora Gold Gradient Text & Background */
+/* Editorial Gold Accents & Badges */
 .aurora-gradient-text {
-  background: linear-gradient(135deg, #b45309 0%, #e11d48 50%, #d97706 100%);
+  background: linear-gradient(135deg, #9A7B3E 0%, #C5A059 50%, #785A28 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
 
 .aurora-badge {
-  background: linear-gradient(135deg, rgba(217, 119, 6, 0.1) 0%, rgba(225, 29, 72, 0.08) 100%);
-  border: 1px solid rgba(217, 119, 6, 0.25);
-  color: #92400e;
+  background: rgba(197, 160, 89, 0.12);
+  border: 1px solid rgba(197, 160, 89, 0.35);
+  color: #8C6D32;
 }
 
-/* Viewport Scroll Reveal (as per Angular project guidelines section 6) */
+/* Luxury Boutique Buttons */
+.boutique-btn-primary {
+  background-color: #1C1917;
+  color: #FAF7F2;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  font-size: 0.75rem;
+  font-weight: 600;
+  transition: all 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.boutique-btn-primary:hover {
+  background-color: #9A7B3E;
+  color: #FFFFFF;
+}
+
+.boutique-btn-outline {
+  background-color: transparent;
+  color: #1C1917;
+  border: 1px solid #1C1917;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  font-size: 0.75rem;
+  font-weight: 600;
+  transition: all 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.boutique-btn-outline:hover {
+  background-color: #1C1917;
+  color: #FAF7F2;
+}
+
+/* Viewport Scroll Reveal */
 .reveal {
   opacity: 0;
   transform: translateY(24px);

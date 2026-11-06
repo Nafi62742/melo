@@ -1,114 +1,236 @@
 'use client';
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { productService } from '@/core/services/product.service';
 import { INITIAL_CATEGORIES } from '@/core/data/categories.data';
 import { ProductCard } from '@/shared/product-card/product-card.component';
-import { HeroSlideshow } from '@/shared/hero-slideshow/hero-slideshow.component';
 import { useI18n } from '@/core/i18n/i18n.context';
 import { initRevealObserver } from '@/core/utils/reveal.util';
-import { Sparkles, ArrowRight, ShieldCheck, Truck, Heart } from 'lucide-react';
+import { Sparkles, ArrowRight, ShieldCheck, Truck, Heart, Gem } from 'lucide-react';
 
 export function HomeFeature() {
   const { t } = useI18n();
-  const featuredProducts = productService.getFeaturedProducts().slice(0, 8);
+  const [activeTab, setActiveTab] = useState<'all' | 'earrings' | 'rings' | 'bracelets'>('all');
+
+  const allProducts = productService.getAllProducts();
   const newArrivals = productService.getNewArrivals().slice(0, 4);
+
+  const curatedProducts = useMemo(() => {
+    if (activeTab === 'all') {
+      return productService.getFeaturedProducts().slice(0, 8);
+    }
+    return productService.getProductsByCategory(activeTab).slice(0, 8);
+  }, [activeTab]);
 
   useEffect(() => {
     const observer = initRevealObserver();
     return () => observer?.disconnect();
-  }, []);
+  }, [activeTab]);
 
   return (
-    <div className="flex flex-col gap-16 md:gap-24 pb-16">
-      {/* Hero Section */}
-      <section className="relative overflow-hidden bg-gradient-to-b from-amber-100/35 via-rose-50/20 to-transparent pt-12 pb-20 md:pt-20 md:pb-32">
-        {/* Soft Warm Champagne Ambient Glow */}
-        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 h-96 w-96 rounded-full bg-amber-300/15 blur-3xl pointer-events-none" />
-        <div className="absolute top-1/3 right-10 h-72 w-72 rounded-full bg-rose-300/15 blur-3xl pointer-events-none" />
+    <div className="flex flex-col pb-20">
+      {/* 1. Asymmetric Split Editorial Hero (Wix Studio + Blingg 04 + Deweler Fusion) */}
+      <section className="relative overflow-hidden bg-gradient-to-b from-[#F3EDE4]/80 via-[#FAF7F2] to-[#FAF7F2] pt-8 pb-16 md:pt-14 md:pb-24">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-8 items-center">
+            {/* Left Column: Editorial Typography & CTAs */}
+            <div className="lg:col-span-7 text-left">
+              <div className="inline-flex items-center gap-2 px-3.5 py-1.5 text-[11px] font-semibold uppercase tracking-[0.2em] aurora-badge mb-6 reveal">
+                <Sparkles className="w-3.5 h-3.5 text-[#9A7B3E]" />
+                <span>{t.hero.badge}</span>
+              </div>
 
-        <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 text-center">
-          <div className="inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-xs font-semibold aurora-badge mb-6 reveal">
-            <Sparkles className="w-3.5 h-3.5 text-amber-700" />
-            <span>{t.hero.badge}</span>
-          </div>
+              <h1 className="font-serif-display text-4xl sm:text-6xl lg:text-7xl font-medium tracking-tight text-[#1C1917] leading-[1.08] reveal delay-1">
+                Where Little Wonders{' '}
+                <span className="italic font-normal text-[#9A7B3E] block sm:inline">
+                  Light Up.
+                </span>
+              </h1>
 
-          <h1 className="text-4xl sm:text-6xl font-black tracking-tight text-stone-900 reveal delay-1 max-w-3xl mx-auto">
-            Where Little Wonders <span className="aurora-gradient-text">Light Up</span>
-          </h1>
+              <p className="mt-6 text-sm sm:text-base text-[#78716C] max-w-xl leading-relaxed reveal delay-2">
+                {t.hero.subheading}
+              </p>
 
-          <p className="mt-5 text-sm sm:text-base text-stone-600 max-w-2xl mx-auto leading-relaxed reveal delay-2">
-            {t.hero.subheading}
-          </p>
+              {/* Dual Boutique CTAs */}
+              <div className="mt-8 flex flex-wrap items-center gap-4 reveal delay-3">
+                <Link
+                  href="/shop"
+                  className="inline-flex items-center gap-3 boutique-btn-primary px-8 py-4"
+                >
+                  <span>{t.hero.shopNow}</span>
+                  <ArrowRight className="w-4 h-4" />
+                </Link>
 
-          <div className="mt-8 flex flex-wrap items-center justify-center gap-3 reveal delay-3">
-            <Link
-              href="/shop"
-              className="flex items-center gap-2 rounded-full bg-stone-900 px-7 py-3 text-sm font-bold text-amber-100 shadow-lg shadow-stone-900/15 hover:bg-amber-800 hover:text-white active:scale-95 transition"
-            >
-              <span>{t.hero.shopNow}</span>
-              <ArrowRight className="w-4 h-4" />
-            </Link>
+                <Link
+                  href="/shop?category=earrings"
+                  className="inline-flex items-center gap-2 boutique-btn-outline px-7 py-4"
+                >
+                  <span>French Ear Clips</span>
+                </Link>
+              </div>
 
-            <Link
-              href="/shop?category=earrings"
-              className="rounded-full border border-stone-300 bg-white/90 px-6 py-3 text-sm font-bold text-stone-800 backdrop-blur-sm hover:bg-white hover:border-amber-600 hover:text-amber-900 transition"
-            >
-              French Ear Clips
-            </Link>
+              {/* Architectural Trust Metrics */}
+              <div className="mt-12 pt-8 border-t border-[#E7E0D6] grid grid-cols-3 gap-4 max-w-lg reveal delay-4">
+                <div>
+                  <div className="font-serif-display text-2xl sm:text-3xl font-semibold text-[#1C1917]">
+                    {allProducts.length}+
+                  </div>
+                  <div className="text-[10px] sm:text-[11px] uppercase tracking-[0.15em] text-[#78716C] mt-0.5">
+                    Curated Pieces
+                  </div>
+                </div>
+                <div className="border-l border-[#E7E0D6] pl-4">
+                  <div className="font-serif-display text-2xl sm:text-3xl font-semibold text-[#1C1917]">
+                    100%
+                  </div>
+                  <div className="text-[10px] sm:text-[11px] uppercase tracking-[0.15em] text-[#78716C] mt-0.5">
+                    Painless Clips
+                  </div>
+                </div>
+                <div className="border-l border-[#E7E0D6] pl-4">
+                  <div className="font-serif-display text-2xl sm:text-3xl font-semibold text-[#1C1917]">
+                    COD
+                  </div>
+                  <div className="text-[10px] sm:text-[11px] uppercase tracking-[0.15em] text-[#78716C] mt-0.5">
+                    All Bangladesh
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Right Column: Arch-Masked Hero Showcase & Overlapping Miniature Card */}
+            <div className="lg:col-span-5 relative flex justify-center lg:justify-end reveal delay-2">
+              <div className="relative w-full max-w-md">
+                {/* Decorative Offset Gold Hairline Arch */}
+                <div className="absolute -inset-3 arch-frame border border-[#C5A059]/40 pointer-events-none" />
+
+                {/* Main Tall Arch Showcase Image */}
+                <Link
+                  href="/product/earring-wreath-flowers"
+                  className="group relative block aspect-[4/5] w-full overflow-hidden arch-frame bg-[#F3EDE4] border border-[#E7E0D6] shadow-2xl"
+                >
+                  <Image
+                    src="/products/earrings/Wreath%20Flowers.webp"
+                    alt="Wreath Flowers — French Light Luxury Ear Clip"
+                    fill
+                    priority
+                    sizes="(max-width: 1024px) 90vw, 420px"
+                    className="object-cover transition-transform duration-700 group-hover:scale-105"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-[#181512]/60 via-transparent to-transparent" />
+                  <div className="absolute bottom-5 left-5 right-5 flex items-end justify-between text-[#FAF7F2]">
+                    <div>
+                      <span className="text-[10px] uppercase tracking-[0.2em] text-[#E6D5B8] block">
+                        Signature Piece
+                      </span>
+                      <span className="font-serif-display text-2xl font-medium">
+                        Wreath Flowers Ear Clip
+                      </span>
+                    </div>
+                    <span className="bg-[#FAF7F2] px-3 py-1 text-xs font-semibold text-[#1C1917]">
+                      ৳410
+                    </span>
+                  </div>
+                </Link>
+
+                {/* Floating Secondary Editorial Card (Bottom-Left Overlap) */}
+                <Link
+                  href="/product/ring-j008-gold"
+                  className="hidden sm:flex items-center gap-3.5 absolute -bottom-6 -left-8 bg-white/95 backdrop-blur-md border border-[#E7E0D6] p-3 shadow-xl hover:border-[#C5A059] transition-all max-w-[230px]"
+                >
+                  <div className="relative h-14 w-14 flex-shrink-0 overflow-hidden bg-[#F3EDE4] border border-[#E7E0D6]">
+                    <Image
+                      src="/products/rings/J008%20gold.webp"
+                      alt="Minimalist Band - J008 Gold"
+                      fill
+                      className="object-cover"
+                    />
+                  </div>
+                  <div className="pr-2">
+                    <div className="text-[9px] font-semibold uppercase tracking-[0.18em] text-[#9A7B3E]">
+                      316L Steel
+                    </div>
+                    <div className="font-serif-display text-sm font-semibold text-[#1C1917] line-clamp-1">
+                      J008 Gold Band
+                    </div>
+                    <div className="text-xs font-semibold text-[#1C1917] mt-0.5">৳320</div>
+                  </div>
+                </Link>
+              </div>
+            </div>
           </div>
         </div>
       </section>
 
-      {/* Hero Slideshow (Real Studio & Customer Shots) */}
-      <section className="mx-auto max-w-7xl px-3 sm:px-6 lg:px-8 w-full -mt-4 sm:-mt-16 md:-mt-20 reveal delay-3">
-        <HeroSlideshow />
-      </section>
+      {/* 2. Boutique Editorial Value Strip */}
+      <div className="border-y border-[#E7E0D6] bg-[#F3EDE4]/70 py-3.5">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 flex flex-wrap items-center justify-center sm:justify-between gap-4 text-[10px] sm:text-[11px] font-semibold uppercase tracking-[0.2em] text-[#78716C]">
+          <span className="flex items-center gap-2">
+            <span className="text-[#C5A059]">✦</span> Painless Silicone Cushion Ear Clips
+          </span>
+          <span className="hidden md:flex items-center gap-2">
+            <span className="text-[#C5A059]">✦</span> Tarnish-Free 316L Stainless Steel Rings
+          </span>
+          <span className="flex items-center gap-2">
+            <span className="text-[#C5A059]">✦</span> Inspect Before You Pay (COD)
+          </span>
+        </div>
+      </div>
 
-      {/* Categories Showcase */}
-      <section className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 w-full">
-        <div className="text-center max-w-xl mx-auto mb-10 reveal">
-          <h2 className="text-2xl sm:text-3xl font-black text-stone-900 tracking-tight">
-            {t.categories.title}
-          </h2>
-          <p className="mt-2 text-xs sm:text-sm text-stone-500">
+      {/* 3. Tall Portrait Category Showcase (Blingg 04 / Jewelix Inspired) */}
+      <section className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 w-full pt-16 md:pt-24">
+        <div className="flex flex-col md:flex-row md:items-end justify-between mb-12 gap-4 reveal">
+          <div>
+            <span className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[#9A7B3E] block mb-2">
+              Shop by Department
+            </span>
+            <h2 className="font-serif-display text-3xl sm:text-5xl font-medium text-[#1C1917]">
+              {t.categories.title}
+            </h2>
+          </div>
+          <p className="text-xs sm:text-sm text-[#78716C] max-w-md">
             {t.categories.subtitle}
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8">
           {INITIAL_CATEGORIES.map((cat, idx) => (
             <Link
               key={cat.id}
               href={`/shop?category=${cat.slug}`}
-              className={`group relative overflow-hidden rounded-3xl glass-card border border-stone-200/70 bg-white p-6 transition-all duration-300 hover:shadow-xl hover:border-amber-400/40 reveal delay-${idx + 1}`}
+              className={`group relative flex flex-col overflow-hidden bg-white border border-[#E7E0D6] transition-all duration-500 hover:border-[#C5A059] reveal delay-${idx + 1}`}
             >
-              <div className="relative aspect-video w-full overflow-hidden rounded-2xl bg-stone-100 mb-5">
+              <div className="relative aspect-[4/5] w-full overflow-hidden bg-[#F3EDE4]">
                 {cat.imageUrl && (
                   <Image
                     src={cat.imageUrl}
                     alt={cat.name}
                     fill
-                    className="object-cover group-hover:scale-105 transition-transform duration-500"
+                    sizes="(max-width: 768px) 100vw, 33vw"
+                    className="object-cover transition-transform duration-700 ease-out group-hover:scale-108"
                   />
                 )}
-                <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent" />
-                <span className="absolute bottom-3 left-3 rounded-full bg-white/95 backdrop-blur-md px-3 py-1 text-xs font-bold text-stone-900">
-                  {cat.itemCount} Items
-                </span>
-              </div>
+                <div className="absolute inset-0 bg-gradient-to-t from-[#181512]/75 via-[#181512]/15 to-transparent" />
 
-              <div className="flex items-center justify-between">
-                <div>
-                  <h3 className="text-lg font-bold text-stone-900 group-hover:text-amber-800 transition">
+                {/* Top Right Count Badge */}
+                <span className="absolute top-4 right-4 bg-[#FAF7F2]/95 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-[#1C1917]">
+                  {cat.itemCount} Pieces
+                </span>
+
+                {/* Bottom Editorial Overlay */}
+                <div className="absolute inset-x-0 bottom-0 p-6 text-[#FAF7F2]">
+                  <h3 className="font-serif-display text-3xl font-medium tracking-wide">
                     {cat.name}
                   </h3>
-                  <p className="mt-1 text-xs text-stone-500 line-clamp-1">{cat.description}</p>
-                </div>
-                <div className="flex h-9 w-9 items-center justify-center rounded-full bg-amber-50 text-amber-800 group-hover:bg-amber-700 group-hover:text-white transition">
-                  <ArrowRight className="w-4 h-4" />
+                  <p className="mt-1.5 text-xs text-[#E7E0D6]/90 line-clamp-2 leading-relaxed">
+                    {cat.description}
+                  </p>
+                  <div className="mt-4 inline-flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.2em] text-[#E6D5B8] group-hover:text-white transition-colors">
+                    <span>Explore {cat.name}</span>
+                    <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-1" />
+                  </div>
                 </div>
               </div>
             </Link>
@@ -116,93 +238,192 @@ export function HomeFeature() {
         </div>
       </section>
 
-      {/* Featured Products */}
-      <section className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 w-full">
-        <div className="flex flex-col sm:flex-row items-start sm:items-end justify-between mb-8 gap-4 reveal">
+      {/* 4. Curated Collection with Interactive Category Switcher (Deweler Pattern) */}
+      <section className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 w-full pt-20 md:pt-28">
+        <div className="flex flex-col lg:flex-row lg:items-end justify-between mb-10 gap-6 reveal">
           <div>
-            <div className="text-xs font-bold uppercase tracking-wider text-amber-700 mb-1">
-              Top Picks
-            </div>
-            <h2 className="text-2xl sm:text-3xl font-black text-stone-900 tracking-tight">
-              Featured Earrings & Accessories
+            <span className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[#9A7B3E] block mb-2">
+              Curated Selection
+            </span>
+            <h2 className="font-serif-display text-3xl sm:text-5xl font-medium text-[#1C1917]">
+              Signature Jewellery
             </h2>
           </div>
-          <Link
-            href="/shop"
-            className="inline-flex items-center gap-1.5 text-xs font-bold text-amber-800 hover:text-amber-950"
-          >
-            <span>View All ({productService.getAllProducts().length})</span>
-            <ArrowRight className="w-4 h-4" />
-          </Link>
+
+          {/* Interactive Boutique Filter Tabs */}
+          <div className="flex flex-wrap items-center gap-2">
+            {(
+              [
+                { id: 'all', label: 'Featured' },
+                { id: 'earrings', label: 'French Ear Clips' },
+                { id: 'rings', label: '316L Rings' },
+                { id: 'bracelets', label: 'Bracelets' },
+              ] as const
+            ).map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={`px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.16em] transition-all cursor-pointer ${
+                  activeTab === tab.id
+                    ? 'bg-[#1C1917] text-[#FAF7F2]'
+                    : 'bg-white border border-[#E7E0D6] text-[#78716C] hover:border-[#1C1917] hover:text-[#1C1917]'
+                }`}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </div>
         </div>
 
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
-          {featuredProducts.map((product, idx) => (
-            <ProductCard
-              key={product.id}
-              product={product}
-              className={`reveal delay-${(idx % 4) + 1}`}
-            />
+          {curatedProducts.map((product) => (
+            <ProductCard key={product.id} product={product} />
           ))}
+        </div>
+
+        <div className="mt-10 text-center">
+          <Link
+            href="/shop"
+            className="inline-flex items-center gap-2.5 boutique-btn-outline px-8 py-3.5"
+          >
+            <span>View Full Collection ({allProducts.length} Pieces)</span>
+            <ArrowRight className="w-4 h-4" />
+          </Link>
         </div>
       </section>
 
-      {/* New Arrivals Section */}
-      <section className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 w-full">
-        <div className="flex flex-col sm:flex-row items-start sm:items-end justify-between mb-8 gap-4 reveal">
-          <div>
-            <div className="text-xs font-bold uppercase tracking-wider text-rose-700 mb-1">
-              Fresh Drops
+      {/* 5. Editorial Split Storytelling Banner (Jewelix Craftsmanship Section) */}
+      <section className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 w-full pt-20 md:pt-28">
+        <div className="grid grid-cols-1 lg:grid-cols-12 border border-[#E7E0D6] bg-white overflow-hidden">
+          {/* Left Visual Column */}
+          <div className="lg:col-span-6 relative min-h-[340px] sm:min-h-[440px] bg-[#F3EDE4]">
+            <Image
+              src="/products/earrings/Love%20Cross-Link%20all%20with%20transparent%20silicone%20cushion.webp"
+              alt="French Ear Clips with Transparent Silicone Cushion"
+              fill
+              sizes="(max-width: 1024px) 100vw, 50vw"
+              className="object-cover"
+            />
+          </div>
+
+          {/* Right Editorial Narrative Column */}
+          <div className="lg:col-span-6 p-8 sm:p-12 lg:p-16 flex flex-col justify-center bg-[#FAF7F2]">
+            <div className="inline-flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.22em] text-[#9A7B3E] mb-3">
+              <Gem className="w-3.5 h-3.5" />
+              <span>The MELO Ear Clip Craftsmanship</span>
             </div>
-            <h2 className="text-2xl sm:text-3xl font-black text-stone-900 tracking-tight">
-              New Arrivals This Week
+
+            <h2 className="font-serif-display text-3xl sm:text-4xl lg:text-5xl font-medium text-[#1C1917] leading-tight">
+              All the Elegance.{' '}
+              <span className="italic font-normal text-[#9A7B3E]">Zero Piercing Pain.</span>
+            </h2>
+
+            <p className="mt-5 text-xs sm:text-sm text-[#78716C] leading-relaxed">
+              Every pair of MELO French ear clips comes fitted with an ultra-soft, removable transparent silicone cushion. Whether your ears are unpierced or sensitive to heavy studs, our featherlight clips stay secure from morning coffee to evening celebrations without pinching.
+            </p>
+
+            <div className="mt-6 grid grid-cols-2 gap-4 pt-6 border-t border-[#E7E0D6] text-xs">
+              <div>
+                <div className="font-semibold text-[#1C1917] uppercase tracking-wider text-[11px]">
+                  Silicone Cushion Pad
+                </div>
+                <p className="text-[#78716C] mt-1">
+                  Distributes pressure evenly for all-day comfort.
+                </p>
+              </div>
+              <div>
+                <div className="font-semibold text-[#1C1917] uppercase tracking-wider text-[11px]">
+                  316L Titanium Steel Rings
+                </div>
+                <p className="text-[#78716C] mt-1">
+                  Water-resistant, non-tarnish gold &amp; silver finishes.
+                </p>
+              </div>
+            </div>
+
+            <div className="mt-8">
+              <Link
+                href="/shop?category=earrings"
+                className="inline-flex items-center gap-2.5 boutique-btn-primary px-7 py-3.5"
+              >
+                <span>Discover Ear Clips</span>
+                <ArrowRight className="w-4 h-4" />
+              </Link>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* 6. New Arrivals This Week */}
+      <section className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 w-full pt-20 md:pt-28">
+        <div className="flex flex-col sm:flex-row items-start sm:items-end justify-between mb-10 gap-4 reveal">
+          <div>
+            <span className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[#9A7B3E] block mb-2">
+              Fresh Drops
+            </span>
+            <h2 className="font-serif-display text-3xl sm:text-5xl font-medium text-[#1C1917]">
+              New Arrivals
             </h2>
           </div>
           <Link
             href="/shop"
-            className="inline-flex items-center gap-1.5 text-xs font-bold text-amber-800 hover:text-amber-950"
+            className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.18em] text-[#1C1917] hover:text-[#9A7B3E] transition"
           >
-            <span>See All</span>
+            <span>Browse All New</span>
             <ArrowRight className="w-4 h-4" />
           </Link>
         </div>
 
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 sm:gap-6">
-          {newArrivals.map((product, idx) => (
-            <ProductCard
-              key={product.id}
-              product={product}
-              className={`reveal delay-${(idx % 4) + 1}`}
-            />
+          {newArrivals.map((product) => (
+            <ProductCard key={product.id} product={product} />
           ))}
         </div>
       </section>
 
-      {/* Why Shop With MELO */}
-      <section className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 w-full">
-        <div className="rounded-3xl bg-gradient-to-br from-[#1c1917] via-[#292524] to-[#1c1917] p-8 sm:p-12 text-white relative overflow-hidden border border-amber-900/30 shadow-2xl">
-          <div className="relative z-10 max-w-2xl">
-            <span className="rounded-full bg-amber-500/20 border border-amber-400/30 px-3.5 py-1 text-xs font-bold text-amber-300">
-              The MELO Promise
-            </span>
-            <h2 className="mt-4 text-2xl sm:text-4xl font-black tracking-tight">
-              A Little Something For Everyone.
-            </h2>
-            <p className="mt-3 text-xs sm:text-sm text-stone-300 leading-relaxed">
-              We know ordering online in Bangladesh requires confidence. That’s why we inspect every single piece, provide comfortable silicone cushions for painless ear clips, and offer hassle-free Cash on Delivery everywhere.
-            </p>
-            <div className="mt-6 flex flex-wrap gap-4 text-xs font-semibold">
-              <div className="flex items-center gap-2 text-amber-200">
-                <ShieldCheck className="w-4 h-4 text-amber-400" />
-                <span>100% Quality Checked</span>
+      {/* 7. Dark Espresso Luxury Brand Promise Banner (Deweler Contrast Section) */}
+      <section className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 w-full pt-20 md:pt-28">
+        <div className="bg-[#181512] border border-[#2E2925] p-8 sm:p-14 lg:p-16 text-[#FAF7F2] relative overflow-hidden">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-center">
+            <div className="lg:col-span-7">
+              <span className="inline-block border border-[#C5A059]/40 bg-[#C5A059]/10 px-3.5 py-1 text-[10px] font-semibold uppercase tracking-[0.22em] text-[#E6D5B8]">
+                The MELO Guarantee
+              </span>
+              <h2 className="mt-4 font-serif-display text-3xl sm:text-5xl font-medium tracking-tight text-[#FAF7F2]">
+                A Little Something <span className="italic font-normal text-[#C5A059]">For Everyone.</span>
+              </h2>
+              <p className="mt-4 text-xs sm:text-sm text-[#A8A29E] leading-relaxed max-w-xl">
+                Shopping for jewellery online in Bangladesh should feel effortless and reassuring. Every piece is hand-inspected in Dhaka, packed with protective cushions, and delivered to your doorstep with Cash on Delivery.
+              </p>
+            </div>
+
+            <div className="lg:col-span-5 grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-1 gap-4 border-t lg:border-t-0 lg:border-l border-[#2E2925] pt-6 lg:pt-0 lg:pl-10">
+              <div className="flex items-center gap-3.5">
+                <ShieldCheck className="w-5 h-5 text-[#C5A059] flex-shrink-0" />
+                <div>
+                  <div className="text-xs font-semibold uppercase tracking-wider text-[#FAF7F2]">
+                    100% Quality Checked
+                  </div>
+                  <div className="text-[11px] text-[#A8A29E]">Hand-inspected before dispatch</div>
+                </div>
               </div>
-              <div className="flex items-center gap-2 text-stone-200">
-                <Truck className="w-4 h-4 text-rose-400" />
-                <span>Pathao & Steadfast Delivery</span>
+              <div className="flex items-center gap-3.5">
+                <Truck className="w-5 h-5 text-[#C5A059] flex-shrink-0" />
+                <div>
+                  <div className="text-xs font-semibold uppercase tracking-wider text-[#FAF7F2]">
+                    Pathao &amp; Steadfast Courier
+                  </div>
+                  <div className="text-[11px] text-[#A8A29E]">Fast doorstep COD nationwide</div>
+                </div>
               </div>
-              <div className="flex items-center gap-2 text-stone-200">
-                <Heart className="w-4 h-4 text-pink-400" />
-                <span>Hypoallergenic & Lightweight</span>
+              <div className="flex items-center gap-3.5">
+                <Heart className="w-5 h-5 text-[#C5A059] flex-shrink-0" />
+                <div>
+                  <div className="text-xs font-semibold uppercase tracking-wider text-[#FAF7F2]">
+                    Hypoallergenic Comfort
+                  </div>
+                  <div className="text-[11px] text-[#A8A29E]">Gentle on sensitive skin &amp; ears</div>
+                </div>
               </div>
             </div>
           </div>
