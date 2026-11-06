@@ -70,10 +70,41 @@ export class OrderRepository {
   async insertInDb(order: Order): Promise<boolean> {
     if (!supabaseClient.isConfigured()) return false;
     try {
+      const payload = {
+        id: order.id,
+        orderNumber: order.orderNumber,
+        createdAt: order.createdAt,
+        customerId: order.customerId || null,
+        customerPhone: order.customerPhone || order.customer.phone,
+        customerName: order.customer.fullName,
+        deliveryAddress: order.customer.address,
+        deliveryZone: order.customer.deliveryZone,
+        orderSource: order.customer.orderSource || 'website',
+        customer: order.customer,
+        items: order.items,
+        subtotal: order.subtotal,
+        deliveryFee: order.deliveryFee,
+        total: order.total,
+        paymentMethod: order.paymentMethod,
+        status: order.status,
+        paymentStatus: order.paymentStatus,
+        trxId: order.trxId || null,
+        bkashSenderNumber: order.bkashSenderNumber || null,
+        cardLast4: order.cardLast4 || null,
+        trackingNumber: order.trackingNumber || null,
+        courierName: order.courierName || null,
+        courierTrackingUrl: order.courierTrackingUrl || null,
+        estimatedDelivery: order.estimatedDelivery || null,
+        dispatchedAt: order.dispatchedAt || null,
+        deliveredAt: order.deliveredAt || null,
+      };
+
       const res = await fetch(`${supabaseClient.baseUrl}/rest/v1/orders`, {
         method: 'POST',
-        headers: supabaseClient.getHeaders(),
-        body: JSON.stringify(order),
+        headers: supabaseClient.getHeaders({
+          Prefer: 'resolution=merge-duplicates',
+        }),
+        body: JSON.stringify(payload),
       });
       return res.ok;
     } catch {
@@ -84,12 +115,56 @@ export class OrderRepository {
   async updateStatusInDb(orderId: string, status: OrderStatus): Promise<boolean> {
     if (!supabaseClient.isConfigured()) return false;
     try {
+      const patch: Record<string, unknown> = { status };
+      if (status === 'dispatched') {
+        patch.dispatchedAt = new Date().toISOString();
+      } else if (status === 'delivered') {
+        patch.deliveredAt = new Date().toISOString();
+      }
+
       const res = await fetch(
         `${supabaseClient.baseUrl}/rest/v1/orders?id=eq.${encodeURIComponent(orderId)}`,
         {
           method: 'PATCH',
           headers: supabaseClient.getHeaders(),
-          body: JSON.stringify({ status }),
+          body: JSON.stringify(patch),
+        }
+      );
+      return res.ok;
+    } catch {
+      return false;
+    }
+  }
+
+  async updateTrackingInDb(
+    orderId: string,
+    tracking: {
+      trackingNumber: string;
+      courierName?: string;
+      courierTrackingUrl?: string;
+      estimatedDelivery?: string;
+      status?: OrderStatus;
+    }
+  ): Promise<boolean> {
+    if (!supabaseClient.isConfigured()) return false;
+    try {
+      const patch: Record<string, unknown> = {
+        trackingNumber: tracking.trackingNumber,
+        ...(tracking.courierName ? { courierName: tracking.courierName } : {}),
+        ...(tracking.courierTrackingUrl ? { courierTrackingUrl: tracking.courierTrackingUrl } : {}),
+        ...(tracking.estimatedDelivery ? { estimatedDelivery: tracking.estimatedDelivery } : {}),
+        ...(tracking.status ? { status: tracking.status } : {}),
+      };
+      if (tracking.status === 'dispatched') {
+        patch.dispatchedAt = new Date().toISOString();
+      }
+
+      const res = await fetch(
+        `${supabaseClient.baseUrl}/rest/v1/orders?id=eq.${encodeURIComponent(orderId)}`,
+        {
+          method: 'PATCH',
+          headers: supabaseClient.getHeaders(),
+          body: JSON.stringify(patch),
         }
       );
       return res.ok;

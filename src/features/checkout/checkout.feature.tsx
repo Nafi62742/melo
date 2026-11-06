@@ -74,16 +74,22 @@ export function CheckoutFeature() {
     setIsSubmitting(true);
 
     const orderNumber = `MELO-${Date.now().toString().slice(-6)}`;
+    const activeCustomer = customerService.getCurrentCustomer();
+
     const newOrder: Order = {
       id: `ord-${Date.now()}`,
       orderNumber,
       createdAt: new Date().toISOString(),
+      customerId: activeCustomer ? activeCustomer.id : undefined,
+      customerPhone: phone.trim(),
       customer: {
         fullName,
         phone,
+        email: initialCustomer?.email || undefined,
         address,
         deliveryZone,
         notes,
+        customerId: activeCustomer ? activeCustomer.id : undefined,
       },
       items: [...items],
       subtotal,
@@ -92,6 +98,7 @@ export function CheckoutFeature() {
       paymentMethod,
       status: 'pending',
       paymentStatus: 'pending',
+      estimatedDelivery: deliveryZone === 'inside_dhaka' ? '24–48 hours' : '3–4 business days',
       trxId: paymentMethod === 'bkash' ? trxId.trim().toUpperCase() : undefined,
       bkashSenderNumber:
         paymentMethod === 'bkash' && bkashSenderNumber.trim()
@@ -155,6 +162,12 @@ export function CheckoutFeature() {
             </span>
           </div>
           <div className="flex justify-between">
+            <span className="text-[#78716C]">Estimated Delivery</span>
+            <span className="font-semibold text-[#1C1917]">
+              {completedOrder.estimatedDelivery || (completedOrder.customer.deliveryZone === 'inside_dhaka' ? '24–48 hours' : '3–4 days')}
+            </span>
+          </div>
+          <div className="flex justify-between">
             <span className="text-[#78716C]">Payment Method</span>
             <span className="font-semibold text-[#1C1917]">
               {paymentMethodLabel(completedOrder.paymentMethod)}
@@ -175,8 +188,11 @@ export function CheckoutFeature() {
         </div>
 
         <div className="mt-8 flex flex-wrap justify-center gap-4">
-          <Link href="/account" className="boutique-btn-primary px-7 py-3.5">
-            Track My Order &amp; bKash Status
+          <Link
+            href={`/account?orderNumber=${completedOrder.orderNumber}`}
+            className="boutique-btn-primary px-7 py-3.5"
+          >
+            Track My Order Live
           </Link>
           <Link href="/shop" className="boutique-btn-outline px-6 py-3.5">
             Continue Shopping

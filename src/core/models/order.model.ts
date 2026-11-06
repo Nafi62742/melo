@@ -14,14 +14,16 @@ export interface OrderCustomerInfo {
   deliveryZone: DeliveryZone;
   notes?: string;
   orderSource?: OrderSource;
+  customerId?: string;
 }
 
 export interface Order {
   id: string;
   orderNumber: string;
   createdAt: string;
-  customer: OrderCustomerInfo;
+  customerId?: string;
   customerPhone?: string;
+  customer: OrderCustomerInfo;
   items: CartItem[];
   subtotal: number;
   deliveryFee: number;
@@ -32,4 +34,11 @@ export interface Order {
   trxId?: string;
   bkashSenderNumber?: string;
   cardLast4?: string;
+  // Courier & Tracking Details
+  trackingNumber?: string;
+  courierName?: string;
+  courierTrackingUrl?: string;
+  estimatedDelivery?: string;
+  dispatchedAt?: string;
+  deliveredAt?: string;
 }

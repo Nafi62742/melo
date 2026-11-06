@@ -116,6 +116,26 @@ class ProductService {
     return true;
   }
 
+  toggleProductFeatured(id: string): boolean {
+    this.ensureLoaded();
+    const product = this.getProductById(id);
+    if (!product) return false;
+    product.isFeatured = !product.isFeatured;
+    this.persist();
+    void productRepository.upsertInDb(product);
+    return true;
+  }
+
+  setProductFeatured(id: string, isFeatured: boolean): boolean {
+    this.ensureLoaded();
+    const product = this.getProductById(id);
+    if (!product) return false;
+    product.isFeatured = Boolean(isFeatured);
+    this.persist();
+    void productRepository.upsertInDb(product);
+    return true;
+  }
+
   addProduct(newProduct: Product): Product {
     this.ensureLoaded();
     this.products = [newProduct, ...this.products];

@@ -5,11 +5,16 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { Product } from '@/core/models/product.model';
 import { ProductType } from '@/core/models/product-type.model';
+import { StoreContent } from '@/core/models/store-content.model';
 import { productService, PRODUCTS_UPDATED_EVENT } from '@/core/services/product.service';
 import {
   productTypeService,
   PRODUCT_TYPES_UPDATED_EVENT,
 } from '@/core/services/product-type.service';
+import {
+  storeContentService,
+  STORE_CONTENT_UPDATED_EVENT,
+} from '@/core/services/store-content.service';
 import { INITIAL_CATEGORIES } from '@/core/data/categories.data';
 import { ProductCard } from '@/shared/product-card/product-card.component';
 import { useI18n } from '@/core/i18n/i18n.context';
@@ -32,10 +37,16 @@ export function HomeFeature() {
   const [productTypes, setProductTypes] = useState<ProductType[]>(() =>
     productTypeService.getAllProductTypes()
   );
+  const [storeContent, setStoreContent] = useState<StoreContent>(() =>
+    storeContentService.getStoreContent()
+  );
 
   useEffect(() => {
     void productService.syncFromDatabase().then((remote) => {
       setAllProducts([...remote]);
+    });
+    void storeContentService.syncFromDatabase().then((remote) => {
+      setStoreContent({ ...remote });
     });
 
     const handleProductsUpdate = () => {
@@ -44,30 +55,39 @@ export function HomeFeature() {
     const handleProductTypesUpdate = () => {
       setProductTypes([...productTypeService.getAllProductTypes()]);
     };
+    const handleStoreContentUpdate = () => {
+      setStoreContent({ ...storeContentService.getStoreContent() });
+    };
 
     window.addEventListener(PRODUCTS_UPDATED_EVENT, handleProductsUpdate);
     window.addEventListener(PRODUCT_TYPES_UPDATED_EVENT, handleProductTypesUpdate);
+    window.addEventListener(STORE_CONTENT_UPDATED_EVENT, handleStoreContentUpdate);
 
     return () => {
       window.removeEventListener(PRODUCTS_UPDATED_EVENT, handleProductsUpdate);
       window.removeEventListener(PRODUCT_TYPES_UPDATED_EVENT, handleProductTypesUpdate);
+      window.removeEventListener(STORE_CONTENT_UPDATED_EVENT, handleStoreContentUpdate);
     };
   }, []);
 
+  const hero = storeContent.hero;
+
   const heroPrimaryProduct = useMemo(
     () =>
+      allProducts.find((p) => p.slug === hero.primaryProductSlug) ||
       allProducts.find((p) => p.slug === 'earring-wreath-flowers') ||
       allProducts.find((p) => p.isFeatured) ||
       allProducts[0],
-    [allProducts]
+    [allProducts, hero.primaryProductSlug]
   );
 
   const heroSecondaryProduct = useMemo(
     () =>
+      allProducts.find((p) => p.slug === hero.secondaryProductSlug) ||
       allProducts.find((p) => p.slug === 'ring-j008-gold') ||
       allProducts.find((p) => p.category === 'rings') ||
       allProducts[1],
-    [allProducts]
+    [allProducts, hero.secondaryProductSlug]
   );
 
   const newArrivals = useMemo(
@@ -136,64 +156,50 @@ export function HomeFeature() {
             <div className="lg:col-span-7 text-left">
               <div className="inline-flex items-center gap-2 px-3.5 py-1.5 text-[11px] font-semibold uppercase tracking-[0.2em] aurora-badge mb-6 reveal">
                 <Sparkles className="w-3.5 h-3.5 text-[#9A7B3E]" />
-                <span>{t.hero.badge}</span>
+                <span>{hero.badge || t.hero.badge}</span>
               </div>
 
               <h1 className="font-serif-display text-4xl sm:text-6xl lg:text-7xl font-medium tracking-tight text-[#1C1917] leading-[1.08] reveal delay-1">
-                Where Little Wonders{' '}
+                {hero.titleLine1 || 'Where Little Wonders'}{' '}
                 <span className="italic font-normal text-[#9A7B3E] block sm:inline">
-                  Light Up.
+                  {hero.titleHighlight || 'Light Up.'}
                 </span>
               </h1>
 
               <p className="mt-6 text-sm sm:text-base text-[#78716C] max-w-xl leading-relaxed reveal delay-2">
-                {t.hero.subheading}
+                {hero.subtitle || t.hero.subheading}
               </p>
 
               {/* Dual Boutique CTAs */}
               <div className="mt-8 flex flex-wrap items-center gap-4 reveal delay-3">
                 <Link
-                  href="/shop"
+                  href={hero.primaryCtaLink || '/shop'}
                   className="inline-flex items-center gap-3 boutique-btn-primary px-8 py-4"
                 >
-                  <span>{t.hero.shopNow}</span>
+                  <span>{hero.primaryCtaText || t.hero.shopNow}</span>
                   <ArrowRight className="w-4 h-4" />
                 </Link>
 
                 <Link
-                  href="/shop?category=earrings"
+                  href={hero.secondaryCtaLink || '/shop?category=earrings'}
                   className="inline-flex items-center gap-2 boutique-btn-outline px-7 py-4"
                 >
-                  <span>French Ear Clips</span>
+                  <span>{hero.secondaryCtaText || 'French Ear Clips'}</span>
                 </Link>
               </div>
 
               {/* Architectural Trust Metrics */}
               <div className="mt-12 pt-8 border-t border-[#E7E0D6] grid grid-cols-3 gap-4 max-w-lg reveal delay-4">
-                <div>
-                  <div className="font-serif-display text-2xl sm:text-3xl font-semibold text-[#1C1917]">
-                    {allProducts.length}+
+                {hero.trustMetrics.map((metric, idx) => (
+                  <div key={idx} className={idx > 0 ? 'border-l border-[#E7E0D6] pl-4' : ''}>
+                    <div className="font-serif-display text-2xl sm:text-3xl font-semibold text-[#1C1917]">
+                      {metric.value === '54+' ? `${allProducts.length}+` : metric.value}
+                    </div>
+                    <div className="text-[10px] sm:text-[11px] uppercase tracking-[0.15em] text-[#78716C] mt-0.5">
+                      {metric.label}
+                    </div>
                   </div>
-                  <div className="text-[10px] sm:text-[11px] uppercase tracking-[0.15em] text-[#78716C] mt-0.5">
-                    Curated Pieces
-                  </div>
-                </div>
-                <div className="border-l border-[#E7E0D6] pl-4">
-                  <div className="font-serif-display text-2xl sm:text-3xl font-semibold text-[#1C1917]">
-                    100%
-                  </div>
-                  <div className="text-[10px] sm:text-[11px] uppercase tracking-[0.15em] text-[#78716C] mt-0.5">
-                    Painless Clips
-                  </div>
-                </div>
-                <div className="border-l border-[#E7E0D6] pl-4">
-                  <div className="font-serif-display text-2xl sm:text-3xl font-semibold text-[#1C1917]">
-                    COD
-                  </div>
-                  <div className="text-[10px] sm:text-[11px] uppercase tracking-[0.15em] text-[#78716C] mt-0.5">
-                    All Bangladesh
-                  </div>
-                </div>
+                ))}
               </div>
             </div>
 
@@ -224,7 +230,7 @@ export function HomeFeature() {
                   <div className="absolute bottom-5 left-5 right-5 flex items-end justify-between text-[#FAF7F2]">
                     <div>
                       <span className="text-[10px] uppercase tracking-[0.2em] text-[#E6D5B8] block">
-                        Signature Piece
+                        {hero.primaryProductBadge || 'Signature Piece'}
                       </span>
                       <span className="font-serif-display text-2xl font-medium">
                         {heroPrimaryProduct?.name || 'Wreath Flowers Ear Clip'}
@@ -259,7 +265,9 @@ export function HomeFeature() {
                   </div>
                   <div className="pr-2">
                     <div className="text-[9px] font-semibold uppercase tracking-[0.18em] text-[#9A7B3E]">
-                      {heroSecondaryProduct?.categoryName || '316L Steel'}
+                      {hero.secondaryProductBadge ||
+                        heroSecondaryProduct?.categoryName ||
+                        '316L Steel'}
                     </div>
                     <div className="font-serif-display text-sm font-semibold text-[#1C1917] line-clamp-1">
                       {heroSecondaryProduct?.name || 'J008 Gold Band'}
@@ -286,15 +294,14 @@ export function HomeFeature() {
       {/* 2. Boutique Editorial Value Strip */}
       <div className="border-y border-[#E7E0D6] bg-[#F3EDE4]/70 py-3.5">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 flex flex-wrap items-center justify-center sm:justify-between gap-4 text-[10px] sm:text-[11px] font-semibold uppercase tracking-[0.2em] text-[#78716C]">
-          <span className="flex items-center gap-2">
-            <span className="text-[#C5A059]">✦</span> Painless Silicone Cushion Ear Clips
-          </span>
-          <span className="hidden md:flex items-center gap-2">
-            <span className="text-[#C5A059]">✦</span> Tarnish-Free 316L Stainless Steel Rings
-          </span>
-          <span className="flex items-center gap-2">
-            <span className="text-[#C5A059]">✦</span> Inspect Before You Pay (COD)
-          </span>
+          {hero.tickerItems.map((item, idx) => (
+            <span
+              key={idx}
+              className={`flex items-center gap-2 ${idx === 1 ? 'hidden md:flex' : ''}`}
+            >
+              <span className="text-[#C5A059]">✦</span> {item}
+            </span>
+          ))}
         </div>
       </div>
 

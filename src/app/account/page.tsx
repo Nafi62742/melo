@@ -1,3 +1,4 @@
+import { Suspense } from 'react';
 import { AccountFeature } from '@/features/account/account.feature';
 
 export const metadata = {
@@ -6,6 +7,16 @@ export const metadata = {
 };
 
 export default function AccountPage() {
-  return <AccountFeature />;
+  return (
+    <Suspense
+      fallback={
+        <div className="mx-auto max-w-6xl px-4 py-20 text-center text-xs text-[#78716C]">
+          Loading customer account &amp; tracking...
+        </div>
+      }
+    >
+      <AccountFeature />
+    </Suspense>
+  );
 }
 
