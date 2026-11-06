@@ -794,7 +794,7 @@ export function AdminFeature() {
               <input
                 type="email"
                 required
-                placeholder="melo@gmail.com"
+                placeholder="Enter admin email"
                 value={loginId}
                 onChange={(e) => setLoginId(e.target.value)}
                 className="w-full border border-[#D6CFC5] bg-[#FAF7F2]/50 px-3.5 py-2.5 text-xs text-[#1C1917] focus:bg-white focus:outline-none focus:border-[#C5A059]"

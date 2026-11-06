@@ -1,8 +1,10 @@
-import { adminRepository } from '../repositories/admin.repository';
+import { adminRepository, ADMIN_AUTH_CHANGED_EVENT } from '../repositories/admin.repository';
 import { productService } from './product.service';
 import { productTypeService } from './product-type.service';
 import { orderService } from './order.service';
 import { storeLinkService } from './store-link.service';
+
+export { ADMIN_AUTH_CHANGED_EVENT };
 
 /**
  * AdminService — Domain service for admin authentication, session state,

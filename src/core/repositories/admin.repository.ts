@@ -1,5 +1,6 @@
 import { supabaseClient } from './supabase.client';
 
+export const ADMIN_AUTH_CHANGED_EVENT = 'melo-admin-auth-changed';
 const ADMIN_SESSION_KEY = 'melo_admin_authenticated';
 const DEFAULT_ADMIN_EMAIL = 'melo@gmail.com';
 const DEFAULT_ADMIN_PASS = 'hippo#aurora';
@@ -35,6 +36,7 @@ export class AdminRepository {
         sessionStorage.removeItem(ADMIN_SESSION_KEY);
         localStorage.removeItem(ADMIN_SESSION_KEY);
       }
+      window.dispatchEvent(new CustomEvent(ADMIN_AUTH_CHANGED_EVENT));
     } catch {
       // ignore storage errors
     }
