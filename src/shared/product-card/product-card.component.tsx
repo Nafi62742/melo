@@ -6,16 +6,20 @@ import Image from 'next/image';
 import { Product } from '@/core/models/product.model';
 import { formatBDT } from '@/core/utils/currency.util';
 import { useCart } from '@/core/services/cart.context';
-import { ShoppingBag, Eye, Plus, Minus, Lock } from 'lucide-react';
+import { useWishlist } from '@/core/services/wishlist.context';
+import { ShoppingBag, Eye, Plus, Minus, Lock, Heart } from 'lucide-react';
 
 interface ProductCardProps {
   product: Product;
   className?: string;
+  onQuickView?: (product: Product) => void;
 }
 
-export function ProductCard({ product, className = '' }: ProductCardProps) {
+export function ProductCard({ product, className = '', onQuickView }: ProductCardProps) {
   const { addItem, updateQuantity, getItemQuantity } = useCart();
+  const { isInWishlist, toggleWishlist } = useWishlist();
 
+  const isFavorite = isInWishlist(product.id);
   const maxStock = Math.max(0, Number(product.stock ?? 0));
   const isOutOfStock = maxStock <= 0;
   const inBagQty = getItemQuantity(product.id);
@@ -68,14 +72,58 @@ export function ProductCard({ product, className = '' }: ProductCardProps) {
           )}
         </div>
 
-        {/* Top-Right Quick View Icon on Hover */}
-        <Link
-          href={`/product/${product.slug}`}
-          aria-label={`View ${product.name}`}
-          className="absolute top-3 right-3 z-10 flex h-8 w-8 items-center justify-center bg-white/90 text-[#1C1917] opacity-0 translate-y-1 transition-all duration-300 group-hover:opacity-100 group-hover:translate-y-0 hover:bg-[#1C1917] hover:text-white shadow-xs"
-        >
-          <Eye className="w-3.5 h-3.5" />
-        </Link>
+        {/* Top-Right Action Buttons: Wishlist Heart & Quick View Eye */}
+        <div className="absolute top-3 right-3 z-10 flex flex-col items-center gap-1.5">
+          {/* Wishlist Heart Toggle */}
+          <button
+            type="button"
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              toggleWishlist(product.id);
+            }}
+            aria-label={
+              isFavorite
+                ? `Remove ${product.name} from wishlist`
+                : `Save ${product.name} to wishlist`
+            }
+            className={`flex h-8 w-8 items-center justify-center transition-all shadow-xs cursor-pointer ${
+              isFavorite
+                ? 'bg-[#1C1917] text-[#FAF7F2]'
+                : 'bg-white/90 text-[#78716C] hover:text-[#1C1917] hover:bg-white'
+            }`}
+          >
+            <Heart
+              className={`w-3.5 h-3.5 transition-colors ${
+                isFavorite ? 'fill-[#C5A059] text-[#C5A059]' : ''
+              }`}
+            />
+          </button>
+
+          {/* Quick View Eye Button */}
+          {onQuickView ? (
+            <button
+              type="button"
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                onQuickView(product);
+              }}
+              aria-label={`Quick view ${product.name}`}
+              className="flex h-8 w-8 items-center justify-center bg-white/90 text-[#1C1917] opacity-0 translate-y-1 transition-all duration-300 group-hover:opacity-100 group-hover:translate-y-0 hover:bg-[#1C1917] hover:text-white shadow-xs cursor-pointer"
+            >
+              <Eye className="w-3.5 h-3.5" />
+            </button>
+          ) : (
+            <Link
+              href={`/product/${product.slug}`}
+              aria-label={`View ${product.name}`}
+              className="flex h-8 w-8 items-center justify-center bg-white/90 text-[#1C1917] opacity-0 translate-y-1 transition-all duration-300 group-hover:opacity-100 group-hover:translate-y-0 hover:bg-[#1C1917] hover:text-white shadow-xs"
+            >
+              <Eye className="w-3.5 h-3.5" />
+            </Link>
+          )}
+        </div>
 
         {/* Slide-Up Editorial Action Bar on Desktop Hover */}
         <div className="hidden sm:block absolute inset-x-0 bottom-0 p-3 translate-y-full opacity-0 transition-all duration-300 ease-out group-hover:translate-y-0 group-hover:opacity-100 z-20">

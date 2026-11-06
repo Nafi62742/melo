@@ -17,6 +17,7 @@ import {
 } from '@/core/services/store-content.service';
 import { INITIAL_CATEGORIES } from '@/core/data/categories.data';
 import { ProductCard } from '@/shared/product-card/product-card.component';
+import { QuickViewModal } from '@/shared/quick-view-modal/quick-view-modal.component';
 import { useI18n } from '@/core/i18n/i18n.context';
 import { initRevealObserver } from '@/core/utils/reveal.util';
 import { Sparkles, ArrowRight, ShieldCheck, Truck, Heart, Gem } from 'lucide-react';
@@ -40,6 +41,7 @@ export function HomeFeature() {
   const [storeContent, setStoreContent] = useState<StoreContent>(() =>
     storeContentService.getStoreContent()
   );
+  const [quickViewProduct, setQuickViewProduct] = useState<Product | null>(null);
 
   useEffect(() => {
     void productService.syncFromDatabase().then((remote) => {
@@ -396,7 +398,11 @@ export function HomeFeature() {
 
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
           {curatedProducts.map((product) => (
-            <ProductCard key={product.id} product={product} />
+            <ProductCard
+              key={product.id}
+              product={product}
+              onQuickView={setQuickViewProduct}
+            />
           ))}
         </div>
 
@@ -495,7 +501,11 @@ export function HomeFeature() {
 
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 sm:gap-6">
           {newArrivals.map((product) => (
-            <ProductCard key={product.id} product={product} />
+            <ProductCard
+              key={product.id}
+              product={product}
+              onQuickView={setQuickViewProduct}
+            />
           ))}
         </div>
       </section>
@@ -548,6 +558,13 @@ export function HomeFeature() {
           </div>
         </div>
       </section>
+
+      {/* Luxury Quick View Modal */}
+      <QuickViewModal
+        product={quickViewProduct}
+        isOpen={Boolean(quickViewProduct)}
+        onClose={() => setQuickViewProduct(null)}
+      />
     </div>
   );
 }
