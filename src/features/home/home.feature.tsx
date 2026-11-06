@@ -3,23 +3,72 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { productService } from '@/core/services/product.service';
+import { Product } from '@/core/models/product.model';
+import { ProductType } from '@/core/models/product-type.model';
+import { productService, PRODUCTS_UPDATED_EVENT } from '@/core/services/product.service';
+import {
+  productTypeService,
+  PRODUCT_TYPES_UPDATED_EVENT,
+} from '@/core/services/product-type.service';
 import { INITIAL_CATEGORIES } from '@/core/data/categories.data';
 import { ProductCard } from '@/shared/product-card/product-card.component';
 import { useI18n } from '@/core/i18n/i18n.context';
 import { initRevealObserver } from '@/core/utils/reveal.util';
 import { Sparkles, ArrowRight, ShieldCheck, Truck, Heart, Gem } from 'lucide-react';
 
+interface DisplayCategory {
+  id: string;
+  name: string;
+  slug: string;
+  description: string;
+  itemCount: number;
+  imageUrl?: string;
+}
+
 export function HomeFeature() {
   const { t } = useI18n();
-  const [activeTab, setActiveTab] = useState<'all' | 'earrings' | 'rings' | 'bracelets'>('all');
-  const [allProducts, setAllProducts] = useState(() => productService.getAllProducts());
+  const [activeTab, setActiveTab] = useState<string>('all');
+  const [allProducts, setAllProducts] = useState<Product[]>(() => productService.getAllProducts());
+  const [productTypes, setProductTypes] = useState<ProductType[]>(() =>
+    productTypeService.getAllProductTypes()
+  );
 
   useEffect(() => {
     void productService.syncFromDatabase().then((remote) => {
       setAllProducts([...remote]);
     });
+
+    const handleProductsUpdate = () => {
+      setAllProducts([...productService.getAllProducts()]);
+    };
+    const handleProductTypesUpdate = () => {
+      setProductTypes([...productTypeService.getAllProductTypes()]);
+    };
+
+    window.addEventListener(PRODUCTS_UPDATED_EVENT, handleProductsUpdate);
+    window.addEventListener(PRODUCT_TYPES_UPDATED_EVENT, handleProductTypesUpdate);
+
+    return () => {
+      window.removeEventListener(PRODUCTS_UPDATED_EVENT, handleProductsUpdate);
+      window.removeEventListener(PRODUCT_TYPES_UPDATED_EVENT, handleProductTypesUpdate);
+    };
   }, []);
+
+  const heroPrimaryProduct = useMemo(
+    () =>
+      allProducts.find((p) => p.slug === 'earring-wreath-flowers') ||
+      allProducts.find((p) => p.isFeatured) ||
+      allProducts[0],
+    [allProducts]
+  );
+
+  const heroSecondaryProduct = useMemo(
+    () =>
+      allProducts.find((p) => p.slug === 'ring-j008-gold') ||
+      allProducts.find((p) => p.category === 'rings') ||
+      allProducts[1],
+    [allProducts]
+  );
 
   const newArrivals = useMemo(
     () => allProducts.filter((p) => p.isNew).slice(0, 4),
@@ -32,6 +81,45 @@ export function HomeFeature() {
     }
     return allProducts.filter((p) => p.category === activeTab).slice(0, 8);
   }, [activeTab, allProducts]);
+
+  const displayCategories: DisplayCategory[] = useMemo(() => {
+    if (productTypes.length === 0) {
+      return INITIAL_CATEGORIES.map((cat) => ({
+        id: cat.id,
+        name: cat.name,
+        slug: cat.slug,
+        description: cat.description,
+        itemCount: allProducts.filter((p) => p.category === cat.slug).length,
+        imageUrl: cat.imageUrl,
+      }));
+    }
+    return productTypes.map((pt: ProductType) => {
+      const matchingInitial = INITIAL_CATEGORIES.find((c) => c.slug === pt.slug);
+      const count = allProducts.filter((p) => p.category === pt.slug).length;
+      const fallbackImage =
+        allProducts.find((p) => p.category === pt.slug)?.imageUrl ||
+        '/products/earrings/Wreath%20Flowers.webp';
+      return {
+        id: pt.slug,
+        name: pt.name,
+        slug: pt.slug,
+        description:
+          pt.description ||
+          matchingInitial?.description ||
+          `Explore our handpicked ${pt.name.toLowerCase()} collection.`,
+        itemCount: count,
+        imageUrl: matchingInitial?.imageUrl || fallbackImage,
+      };
+    });
+  }, [productTypes, allProducts]);
+
+  const filterTabs = useMemo(() => {
+    const tabs: Array<{ id: string; label: string }> = [{ id: 'all', label: 'Featured' }];
+    for (const pt of productTypes) {
+      tabs.push({ id: pt.slug, label: pt.name });
+    }
+    return tabs;
+  }, [productTypes]);
 
   useEffect(() => {
     const observer = initRevealObserver();
@@ -117,12 +205,16 @@ export function HomeFeature() {
 
                 {/* Main Tall Arch Showcase Image */}
                 <Link
-                  href="/product/earring-wreath-flowers"
+                  href={heroPrimaryProduct ? `/product/${heroPrimaryProduct.slug}` : '/shop'}
                   className="group relative block aspect-[4/5] w-full overflow-hidden arch-frame bg-[#F3EDE4] border border-[#E7E0D6] shadow-2xl"
                 >
                   <Image
-                    src="/products/earrings/Wreath%20Flowers.webp"
-                    alt="Wreath Flowers — French Light Luxury Ear Clip"
+                    src={heroPrimaryProduct?.imageUrl || '/products/earrings/Wreath%20Flowers.webp'}
+                    alt={
+                      heroPrimaryProduct
+                        ? `${heroPrimaryProduct.name} — ${heroPrimaryProduct.categoryName}`
+                        : 'Wreath Flowers — French Light Luxury Ear Clip'
+                    }
                     fill
                     priority
                     sizes="(max-width: 1024px) 90vw, 420px"
@@ -135,36 +227,54 @@ export function HomeFeature() {
                         Signature Piece
                       </span>
                       <span className="font-serif-display text-2xl font-medium">
-                        Wreath Flowers Ear Clip
+                        {heroPrimaryProduct?.name || 'Wreath Flowers Ear Clip'}
                       </span>
                     </div>
-                    <span className="bg-[#FAF7F2] px-3 py-1 text-xs font-semibold text-[#1C1917]">
-                      ৳410
-                    </span>
+                    <div className="flex items-center gap-1.5 bg-[#FAF7F2] px-3 py-1 text-xs font-semibold text-[#1C1917]">
+                      {heroPrimaryProduct?.originalPriceBDT &&
+                        heroPrimaryProduct.originalPriceBDT > heroPrimaryProduct.priceBDT && (
+                          <span className="text-[10px] line-through text-[#78716C] font-normal">
+                            ৳{heroPrimaryProduct.originalPriceBDT.toLocaleString()}
+                          </span>
+                        )}
+                      <span>
+                        ৳{(heroPrimaryProduct?.priceBDT ?? 236).toLocaleString()}
+                      </span>
+                    </div>
                   </div>
                 </Link>
 
                 {/* Floating Secondary Editorial Card (Bottom-Left Overlap) */}
                 <Link
-                  href="/product/ring-j008-gold"
-                  className="hidden sm:flex items-center gap-3.5 absolute -bottom-6 -left-8 bg-white/95 backdrop-blur-md border border-[#E7E0D6] p-3 shadow-xl hover:border-[#C5A059] transition-all max-w-[230px]"
+                  href={heroSecondaryProduct ? `/product/${heroSecondaryProduct.slug}` : '/shop'}
+                  className="hidden sm:flex items-center gap-3.5 absolute -bottom-6 -left-8 bg-white/95 backdrop-blur-md border border-[#E7E0D6] p-3 shadow-xl hover:border-[#C5A059] transition-all max-w-[240px]"
                 >
                   <div className="relative h-14 w-14 flex-shrink-0 overflow-hidden bg-[#F3EDE4] border border-[#E7E0D6]">
                     <Image
-                      src="/products/rings/J008%20gold.webp"
-                      alt="Minimalist Band - J008 Gold"
+                      src={heroSecondaryProduct?.imageUrl || '/products/rings/J008%20gold.webp'}
+                      alt={heroSecondaryProduct?.name || 'Minimalist Band - J008 Gold'}
                       fill
                       className="object-cover"
                     />
                   </div>
                   <div className="pr-2">
                     <div className="text-[9px] font-semibold uppercase tracking-[0.18em] text-[#9A7B3E]">
-                      316L Steel
+                      {heroSecondaryProduct?.categoryName || '316L Steel'}
                     </div>
                     <div className="font-serif-display text-sm font-semibold text-[#1C1917] line-clamp-1">
-                      J008 Gold Band
+                      {heroSecondaryProduct?.name || 'J008 Gold Band'}
                     </div>
-                    <div className="text-xs font-semibold text-[#1C1917] mt-0.5">৳320</div>
+                    <div className="flex items-center gap-1.5 mt-0.5">
+                      <span className="text-xs font-semibold text-[#1C1917]">
+                        ৳{(heroSecondaryProduct?.priceBDT ?? 192).toLocaleString()}
+                      </span>
+                      {heroSecondaryProduct?.originalPriceBDT &&
+                        heroSecondaryProduct.originalPriceBDT > heroSecondaryProduct.priceBDT && (
+                          <span className="text-[10px] line-through text-[#78716C] font-normal">
+                            ৳{heroSecondaryProduct.originalPriceBDT.toLocaleString()}
+                          </span>
+                        )}
+                    </div>
                   </div>
                 </Link>
               </div>
@@ -204,8 +314,8 @@ export function HomeFeature() {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8">
-          {INITIAL_CATEGORIES.map((cat, idx) => (
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 lg:gap-8">
+          {displayCategories.map((cat, idx) => (
             <Link
               key={cat.id}
               href={`/shop?category=${cat.slug}`}
@@ -261,14 +371,7 @@ export function HomeFeature() {
 
           {/* Interactive Boutique Filter Tabs */}
           <div className="flex flex-wrap items-center gap-2">
-            {(
-              [
-                { id: 'all', label: 'Featured' },
-                { id: 'earrings', label: 'French Ear Clips' },
-                { id: 'rings', label: '316L Rings' },
-                { id: 'bracelets', label: 'Bracelets' },
-              ] as const
-            ).map((tab) => (
+            {filterTabs.map((tab) => (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}

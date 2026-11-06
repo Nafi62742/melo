@@ -33,7 +33,7 @@ const SLIDES: Slide[] = [
     badge: 'Curated Rings',
     title: 'Minimalist Band',
     highlight: 'Rings',
-    subtitle: 'Polished, tarnish-resistant stainless steel bands. Starting at only ৳100.',
+    subtitle: 'Polished, tarnish-resistant stainless steel bands crafted for accessible everyday luxury.',
     ctaText: 'Shop Rings',
     ctaLink: '/shop?category=rings',
   },

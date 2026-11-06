@@ -1,6 +1,8 @@
 import { Product } from '../models/product.model';
 import { INITIAL_PRODUCTS } from '../data/products.data';
-import { productRepository } from '../repositories/product.repository';
+import { productRepository, PRODUCTS_UPDATED_EVENT } from '../repositories/product.repository';
+
+export { PRODUCTS_UPDATED_EVENT };
 
 /**
  * ProductService — Domain service for catalogue management, pricing, stock,
