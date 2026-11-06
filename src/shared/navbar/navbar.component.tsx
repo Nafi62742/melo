@@ -9,6 +9,7 @@ import {
   productTypeService,
   PRODUCT_TYPES_UPDATED_EVENT,
 } from '@/core/services/product-type.service';
+import { adminService, ADMIN_AUTH_CHANGED_EVENT } from '@/core/services/admin.service';
 import { useI18n } from '@/core/i18n/i18n.context';
 import { ShoppingBag, Search, Menu, X, Sparkles, User, ShieldCheck, Heart } from 'lucide-react';
 
@@ -22,9 +23,25 @@ export function Navbar() {
   const { language, toggleLanguage, t } = useI18n();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [isAdminLoggedIn, setIsAdminLoggedIn] = useState(false);
   const [productTypes, setProductTypes] = useState(() =>
     productTypeService.getAllProductTypes()
   );
+
+  useEffect(() => {
+    const checkAdminAuth = () => {
+      setIsAdminLoggedIn(adminService.isAuthenticated());
+    };
+
+    checkAdminAuth();
+
+    window.addEventListener(ADMIN_AUTH_CHANGED_EVENT, checkAdminAuth);
+    window.addEventListener('storage', checkAdminAuth);
+    return () => {
+      window.removeEventListener(ADMIN_AUTH_CHANGED_EVENT, checkAdminAuth);
+      window.removeEventListener('storage', checkAdminAuth);
+    };
+  }, [pathname]);
 
   useEffect(() => {
     const refreshProductTypes = () => {
@@ -165,19 +182,21 @@ export function Navbar() {
             <span className="hidden xl:inline">Account</span>
           </Link>
 
-          {/* Admin Panel Quick Link */}
-          <Link
-            href="/admin"
-            className={`hidden sm:flex items-center gap-1.5 border px-2.5 py-1.5 text-[10px] font-semibold uppercase tracking-wider transition ${
-              pathname === '/admin'
-                ? 'border-[#1C1917] bg-[#1C1917] text-[#FAF7F2]'
-                : 'border-[#E7E0D6] bg-white/80 text-[#78716C] hover:border-[#C5A059] hover:text-[#1C1917]'
-            }`}
-            title="Admin Dashboard"
-          >
-            <ShieldCheck className="w-3.5 h-3.5 text-[#9A7B3E]" />
-            <span className="hidden xl:inline">{t.nav.admin}</span>
-          </Link>
+          {/* Admin Panel Quick Link - Only shown when authenticated as admin */}
+          {isAdminLoggedIn && (
+            <Link
+              href="/admin"
+              className={`hidden sm:flex items-center gap-1.5 border px-2.5 py-1.5 text-[10px] font-semibold uppercase tracking-wider transition ${
+                pathname === '/admin'
+                  ? 'border-[#1C1917] bg-[#1C1917] text-[#FAF7F2]'
+                  : 'border-[#E7E0D6] bg-white/80 text-[#78716C] hover:border-[#C5A059] hover:text-[#1C1917]'
+              }`}
+              title="Admin Dashboard"
+            >
+              <ShieldCheck className="w-3.5 h-3.5 text-[#9A7B3E]" />
+              <span className="hidden xl:inline">{t.nav.admin}</span>
+            </Link>
+          )}
 
           {/* Boutique Wishlist Trigger */}
           <button
@@ -258,14 +277,16 @@ export function Navbar() {
               <span>My Account &amp; Order Tracking</span>
             </Link>
 
-            <Link
-              href="/admin"
-              onClick={() => setMobileMenuOpen(false)}
-              className="flex items-center gap-2 border border-[#E7E0D6] bg-white px-3.5 py-2.5 text-xs font-semibold uppercase tracking-wider text-[#1C1917]"
-            >
-              <ShieldCheck className="w-4 h-4 text-[#9A7B3E]" />
-              <span>{t.nav.admin} Dashboard</span>
-            </Link>
+            {isAdminLoggedIn && (
+              <Link
+                href="/admin"
+                onClick={() => setMobileMenuOpen(false)}
+                className="flex items-center gap-2 border border-[#E7E0D6] bg-white px-3.5 py-2.5 text-xs font-semibold uppercase tracking-wider text-[#1C1917]"
+              >
+                <ShieldCheck className="w-4 h-4 text-[#9A7B3E]" />
+                <span>{t.nav.admin} Dashboard</span>
+              </Link>
+            )}
           </div>
         </div>
       )}
