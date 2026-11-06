@@ -5,5 +5,6 @@ export * from './order.service';
 export * from './product.service';
 export * from './product-type.service';
 export * from './store-link.service';
+export * from './store-content.service';
 export * from './supabase.service';
 

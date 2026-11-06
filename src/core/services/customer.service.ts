@@ -1,5 +1,5 @@
 import { CustomerProfile } from '../models/customer.model';
-import { DeliveryZone } from '../models/order.model';
+import { DeliveryZone, OrderCustomerInfo } from '../models/order.model';
 import { customerRepository } from '../repositories/customer.repository';
 
 /**
@@ -101,6 +101,75 @@ class CustomerService {
 
   logout(): void {
     this.setCurrentCustomer(null);
+  }
+
+  async ensureCustomerFromOrder(
+    info: OrderCustomerInfo,
+    orderTotal: number
+  ): Promise<CustomerProfile> {
+    const cleanPhone = info.phone.trim().replace(/\s+/g, '');
+
+    // 1. Check if customer already exists in DB or local
+    let existing = await customerRepository.findByPhoneInDb(cleanPhone);
+    if (!existing) {
+      existing = customerRepository.loadAllLocal().find((c) => c.phone === cleanPhone) || null;
+    }
+
+    if (existing) {
+      const updated: CustomerProfile = {
+        ...existing,
+        fullName: info.fullName.trim() || existing.fullName,
+        defaultAddress: info.address.trim() || existing.defaultAddress,
+        deliveryZone: info.deliveryZone || existing.deliveryZone,
+        totalOrders: (existing.totalOrders || 0) + 1,
+        totalSpent: (existing.totalSpent || 0) + orderTotal,
+      };
+      customerRepository.saveLocalCustomer(updated);
+      void customerRepository.upsertInDb(updated);
+
+      const current = this.getCurrentCustomer();
+      if (current && current.phone === cleanPhone) {
+        this.setCurrentCustomer(updated);
+      }
+      return updated;
+    }
+
+    // 2. Auto-create guest customer profile so order is tied to them
+    const newProfile: CustomerProfile = {
+      id: `cust-${Date.now()}`,
+      phone: cleanPhone,
+      email: info.email?.trim() || undefined,
+      fullName: info.fullName.trim(),
+      defaultAddress: info.address.trim(),
+      deliveryZone: info.deliveryZone,
+      totalOrders: 1,
+      totalSpent: orderTotal,
+      savedTrxIds: [],
+      createdAt: new Date().toISOString(),
+    };
+
+    customerRepository.saveLocalCustomer(newProfile);
+    void customerRepository.upsertInDb(newProfile);
+    return newProfile;
+  }
+
+  async getAllCustomers(): Promise<CustomerProfile[]> {
+    const remote = await customerRepository.fetchAllFromDb();
+    if (remote && Array.isArray(remote) && remote.length > 0) {
+      return remote;
+    }
+    return customerRepository.loadAllLocal().map((c) => ({
+      id: c.id,
+      phone: c.phone,
+      email: c.email,
+      fullName: c.fullName,
+      defaultAddress: c.defaultAddress,
+      deliveryZone: c.deliveryZone,
+      totalOrders: c.totalOrders ?? 0,
+      totalSpent: c.totalSpent ?? 0,
+      savedTrxIds: c.savedTrxIds || [],
+      createdAt: c.createdAt,
+    }));
   }
 }
 

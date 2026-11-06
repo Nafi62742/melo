@@ -9,6 +9,8 @@ export interface CustomerProfile {
   defaultAddress: string;
   deliveryZone: DeliveryZone;
   savedTrxIds: string[];
+  totalOrders?: number;
+  totalSpent?: number;
   createdAt: string;
 }
 

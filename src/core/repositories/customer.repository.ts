@@ -13,6 +13,8 @@ interface CustomerRow {
   password?: string;
   default_address: string;
   delivery_zone: DeliveryZone;
+  total_orders?: number;
+  total_spent?: number;
   saved_trx_ids: string[];
   created_at?: string;
   updated_at?: string;
@@ -88,6 +90,8 @@ export class CustomerRepository {
         ...(password ? { password } : {}),
         default_address: customer.defaultAddress,
         delivery_zone: customer.deliveryZone,
+        total_orders: customer.totalOrders ?? 0,
+        total_spent: customer.totalSpent ?? 0,
         saved_trx_ids: customer.savedTrxIds,
         updated_at: new Date().toISOString(),
       };
@@ -109,8 +113,72 @@ export class CustomerRepository {
         fullName: row.full_name,
         defaultAddress: row.default_address,
         deliveryZone: row.delivery_zone,
+        totalOrders: row.total_orders ?? customer.totalOrders ?? 0,
+        totalSpent: row.total_spent ?? customer.totalSpent ?? 0,
         savedTrxIds: Array.isArray(row.saved_trx_ids) ? row.saved_trx_ids : [],
         createdAt: row.created_at || customer.createdAt,
+      };
+    } catch {
+      return null;
+    }
+  }
+
+  async fetchAllFromDb(): Promise<CustomerProfile[] | null> {
+    if (!supabaseClient.isConfigured()) return null;
+    try {
+      const res = await fetch(
+        `${supabaseClient.baseUrl}/rest/v1/customers?select=*&order=created_at.desc`,
+        {
+          headers: supabaseClient.getHeaders(),
+          cache: 'no-store',
+        }
+      );
+      if (!res.ok) return null;
+      const rows = (await res.json()) as CustomerRow[];
+      return rows.map((r) => ({
+        id: r.id || `cust-${r.phone}`,
+        phone: r.phone,
+        email: r.email || undefined,
+        fullName: r.full_name,
+        defaultAddress: r.default_address,
+        deliveryZone: r.delivery_zone,
+        totalOrders: r.total_orders ?? 0,
+        totalSpent: r.total_spent ?? 0,
+        savedTrxIds: Array.isArray(r.saved_trx_ids) ? r.saved_trx_ids : [],
+        createdAt: r.created_at || new Date().toISOString(),
+      }));
+    } catch {
+      return null;
+    }
+  }
+
+  async findByPhoneInDb(phone: string): Promise<CustomerProfile | null> {
+    if (!supabaseClient.isConfigured()) return null;
+    try {
+      const res = await fetch(
+        `${supabaseClient.baseUrl}/rest/v1/customers?phone=eq.${encodeURIComponent(
+          phone.trim()
+        )}&select=*`,
+        {
+          headers: supabaseClient.getHeaders(),
+          cache: 'no-store',
+        }
+      );
+      if (!res.ok) return null;
+      const rows = (await res.json()) as CustomerRow[];
+      const row = rows[0];
+      if (!row) return null;
+      return {
+        id: row.id || `cust-${row.phone}`,
+        phone: row.phone,
+        email: row.email || undefined,
+        fullName: row.full_name,
+        defaultAddress: row.default_address,
+        deliveryZone: row.delivery_zone,
+        totalOrders: row.total_orders ?? 0,
+        totalSpent: row.total_spent ?? 0,
+        savedTrxIds: Array.isArray(row.saved_trx_ids) ? row.saved_trx_ids : [],
+        createdAt: row.created_at || new Date().toISOString(),
       };
     } catch {
       return null;

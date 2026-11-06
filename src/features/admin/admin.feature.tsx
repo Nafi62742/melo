@@ -8,8 +8,10 @@ import { productService } from '@/core/services/product.service';
 import { productTypeService } from '@/core/services/product-type.service';
 import { orderService } from '@/core/services/order.service';
 import { storeLinkService } from '@/core/services/store-link.service';
+import { customerService } from '@/core/services/customer.service';
 import { Product } from '@/core/models/product.model';
 import { ProductType } from '@/core/models/product-type.model';
+import { CustomerProfile } from '@/core/models/customer.model';
 import { CartItem } from '@/core/models/cart.model';
 import {
   Order,
@@ -25,6 +27,7 @@ import { exportProductsToCsv, mergeProductsFromCsv } from '@/core/utils/csv-prod
 import { AdminOrdersTab } from './components/admin-orders-tab.component';
 import { AdminAnalyticsTab } from './components/admin-analytics-tab.component';
 import { AdminLinksTab } from './components/admin-links-tab.component';
+import { AdminHomepageTab } from './components/admin-homepage-tab.component';
 import { AdminProductModal, ProductFormState } from './components/admin-product-modal.component';
 import { AdminManualOrderModal } from './components/admin-manual-order-modal.component';
 import {
@@ -45,6 +48,8 @@ import {
   Upload,
   Download,
   TrendingUp,
+  Star,
+  Sparkles,
 } from 'lucide-react';
 
 const INITIAL_FORM: ProductFormState = {
@@ -73,9 +78,9 @@ export function AdminFeature() {
   const [dbReachable, setDbReachable] = useState<boolean | null>(null);
 
   // Dashboard State
-  const [activeTab, setActiveTab] = useState<'products' | 'orders' | 'analytics' | 'links'>(
-    'orders'
-  );
+  const [activeTab, setActiveTab] = useState<
+    'products' | 'orders' | 'analytics' | 'links' | 'homepage'
+  >('orders');
   const [products, setProducts] = useState<Product[]>(() => [...productService.getAllProducts()]);
   const [productTypes, setProductTypes] = useState<ProductType[]>(() => [
     ...productTypeService.getAllProductTypes(),
@@ -83,6 +88,7 @@ export function AdminFeature() {
   const [newTypeName, setNewTypeName] = useState('');
   const [newTypeDesc, setNewTypeDesc] = useState('');
   const [orders, setOrders] = useState<Order[]>(() => orderService.getOrders());
+  const [customers, setCustomers] = useState<CustomerProfile[]>([]);
   const [bkashNumber, setBkashNumber] = useState<string>(() => orderService.getBkashNumber());
   const [storeLinks, setStoreLinks] = useState<StoreLink[]>(() => [
     ...storeLinkService.getAllLinks(),
@@ -127,9 +133,9 @@ export function AdminFeature() {
 
   // Catalogue Filter State
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
-  const [stockFilter, setStockFilter] = useState<'all' | 'in_stock' | 'low_stock' | 'sold_out'>(
-    'all'
-  );
+  const [stockFilter, setStockFilter] = useState<
+    'all' | 'in_stock' | 'low_stock' | 'sold_out' | 'featured'
+  >('all');
   const [searchQuery, setSearchQuery] = useState('');
 
   const totalStock = products.reduce((acc, p) => acc + p.stock, 0);
@@ -204,6 +210,8 @@ export function AdminFeature() {
     const matchesStock =
       stockFilter === 'all'
         ? true
+        : stockFilter === 'featured'
+        ? Boolean(p.isFeatured)
         : stockFilter === 'in_stock'
         ? p.stock > 0
         : stockFilter === 'low_stock'
@@ -229,6 +237,9 @@ export function AdminFeature() {
       setProducts([...synced.products]);
       setOrders([...synced.orders]);
       setStoreLinks([...synced.storeLinks]);
+    });
+    void customerService.getAllCustomers().then((custs) => {
+      setCustomers(custs);
     });
   }, [isAuthenticated]);
 
@@ -295,6 +306,24 @@ export function AdminFeature() {
   const handlePaymentStatusChange = (orderId: string, paymentStatus: PaymentStatus) => {
     orderService.updatePaymentStatus(orderId, paymentStatus);
     setOrders(orderService.getOrders());
+  };
+
+  const handleUpdateOrderTracking = (
+    orderId: string,
+    tracking: {
+      trackingNumber: string;
+      courierName?: string;
+      courierTrackingUrl?: string;
+      estimatedDelivery?: string;
+      status?: OrderStatus;
+    }
+  ) => {
+    orderService.updateOrderTracking(orderId, tracking);
+    setOrders([...orderService.getOrders()]);
+    setSyncMessage(
+      `Assigned tracking ${tracking.trackingNumber} (${tracking.courierName || 'Courier'}) to order`
+    );
+    setTimeout(() => setSyncMessage(null), 3500);
   };
 
   const handleSaveBkashNumber = (e: React.FormEvent) => {
@@ -464,6 +493,8 @@ export function AdminFeature() {
         manualPaymentMethod === 'bkash' && manualTrxId.trim() ? 'verified' : 'pending',
       trxId: manualTrxId.trim() ? manualTrxId.trim().toUpperCase() : undefined,
       bkashSenderNumber: manualSenderPhone.trim() ? manualSenderPhone.trim() : undefined,
+      estimatedDelivery:
+        manualDeliveryZone === 'inside_dhaka' ? '24–48 hours' : '3–4 business days',
     };
 
     manualItems.forEach((item) => {
@@ -510,6 +541,17 @@ export function AdminFeature() {
     if (!confirm(`Delete "${product.name}" from the catalogue?`)) return;
     productService.deleteProduct(product.id);
     refreshProducts();
+  };
+
+  const handleToggleFeatured = (product: Product) => {
+    productService.toggleProductFeatured(product.id);
+    refreshProducts();
+    setSyncMessage(
+      product.isFeatured
+        ? `Removed "${product.name}" from featured pieces`
+        : `Marked "${product.name}" as Featured ★`
+    );
+    setTimeout(() => setSyncMessage(null), 3000);
   };
 
   const handleAddProductType = (e: React.FormEvent) => {
@@ -945,6 +987,17 @@ export function AdminFeature() {
             >
               Chat &amp; URLs ({storeLinks.length})
             </button>
+            <button
+              onClick={() => setActiveTab('homepage')}
+              className={`inline-flex items-center gap-1.5 px-3.5 py-2 text-[11px] uppercase tracking-[0.14em] transition cursor-pointer ${
+                activeTab === 'homepage'
+                  ? 'bg-[#1C1917] text-[#FAF7F2]'
+                  : 'text-[#78716C] hover:text-[#1C1917]'
+              }`}
+            >
+              <Sparkles className="w-3.5 h-3.5 text-[#C5A059]" />
+              <span>Homepage &amp; Hero</span>
+            </button>
           </div>
 
           <button
@@ -1087,10 +1140,15 @@ export function AdminFeature() {
       {activeTab === 'orders' && (
         <AdminOrdersTab
           orders={orders}
+          customers={customers}
           onOpenManualOrderModal={openManualOrderModal}
-          onRefreshOrders={() => setOrders(orderService.getOrders())}
+          onRefreshOrders={() => {
+            void orderService.syncFromDatabase().then((o) => setOrders([...o]));
+            void customerService.getAllCustomers().then((c) => setCustomers(c));
+          }}
           onPaymentStatusChange={handlePaymentStatusChange}
           onOrderStatusChange={handleStatusChange}
+          onUpdateOrderTracking={handleUpdateOrderTracking}
         />
       )}
 
@@ -1286,6 +1344,10 @@ export function AdminFeature() {
                       [
                         { key: 'all', label: 'All Stock' },
                         {
+                          key: 'featured',
+                          label: `★ Featured (${products.filter((p) => p.isFeatured).length})`,
+                        },
+                        {
                           key: 'in_stock',
                           label: `In Stock (${products.filter((p) => p.stock > 0).length})`,
                         },
@@ -1375,10 +1437,30 @@ export function AdminFeature() {
                                 />
                               </div>
                               <div>
-                                <div className="font-serif-display text-base font-medium text-[#1C1917]">
-                                  {p.name}
+                                <div className="flex items-center gap-1.5">
+                                  <button
+                                    type="button"
+                                    onClick={() => handleToggleFeatured(p)}
+                                    title={
+                                      p.isFeatured
+                                        ? 'Featured on Storefront (Click to unfeature)'
+                                        : 'Click to feature on Storefront'
+                                    }
+                                    className="p-0.5 hover:scale-125 transition cursor-pointer"
+                                  >
+                                    <Star
+                                      className={`w-3.5 h-3.5 ${
+                                        p.isFeatured
+                                          ? 'fill-amber-400 text-amber-500'
+                                          : 'text-stone-300 hover:text-amber-400'
+                                      }`}
+                                    />
+                                  </button>
+                                  <span className="font-serif-display text-base font-medium text-[#1C1917]">
+                                    {p.name}
+                                  </span>
                                 </div>
-                                <div className="text-[10px] text-[#A8A29E]">{p.slug}</div>
+                                <div className="text-[10px] text-[#A8A29E] pl-5">{p.slug}</div>
                               </div>
                             </div>
                           </td>
@@ -1558,6 +1640,11 @@ export function AdminFeature() {
           onChangeNewLinkCategory={setNewLinkCategory}
           onAddNewStoreLink={handleAddNewStoreLink}
         />
+      )}
+
+      {/* Tab 5: Homepage & Hero Customizer */}
+      {activeTab === 'homepage' && (
+        <AdminHomepageTab products={products} onNotify={setSyncMessage} />
       )}
 
       {/* Add / Edit Product Modal */}
