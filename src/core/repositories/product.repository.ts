@@ -1,7 +1,8 @@
 import { Product } from '../models/product.model';
 import { supabaseClient } from './supabase.client';
 
-const PRODUCTS_STORAGE_KEY = 'melo_products_catalogue_v3';
+export const PRODUCTS_STORAGE_KEY = 'melo_products_catalogue_v3';
+export const PRODUCTS_UPDATED_EVENT = 'melo-products-updated';
 
 /**
  * ProductRepository — Handles all database (`public.products`) and local storage
@@ -28,6 +29,7 @@ export class ProductRepository {
     if (typeof window === 'undefined') return;
     try {
       localStorage.setItem(PRODUCTS_STORAGE_KEY, JSON.stringify(products));
+      window.dispatchEvent(new CustomEvent(PRODUCTS_UPDATED_EVENT));
     } catch {
       // ignore storage errors
     }
