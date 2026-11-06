@@ -2,7 +2,7 @@ import { Product } from '../models/product.model';
 import { INITIAL_PRODUCTS } from '../data/products.data';
 import { supabaseService } from './supabase.service';
 
-const PRODUCTS_STORAGE_KEY = 'melo_products_catalogue_v2';
+const PRODUCTS_STORAGE_KEY = 'melo_products_catalogue_v3';
 
 class ProductService {
   private products: Product[] = [...INITIAL_PRODUCTS];

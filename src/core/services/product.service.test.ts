@@ -4,12 +4,16 @@ describe('ProductService', () => {
   it('should load all products', () => {
     const products = productService.getAllProducts();
     expect(products.length).toBeGreaterThan(0);
-    expect(products.length).toBe(27);
+    expect(products.length).toBe(54);
   });
 
   it('should filter products by category', () => {
     const earrings = productService.getProductsByCategory('earrings');
+    const rings = productService.getProductsByCategory('rings');
+    const bracelets = productService.getProductsByCategory('bracelets');
     expect(earrings.length).toBe(27);
+    expect(rings.length).toBe(25);
+    expect(bracelets.length).toBe(2);
     expect(earrings.every((p) => p.category === 'earrings')).toBe(true);
   });
 
