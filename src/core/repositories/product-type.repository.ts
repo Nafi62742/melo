@@ -2,6 +2,7 @@ import { ProductType } from '../models/product-type.model';
 import { supabaseClient } from './supabase.client';
 
 const PRODUCT_TYPES_STORAGE_KEY = 'melo_product_types_v1';
+export const PRODUCT_TYPES_UPDATED_EVENT = 'melo-product-types-updated';
 
 interface ProductTypeRow {
   slug: string;
@@ -35,6 +36,7 @@ export class ProductTypeRepository {
     if (typeof window === 'undefined') return;
     try {
       localStorage.setItem(PRODUCT_TYPES_STORAGE_KEY, JSON.stringify(productTypes));
+      window.dispatchEvent(new CustomEvent(PRODUCT_TYPES_UPDATED_EVENT));
     } catch {
       // ignore storage errors
     }

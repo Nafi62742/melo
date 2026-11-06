@@ -2,21 +2,43 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Truck, ShieldCheck, HeartHandshake, PhoneCall, Sparkles, CreditCard, ExternalLink } from 'lucide-react';
+import {
+  Truck,
+  ShieldCheck,
+  HeartHandshake,
+  PhoneCall,
+  Sparkles,
+  CreditCard,
+  ExternalLink,
+} from 'lucide-react';
 import { storeLinkService, STORE_LINKS_UPDATED_EVENT } from '@/core/services/store-link.service';
-import { StoreLink, DEFAULT_STORE_LINKS } from '@/core/models/store-link.model';
+import {
+  productTypeService,
+  PRODUCT_TYPES_UPDATED_EVENT,
+} from '@/core/services/product-type.service';
+import { StoreLink } from '@/core/models/store-link.model';
+import { ProductType } from '@/core/models/product-type.model';
 
 export function Footer() {
-  const [links, setLinks] = useState<StoreLink[]>(DEFAULT_STORE_LINKS);
+  const [links, setLinks] = useState<StoreLink[]>(() => [
+    ...storeLinkService.getAllLinks(),
+  ]);
+  const [productTypes, setProductTypes] = useState<ProductType[]>(() =>
+    productTypeService.getAllProductTypes()
+  );
 
   useEffect(() => {
     const refreshLinks = () => {
       setLinks([...storeLinkService.getAllLinks()]);
     };
-    refreshLinks();
+    const refreshTypes = () => {
+      setProductTypes([...productTypeService.getAllProductTypes()]);
+    };
     window.addEventListener(STORE_LINKS_UPDATED_EVENT, refreshLinks);
+    window.addEventListener(PRODUCT_TYPES_UPDATED_EVENT, refreshTypes);
     return () => {
       window.removeEventListener(STORE_LINKS_UPDATED_EVENT, refreshLinks);
+      window.removeEventListener(PRODUCT_TYPES_UPDATED_EVENT, refreshTypes);
     };
   }, []);
 
@@ -131,24 +153,24 @@ export function Footer() {
               Collections
             </div>
             <ul className="space-y-2.5 text-xs text-[#A8A29E]">
-              <li>
-                <Link href="/shop?category=earrings" className="hover:text-[#C5A059] transition">
-                  French Ear Clips
-                </Link>
-              </li>
-              <li>
-                <Link href="/shop?category=rings" className="hover:text-[#C5A059] transition">
-                  Minimalist Rings
-                </Link>
-              </li>
-              <li>
-                <Link href="/shop?category=bracelets" className="hover:text-[#C5A059] transition">
-                  Charm Bracelets
-                </Link>
-              </li>
+              {productTypes.map((pt) => (
+                <li key={pt.slug}>
+                  <Link
+                    href={`/shop?category=${pt.slug}`}
+                    className="hover:text-[#C5A059] transition"
+                  >
+                    {pt.name}
+                  </Link>
+                </li>
+              ))}
               <li>
                 <Link href="/shop" className="hover:text-[#C5A059] transition">
                   All Curated Pieces
+                </Link>
+              </li>
+              <li>
+                <Link href="/account" className="hover:text-[#C5A059] transition">
+                  Track Order &amp; Account
                 </Link>
               </li>
             </ul>
