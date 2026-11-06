@@ -3,11 +3,11 @@
 import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
+import { adminService } from '@/core/services/admin.service';
 import { productService } from '@/core/services/product.service';
 import { productTypeService } from '@/core/services/product-type.service';
 import { orderService } from '@/core/services/order.service';
 import { storeLinkService } from '@/core/services/store-link.service';
-import { supabaseService } from '@/core/services/supabase.service';
 import { Product } from '@/core/models/product.model';
 import { ProductType } from '@/core/models/product-type.model';
 import { CartItem } from '@/core/models/cart.model';
@@ -20,17 +20,19 @@ import {
   OrderSource,
 } from '@/core/models/order.model';
 import { StoreLink, StoreLinkCategory } from '@/core/models/store-link.model';
-import { formatBDT } from '@/core/utils/currency.util';
 import { slugify } from '@/core/utils/slug.util';
 import { exportProductsToCsv, mergeProductsFromCsv } from '@/core/utils/csv-products.util';
+import { AdminOrdersTab } from './components/admin-orders-tab.component';
+import { AdminAnalyticsTab } from './components/admin-analytics-tab.component';
+import { AdminLinksTab } from './components/admin-links-tab.component';
+import { AdminProductModal, ProductFormState } from './components/admin-product-modal.component';
+import { AdminManualOrderModal } from './components/admin-manual-order-modal.component';
 import {
   Package,
   ShoppingBag,
   Layers,
   ArrowLeft,
-  RefreshCw,
   CheckCircle,
-  Clock,
   Plus,
   Minus,
   Edit3,
@@ -40,31 +42,10 @@ import {
   Lock,
   LogOut,
   Smartphone,
-  Link2,
   Upload,
   Download,
   TrendingUp,
-  MessageCircle,
-  TrendingUp,
-  MessageCircle,
 } from 'lucide-react';
-
-const ADMIN_ID = 'melo@gmail.com';
-const ADMIN_SESSION_KEY = 'melo_admin_authenticated';
-
-interface ProductFormState {
-  id?: string;
-  name: string;
-  category: string;
-  priceBDT: number;
-  originalPriceBDT: number;
-  costPriceCNY: number;
-  stock: number;
-  imageUrl: string;
-  description: string;
-  isFeatured: boolean;
-  isNew: boolean;
-}
 
 const INITIAL_FORM: ProductFormState = {
   name: '',
@@ -81,16 +62,10 @@ const INITIAL_FORM: ProductFormState = {
 };
 
 export function AdminFeature() {
-  // Authentication State
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => {
-    if (typeof window !== 'undefined') {
-      return (
-        sessionStorage.getItem(ADMIN_SESSION_KEY) === 'true' ||
-        localStorage.getItem(ADMIN_SESSION_KEY) === 'true'
-      );
-    }
-    return false;
-  });
+  // Authentication State (delegated to AdminService -> AdminRepository)
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() =>
+    adminService.isAuthenticated()
+  );
   const [loginId, setLoginId] = useState('');
   const [loginPass, setLoginPass] = useState('');
   const [loginError, setLoginError] = useState<string | null>(null);
@@ -109,7 +84,9 @@ export function AdminFeature() {
   const [newTypeDesc, setNewTypeDesc] = useState('');
   const [orders, setOrders] = useState<Order[]>(() => orderService.getOrders());
   const [bkashNumber, setBkashNumber] = useState<string>(() => orderService.getBkashNumber());
-  const [storeLinks, setStoreLinks] = useState<StoreLink[]>(() => [...storeLinkService.getAllLinks()]);
+  const [storeLinks, setStoreLinks] = useState<StoreLink[]>(() => [
+    ...storeLinkService.getAllLinks(),
+  ]);
   const [newLinkKey, setNewLinkKey] = useState('');
   const [newLinkLabel, setNewLinkLabel] = useState('');
   const [newLinkUrl, setNewLinkUrl] = useState('');
@@ -127,7 +104,7 @@ export function AdminFeature() {
     Record<string, { priceBDT: string; costPriceCNY: string }>
   >({});
 
-  // Add / Edit Modal state
+  // Add / Edit Product Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState<ProductFormState>(INITIAL_FORM);
@@ -158,64 +135,8 @@ export function AdminFeature() {
   const totalStock = products.reduce((acc, p) => acc + p.stock, 0);
   const soldOutCount = products.filter((p) => p.stock === 0).length;
   const lowStockCount = products.filter((p) => p.stock > 0 && p.stock <= 2).length;
-  const isSupabaseConnected = supabaseService.isConfigured();
-
-  // Profit, Cost & Revenue Calculations (using Hippo tracker Per Piece + Shipping Cost)
-  const getUnitBaseCost = (p: Product): number => Number(p.costPriceCNY ?? 0);
-  const getUnitLandedCost = (p: Product): number => getUnitBaseCost(p) + shippingCostPerPiece;
-  const getUnitMinSellPrice = (p: Product): number => Math.round(getUnitLandedCost(p) * 1.5);
-  const getUnitNetProfit = (p: Product): number => p.priceBDT - getUnitLandedCost(p);
-
-  const totalInventoryBaseCost = products.reduce(
-    (acc, p) => acc + p.stock * getUnitBaseCost(p),
-    0
-  );
-  const totalInventoryLandedCost = products.reduce(
-    (acc, p) => acc + p.stock * getUnitLandedCost(p),
-    0
-  );
-  const totalExpectedRevenue = products.reduce((acc, p) => acc + p.stock * p.priceBDT, 0);
-  const totalExpectedNetProfit = totalExpectedRevenue - totalInventoryLandedCost;
-  const expectedMarginPercent =
-    totalExpectedRevenue > 0
-      ? Math.round((totalExpectedNetProfit / totalExpectedRevenue) * 100)
-      : 0;
-
-  // Realized Profit from Orders filtered by timeframe (today, week, month, all) and scope
-  const [nowMs] = useState<number>(() => Date.now());
-  const analyticsFilteredOrders = orders.filter((o) => {
-    const matchesScope =
-      analyticsOrderScope === 'delivered' ? o.status === 'delivered' : o.status !== 'cancelled';
-    if (!matchesScope) return false;
-    if (analyticsTimeframe === 'all') return true;
-    const orderTimeMs = new Date(o.createdAt).getTime();
-    if (Number.isNaN(orderTimeMs)) return true;
-    const diffHours = (nowMs - orderTimeMs) / (1000 * 60 * 60);
-    if (analyticsTimeframe === 'today') return diffHours <= 24;
-    if (analyticsTimeframe === 'week') return diffHours <= 24 * 7;
-    if (analyticsTimeframe === 'month') return diffHours <= 24 * 30;
-    return true;
-  });
-
-  const realizedOrderStats = analyticsFilteredOrders.reduce(
-    (acc, order) => {
-      for (const item of order.items) {
-        const latestProd =
-          products.find((p) => p.id === item.product.id || p.slug === item.product.slug) ||
-          item.product;
-        const unitSell = item.product.priceBDT;
-        const unitLanded =
-          Number(latestProd.costPriceCNY ?? item.product.costPriceCNY ?? 0) +
-          shippingCostPerPiece;
-        acc.unitsSold += item.quantity;
-        acc.itemRevenue += unitSell * item.quantity;
-        acc.itemLandedCost += unitLanded * item.quantity;
-        acc.netProfit += (unitSell - unitLanded) * item.quantity;
-      }
-      return acc;
-    },
-    { unitsSold: 0, itemRevenue: 0, itemLandedCost: 0, netProfit: 0 }
-  );
+  const isSupabaseConnected = adminService.isDatabaseConfigured();
+  const adminEmail = adminService.getDefaultAdminEmail();
 
   // Profit, Cost & Revenue Calculations (using Hippo tracker Per Piece + Shipping Cost)
   const getUnitBaseCost = (p: Product): number => Number(p.costPriceCNY ?? 0);
@@ -294,21 +215,16 @@ export function AdminFeature() {
   });
 
   useEffect(() => {
-    void supabaseService.checkConnection().then((ok) => setDbReachable(ok));
+    void adminService.checkDatabaseConnection().then((ok) => setDbReachable(ok));
   }, []);
 
   useEffect(() => {
     if (!isAuthenticated) return;
-    void Promise.all([
-      productTypeService.syncFromDatabase(),
-      productService.syncFromDatabase(),
-      orderService.syncFromDatabase(),
-      storeLinkService.syncFromDatabase(),
-    ]).then(([remoteTypes, remoteProducts, remoteOrders, remoteLinks]) => {
-      setProductTypes([...remoteTypes]);
-      setProducts([...remoteProducts]);
-      setOrders([...remoteOrders]);
-      setStoreLinks([...remoteLinks]);
+    void adminService.syncAllFromDatabase().then((synced) => {
+      setProductTypes([...synced.productTypes]);
+      setProducts([...synced.products]);
+      setOrders([...synced.orders]);
+      setStoreLinks([...synced.storeLinks]);
     });
   }, [isAuthenticated]);
 
@@ -317,16 +233,12 @@ export function AdminFeature() {
     setIsCheckingAuth(true);
     setLoginError(null);
 
-    const isValid = await supabaseService.verifyAdminCredentials(loginId, loginPass);
+    const isValid = await adminService.login(loginId, loginPass);
     setIsCheckingAuth(false);
 
     if (isValid) {
       setIsAuthenticated(true);
       setLoginError(null);
-      if (typeof window !== 'undefined') {
-        sessionStorage.setItem(ADMIN_SESSION_KEY, 'true');
-        localStorage.setItem(ADMIN_SESSION_KEY, 'true');
-      }
       setOrders(orderService.getOrders());
       setProducts([...productService.getAllProducts()]);
     } else {
@@ -335,13 +247,10 @@ export function AdminFeature() {
   };
 
   const handleLogout = () => {
+    adminService.logout();
     setIsAuthenticated(false);
     setLoginId('');
     setLoginPass('');
-    if (typeof window !== 'undefined') {
-      sessionStorage.removeItem(ADMIN_SESSION_KEY);
-      localStorage.removeItem(ADMIN_SESSION_KEY);
-    }
   };
 
   const refreshProducts = () => {
@@ -497,152 +406,10 @@ export function AdminFeature() {
       if (existing) {
         return prev.map((i) => (i.product.id === prod.id ? { ...i, quantity: nextQty } : i));
       }
-      return [...prev, { product: prod, quantity: Math.min(prod.stock, Math.max(1, manualSelectedQty)) }];
-    });
-    setManualSelectedQty(1);
-  };
-
-  const handleRemoveManualItem = (productId: string) => {
-    setManualItems((prev) => prev.filter((i) => i.product.id !== productId));
-  };
-
-  const handleSubmitManualOrder = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!manualCustName.trim() || !manualCustPhone.trim() || !manualCustAddress.trim()) {
-      alert('Please enter customer name, phone number, and delivery address.');
-      return;
-    }
-    if (manualItems.length === 0) {
-      alert('Please add at least 1 jewellery piece to the manual order.');
-      return;
-    }
-
-    const subtotal = manualItems.reduce(
-      (sum, item) => sum + item.product.priceBDT * item.quantity,
-      0
-    );
-    const deliveryFee = manualDeliveryZone === 'inside_dhaka' ? 70 : 130;
-    const total = subtotal + deliveryFee;
-    const orderNumber = `MELO-${Math.floor(100000 + Math.random() * 900000)}`;
-
-    const newOrder: Order = {
-      id: `order-${Date.now()}`,
-      orderNumber,
-      createdAt: new Date().toISOString(),
-      customer: {
-        fullName: manualCustName.trim(),
-        phone: manualCustPhone.trim(),
-        address: manualCustAddress.trim(),
-        deliveryZone: manualDeliveryZone,
-        orderSource: manualSource,
-        notes: `Manual ${manualSource === 'whatsapp' ? 'WhatsApp' : 'Facebook Messenger'} Order`,
-      },
-      customerPhone: manualCustPhone.trim(),
-      items: manualItems,
-      subtotal,
-      deliveryFee,
-      total,
-      paymentMethod: manualPaymentMethod,
-      status: 'confirmed',
-      paymentStatus:
-        manualPaymentMethod === 'bkash' && manualTrxId.trim() ? 'verified' : 'pending',
-      trxId: manualTrxId.trim() ? manualTrxId.trim().toUpperCase() : undefined,
-      bkashSenderNumber: manualSenderPhone.trim() ? manualSenderPhone.trim() : undefined,
-    };
-
-    // 1. Deduct stock from localStorage + Supabase public.products
-    manualItems.forEach((item) => {
-      productService.updateProductStock(item.product.id, -item.quantity);
-    });
-
-    // 2. Save order to localStorage + Supabase public.orders
-    orderService.saveOrder(newOrder);
-
-    refreshProducts();
-    setOrders(orderService.getOrders());
-    setIsManualOrderOpen(false);
-    setActiveTab('orders');
-    setSyncMessage(
-      `Created ${manualSource.toUpperCase()} Order ${orderNumber} for ${manualCustName.trim()} (${manualCustPhone.trim()})! Stock automatically deducted and customer can track on /account.`
-    );
-    setTimeout(() => setSyncMessage(null), 5000);
-  };
-
-  const handleInlinePriceChange = (
-    product: Product,
-    field: 'priceBDT' | 'costPriceCNY',
-    value: string
-  ) => {
-    setInlineEdits((prev) => {
-      const current = prev[product.id] || {
-        priceBDT: String(product.priceBDT),
-        costPriceCNY: String(product.costPriceCNY ?? 0),
-      };
-      return {
+      return [
         ...prev,
-        [product.id]: {
-          ...current,
-          [field]: value,
-        },
-      };
-    });
-  };
-
-  const handleSaveInlinePricing = (product: Product) => {
-    const edited = inlineEdits[product.id];
-    if (!edited) return;
-    const nextPrice = Math.round(Number(edited.priceBDT));
-    const nextCost = Number(edited.costPriceCNY);
-    if (Number.isNaN(nextPrice) || nextPrice <= 0) return;
-
-    productService.updateProductPricing(
-      product.id,
-      nextPrice,
-      Number.isNaN(nextCost) ? product.costPriceCNY : nextCost
-    );
-    refreshProducts();
-    setInlineEdits((prev) => {
-      const copy = { ...prev };
-      delete copy[product.id];
-      return copy;
-    });
-    setSyncMessage(
-      `Updated "${product.name}" — Selling Price: ৳${nextPrice}, Per Piece Cost: ৳${
-        Number.isNaN(nextCost) ? product.costPriceCNY ?? 0 : nextCost
-      }!`
-    );
-    setTimeout(() => setSyncMessage(null), 3000);
-  };
-
-  const openManualOrderModal = () => {
-    const firstAvailable = products.find((p) => p.stock > 0);
-    setManualSource('whatsapp');
-    setManualCustName('');
-    setManualCustPhone('');
-    setManualCustAddress('');
-    setManualDeliveryZone('inside_dhaka');
-    setManualPaymentMethod('cod');
-    setManualTrxId('');
-    setManualSenderPhone('');
-    setManualSelectedProductId(firstAvailable ? firstAvailable.id : '');
-    setManualSelectedQty(1);
-    setManualItems([]);
-    setIsManualOrderOpen(true);
-  };
-
-  const handleAddManualItem = () => {
-    if (!manualSelectedProductId) return;
-    const prod = products.find((p) => p.id === manualSelectedProductId);
-    if (!prod || prod.stock <= 0) return;
-
-    setManualItems((prev) => {
-      const existing = prev.find((i) => i.product.id === prod.id);
-      const currentQty = existing ? existing.quantity : 0;
-      const nextQty = Math.min(prod.stock, currentQty + Math.max(1, manualSelectedQty));
-      if (existing) {
-        return prev.map((i) => (i.product.id === prod.id ? { ...i, quantity: nextQty } : i));
-      }
-      return [...prev, { product: prod, quantity: Math.min(prod.stock, Math.max(1, manualSelectedQty)) }];
+        { product: prod, quantity: Math.min(prod.stock, Math.max(1, manualSelectedQty)) },
+      ];
     });
     setManualSelectedQty(1);
   };
@@ -695,12 +462,10 @@ export function AdminFeature() {
       bkashSenderNumber: manualSenderPhone.trim() ? manualSenderPhone.trim() : undefined,
     };
 
-    // 1. Deduct stock from localStorage + Supabase public.products
     manualItems.forEach((item) => {
       productService.updateProductStock(item.product.id, -item.quantity);
     });
 
-    // 2. Save order to localStorage + Supabase public.orders
     orderService.saveOrder(newOrder);
 
     refreshProducts();
@@ -905,17 +670,10 @@ export function AdminFeature() {
       return;
     }
     setSyncMessage('Syncing product types, products, and store URLs to Supabase PostgreSQL...');
-    // First push product_types so foreign keys on public.products are satisfied!
-    await productTypeService.pushAllToDatabase();
-    const [okProducts, okLinks] = await Promise.all([
-      productService.pushAllToDatabase(),
-      storeLinkService.pushAllToDatabase(),
-    ]);
+    const okProducts = await adminService.pushAllToDatabase();
     setSyncMessage(
-      okProducts && okLinks
+      okProducts
         ? 'All product types, products, and store URLs synced to Supabase database successfully!'
-        : okProducts
-        ? 'Product types & products synced! Run supabase/store_links.sql in Supabase to enable URL table sync.'
         : 'Could not sync — run supabase/product_types.sql and supabase/schema.sql in Supabase first.'
     );
     setTimeout(() => setSyncMessage(null), 4000);
@@ -972,7 +730,8 @@ export function AdminFeature() {
             MELO Admin Sign In
           </h1>
           <p className="mt-1.5 text-xs text-[#78716C] leading-relaxed">
-            Sign in with your administrator credentials to verify bKash TrxIDs, manage orders, and update jewellery inventory.
+            Sign in with your administrator credentials to verify bKash TrxIDs, manage orders, and
+            update jewellery inventory.
           </p>
 
           {loginError && (
@@ -1050,7 +809,7 @@ export function AdminFeature() {
           </h1>
           <div className="flex flex-wrap items-center gap-2 text-xs text-[#78716C] mt-1">
             <span>
-              Signed in as <strong className="text-[#1C1917]">{ADMIN_ID}</strong>
+              Signed in as <strong className="text-[#1C1917]">{adminEmail}</strong>
             </span>
             <span>•</span>
             {isSupabaseConnected ? (
@@ -1199,7 +958,10 @@ export function AdminFeature() {
             <CheckCircle className="w-4 h-4 text-[#9A7B3E]" />
             <span>{syncMessage}</span>
           </div>
-          <button onClick={() => setSyncMessage(null)} className="text-[#78716C] hover:text-[#1C1917]">
+          <button
+            onClick={() => setSyncMessage(null)}
+            className="text-[#78716C] hover:text-[#1C1917]"
+          >
             <X className="w-4 h-4" />
           </button>
         </div>
@@ -1219,7 +981,8 @@ export function AdminFeature() {
               Manual bKash Collection Number (Shown at Checkout)
             </div>
             <div className="text-[11px] text-[#78716C]">
-              Customers send bKash payments to this number and submit their TrxID for your manual check below.
+              Customers send bKash payments to this number and submit their TrxID for your manual
+              check below.
             </div>
           </div>
         </div>
@@ -1283,7 +1046,10 @@ export function AdminFeature() {
             <ShoppingBag className="w-4 h-4 text-pink-600" />
           </div>
           <div className="font-serif-display text-3xl font-semibold text-[#1C1917]">
-            {orders.filter((o) => o.paymentMethod === 'bkash' && o.paymentStatus === 'pending').length}
+            {
+              orders.filter((o) => o.paymentMethod === 'bkash' && o.paymentStatus === 'pending')
+                .length
+            }
           </div>
           <div className="text-[11px] text-[#78716C] mt-1">
             {orders.length} total customer orders
@@ -1310,388 +1076,41 @@ export function AdminFeature() {
         </div>
       </div>
 
-      {/* Main Content: Orders & Manual bKash TrxID Verification View */}
+      {/* Tab 1: Orders & Manual bKash TrxID Verification */}
       {activeTab === 'orders' && (
-        <div className="border border-[#E7E0D6] bg-white overflow-hidden">
-          <div className="px-6 py-4 border-b border-[#E7E0D6] flex flex-wrap items-center justify-between gap-3">
-            <div>
-              <h2 className="text-xs font-semibold uppercase tracking-[0.2em] text-[#1C1917]">
-                Customer Orders &amp; Manual bKash TrxID Verification
-              </h2>
-              <p className="text-[11px] text-[#78716C] mt-0.5">
-                Includes Website checkout orders and Manual WhatsApp / Messenger orders (customers can track both on <code>/account</code>).
-              </p>
-            </div>
-            <div className="flex items-center gap-3">
-              <button
-                type="button"
-                onClick={openManualOrderModal}
-                className="inline-flex items-center gap-1.5 bg-emerald-700 text-white px-3.5 py-2 text-[11px] font-semibold uppercase tracking-wider hover:bg-emerald-800 transition cursor-pointer"
-              >
-                <Plus className="w-3.5 h-3.5" />
-                <span>+ Create Manual Order (WhatsApp/FB)</span>
-              </button>
-              <button
-                onClick={() => setOrders(orderService.getOrders())}
-                className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#9A7B3E] hover:text-[#1C1917] cursor-pointer"
-              >
-                <RefreshCw className="w-3.5 h-3.5" />
-                <span>Refresh</span>
-              </button>
-            </div>
-          </div>
-
-          {orders.length === 0 ? (
-            <div className="p-14 text-center text-[#78716C]">
-              <Clock className="w-8 h-8 mx-auto text-[#C5A059] mb-2 stroke-[1.25]" />
-              <div className="font-serif-display text-2xl text-[#1C1917]">No orders placed yet</div>
-              <div className="text-xs text-[#78716C] mt-1">
-                When customers check out on the storefront or when you click &ldquo;+ Create Manual Order (WhatsApp/FB)&rdquo;, orders will appear here.
-              </div>
-            </div>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs text-[#78716C]">
-                <thead className="bg-[#FAF7F2] border-b border-[#E7E0D6] text-[#1C1917] uppercase font-semibold text-[10px] tracking-[0.16em]">
-                  <tr>
-                    <th className="py-3.5 px-4">Order Ref &amp; Channel</th>
-                    <th className="py-3.5 px-4">Customer &amp; Address</th>
-                    <th className="py-3.5 px-4">Total</th>
-                    <th className="py-3.5 px-4">Payment &amp; TrxID</th>
-                    <th className="py-3.5 px-4">Manual Payment Check</th>
-                    <th className="py-3.5 px-4">Order Status</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-[#F3EDE4]">
-                  {orders.map((o) => {
-                    const source = o.customer.orderSource || 'website';
-                    return (
-                      <tr key={o.id} className="hover:bg-[#FAF7F2]/60">
-                        <td className="py-3.5 px-4">
-                          <div className="flex items-center gap-2">
-                            <span className="font-bold text-[#9A7B3E]">{o.orderNumber}</span>
-                            <span
-                              className={`px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider border ${
-                                source === 'whatsapp'
-                                  ? 'border-emerald-300 bg-emerald-50 text-emerald-800'
-                                  : source === 'messenger'
-                                  ? 'border-blue-300 bg-blue-50 text-blue-800'
-                                  : 'border-[#E6D5B8] bg-[#FAF7F2] text-[#9A7B3E]'
-                              }`}
-                            >
-                              {source}
-                            </span>
-                          </div>
-                          <div className="text-[10px] text-[#A8A29E] mt-1 space-y-0.5">
-                            {o.items.map((item, idx) => (
-                              <div key={idx} className="text-[#1C1917] font-medium">
-                                {item.quantity}× {item.product.name}
-                              </div>
-                            ))}
-                          </div>
-                        </td>
-                        <td className="py-3.5 px-4">
-                          <div className="font-semibold text-[#1C1917]">{o.customer.fullName}</div>
-                          <div className="font-medium text-[#78716C]">{o.customer.phone}</div>
-                          <div className="text-[11px] text-[#A8A29E] truncate max-w-xs">
-                            {o.customer.address}
-                          </div>
-                        </td>
-                        <td className="py-3.5 px-4 font-bold text-[#1C1917]">
-                          {formatBDT(o.total)}
-                        </td>
-                        <td className="py-3.5 px-4">
-                          <span
-                            className={`inline-block px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider ${
-                              o.paymentMethod === 'bkash'
-                                ? 'bg-pink-50 text-pink-700 border border-pink-200'
-                                : o.paymentMethod === 'card'
-                                ? 'bg-[#FAF7F2] text-[#1C1917] border border-[#C5A059]'
-                                : 'bg-neutral-100 text-neutral-700'
-                            }`}
-                          >
-                            {o.paymentMethod}
-                          </span>
-                          {o.trxId && (
-                            <div className="mt-1 font-mono text-xs font-bold text-pink-700">
-                              TrxID: {o.trxId}
-                            </div>
-                          )}
-                          {o.bkashSenderNumber && (
-                            <div className="text-[10px] text-[#78716C]">
-                              From: {o.bkashSenderNumber}
-                            </div>
-                          )}
-                          {o.cardLast4 && (
-                            <div className="mt-1 font-mono text-[11px] text-[#1C1917]">
-                              Ref/Card: {o.cardLast4}
-                            </div>
-                          )}
-                        </td>
-                        <td className="py-3.5 px-4">
-                          <select
-                            value={o.paymentStatus}
-                            onChange={(e) =>
-                              handlePaymentStatusChange(o.id, e.target.value as PaymentStatus)
-                            }
-                            className={`border px-2.5 py-1 text-xs font-semibold focus:outline-none cursor-pointer ${
-                              o.paymentStatus === 'verified'
-                                ? 'border-emerald-300 bg-emerald-50 text-emerald-800'
-                                : o.paymentStatus === 'failed'
-                                ? 'border-red-300 bg-red-50 text-red-800'
-                                : 'border-amber-300 bg-amber-50 text-amber-800'
-                            }`}
-                          >
-                            <option value="pending">Pending Check</option>
-                            <option value="verified">Verified ✓</option>
-                            <option value="failed">Invalid / Unpaid</option>
-                          </select>
-                        </td>
-                        <td className="py-3.5 px-4">
-                          <select
-                            value={o.status}
-                            onChange={(e) => handleStatusChange(o.id, e.target.value as OrderStatus)}
-                            className="border border-[#D6CFC5] bg-white px-2.5 py-1 text-xs font-semibold text-[#1C1917] focus:outline-none focus:border-[#C5A059] cursor-pointer"
-                          >
-                            <option value="pending">Pending</option>
-                            <option value="confirmed">Confirmed</option>
-                            <option value="dispatched">Dispatched</option>
-                            <option value="delivered">Delivered</option>
-                            <option value="cancelled">Cancelled</option>
-                          </select>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </div>
+        <AdminOrdersTab
+          orders={orders}
+          onOpenManualOrderModal={openManualOrderModal}
+          onRefreshOrders={() => setOrders(orderService.getOrders())}
+          onPaymentStatusChange={handlePaymentStatusChange}
+          onOrderStatusChange={handleStatusChange}
+        />
       )}
 
-      {/* Main Content: Profit, Cost & Revenue Analytics Tab */}
+      {/* Tab 2: Profit, Cost & Revenue Analytics */}
       {activeTab === 'analytics' && (
-        <div className="space-y-6">
-          {/* Controls & Shipping Cost Configuration */}
-          <div className="border border-[#C5A059] bg-white p-5 flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-            <div>
-              <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[#9A7B3E] block">
-                Hippo Tracker Cost &amp; Profit Engine
-              </span>
-              <h2 className="font-serif-display text-2xl font-medium text-[#1C1917]">
-                Inventory Valuation, Expected Profit &amp; Realized Order Net Profit
-              </h2>
-              <p className="text-xs text-[#78716C] mt-0.5">
-                Automatically calculates Landed Cost (<code>Per Piece Cost + Shipping Cost</code>), Minimum Selling Price (<code>1.5× Landed</code>), and Net Profit across all categories.
-              </p>
-            </div>
-
-            <div className="flex flex-wrap items-center gap-3 text-xs">
-              <div className="flex items-center gap-2 border border-[#E7E0D6] bg-[#FAF7F2] px-3 py-1.5">
-                <span className="text-[11px] font-semibold text-[#1C1917]">
-                  Import Shipping / Piece (৳):
-                </span>
-                <input
-                  type="number"
-                  min={0}
-                  value={shippingCostPerPiece}
-                  onChange={(e) => setShippingCostPerPiece(Math.max(0, Number(e.target.value)))}
-                  className="w-16 border border-[#D6CFC5] bg-white px-2 py-1 text-center font-mono font-semibold text-[#1C1917] focus:outline-none focus:border-[#C5A059]"
-                />
-              </div>
-
-              <div className="flex border border-[#E7E0D6] bg-white p-0.5">
-                {(
-                  [
-                    { key: 'all', label: 'All Time' },
-                    { key: 'today', label: 'Today' },
-                    { key: 'week', label: '7 Days' },
-                    { key: 'month', label: '30 Days' },
-                  ] as const
-                ).map((tf) => (
-                  <button
-                    key={tf.key}
-                    type="button"
-                    onClick={() => setAnalyticsTimeframe(tf.key)}
-                    className={`px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider cursor-pointer ${
-                      analyticsTimeframe === tf.key
-                        ? 'bg-[#1C1917] text-[#FAF7F2]'
-                        : 'text-[#78716C] hover:text-[#1C1917]'
-                    }`}
-                  >
-                    {tf.label}
-                  </button>
-                ))}
-              </div>
-
-              <select
-                value={analyticsOrderScope}
-                onChange={(e) =>
-                  setAnalyticsOrderScope(e.target.value as 'delivered' | 'active')
-                }
-                className="border border-[#D6CFC5] bg-white px-3 py-1.5 text-[11px] font-semibold text-[#1C1917] focus:outline-none focus:border-[#C5A059] cursor-pointer"
-              >
-                <option value="delivered">Delivered Orders Only (Realized)</option>
-                <option value="active">All Non-Cancelled Orders</option>
-              </select>
-            </div>
-          </div>
-
-          {/* 4 Financial KPI Cards */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            <div className="border border-[#E7E0D6] bg-white p-5">
-              <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#78716C]">
-                Total Inventory Landed Cost
-              </div>
-              <div className="font-serif-display text-3xl font-semibold text-[#1C1917] mt-2">
-                {formatBDT(totalInventoryLandedCost)}
-              </div>
-              <div className="text-[11px] text-[#78716C] mt-1">
-                Base: {formatBDT(totalInventoryBaseCost)} + Ship: {formatBDT(totalStock * shippingCostPerPiece)} ({totalStock} pcs)
-              </div>
-            </div>
-
-            <div className="border border-[#E7E0D6] bg-white p-5">
-              <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#78716C]">
-                Expected Stock Revenue
-              </div>
-              <div className="font-serif-display text-3xl font-semibold text-[#1C1917] mt-2">
-                {formatBDT(totalExpectedRevenue)}
-              </div>
-              <div className="text-[11px] text-[#78716C] mt-1">
-                If all {totalStock} in-stock units sell at current price
-              </div>
-            </div>
-
-            <div className="border border-[#C5A059] bg-[#FAF7F2]/60 p-5">
-              <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#9A7B3E]">
-                Expected Inventory Net Profit
-              </div>
-              <div className="font-serif-display text-3xl font-semibold text-emerald-800 mt-2">
-                +{formatBDT(totalExpectedNetProfit)}
-              </div>
-              <div className="text-[11px] font-medium text-[#1C1917] mt-1">
-                {expectedMarginPercent}% Avg Net Profit Margin
-              </div>
-            </div>
-
-            <div className="border border-emerald-300 bg-emerald-50/50 p-5">
-              <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-emerald-900">
-                {analyticsOrderScope === 'delivered'
-                  ? 'Realized Profit (Delivered)'
-                  : 'Order Profit (Active Orders)'}
-              </div>
-              <div className="font-serif-display text-3xl font-semibold text-emerald-900 mt-2">
-                +{formatBDT(realizedOrderStats.netProfit)}
-              </div>
-              <div className="text-[11px] text-emerald-800 mt-1">
-                Revenue: {formatBDT(realizedOrderStats.itemRevenue)} · Cost: {formatBDT(realizedOrderStats.itemLandedCost)} ({realizedOrderStats.unitsSold} pcs sold)
-              </div>
-            </div>
-          </div>
-
-          {/* Category Profit & Valuation Breakdown Table */}
-          <div className="border border-[#E7E0D6] bg-white overflow-hidden">
-            <div className="px-6 py-4 border-b border-[#E7E0D6] flex items-center justify-between">
-              <h3 className="text-xs font-semibold uppercase tracking-[0.2em] text-[#1C1917]">
-                Profit &amp; Stock Breakdown by Product Type
-              </h3>
-              <span className="text-xs text-[#78716C]">
-                Shipping Cost Included: ৳{shippingCostPerPiece} / piece
-              </span>
-            </div>
-
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs text-[#78716C]">
-                <thead className="bg-[#FAF7F2] border-b border-[#E7E0D6] text-[#1C1917] uppercase font-semibold text-[10px] tracking-[0.16em]">
-                  <tr>
-                    <th className="py-3.5 px-4">Product Type</th>
-                    <th className="py-3.5 px-4">Pieces / Units</th>
-                    <th className="py-3.5 px-4">Stock Landed Cost</th>
-                    <th className="py-3.5 px-4">Expected Revenue</th>
-                    <th className="py-3.5 px-4">Expected Net Profit</th>
-                    <th className="py-3.5 px-4">Net Margin %</th>
-                    <th className="py-3.5 px-4">Order Units Sold</th>
-                    <th className="py-3.5 px-4 text-right">Realized Order Profit</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-[#F3EDE4]">
-                  {productTypes.map((pt) => {
-                    const catProducts = products.filter((p) => p.category === pt.slug);
-                    const catUnits = catProducts.reduce((s, p) => s + p.stock, 0);
-                    const catLandedCost = catProducts.reduce(
-                      (s, p) => s + p.stock * getUnitLandedCost(p),
-                      0
-                    );
-                    const catExpectedRev = catProducts.reduce(
-                      (s, p) => s + p.stock * p.priceBDT,
-                      0
-                    );
-                    const catExpectedProfit = catExpectedRev - catLandedCost;
-                    const catMargin =
-                      catExpectedRev > 0
-                        ? Math.round((catExpectedProfit / catExpectedRev) * 100)
-                        : 0;
-
-                    // Realized orders for this category
-                    let catSoldUnits = 0;
-                    let catRealizedProfit = 0;
-                    for (const ord of analyticsFilteredOrders) {
-                      for (const item of ord.items) {
-                        const matched =
-                          products.find(
-                            (p) => p.id === item.product.id || p.slug === item.product.slug
-                          ) || item.product;
-                        if (matched.category === pt.slug) {
-                          const landed =
-                            Number(matched.costPriceCNY ?? 0) + shippingCostPerPiece;
-                          catSoldUnits += item.quantity;
-                          catRealizedProfit += (item.product.priceBDT - landed) * item.quantity;
-                        }
-                      }
-                    }
-
-                    return (
-                      <tr key={pt.slug} className="hover:bg-[#FAF7F2]/60">
-                        <td className="py-3.5 px-4 font-serif-display text-base font-medium text-[#1C1917]">
-                          {pt.name}
-                        </td>
-                        <td className="py-3.5 px-4">
-                          <span className="font-semibold text-[#1C1917]">{catProducts.length}</span> designs ·{' '}
-                          <span className="font-semibold text-[#9A7B3E]">{catUnits}</span> units
-                        </td>
-                        <td className="py-3.5 px-4 font-medium text-[#1C1917]">
-                          {formatBDT(catLandedCost)}
-                        </td>
-                        <td className="py-3.5 px-4 font-semibold text-[#1C1917]">
-                          {formatBDT(catExpectedRev)}
-                        </td>
-                        <td className="py-3.5 px-4 font-bold text-emerald-800">
-                          +{formatBDT(catExpectedProfit)}
-                        </td>
-                        <td className="py-3.5 px-4">
-                          <span className="inline-flex items-center border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-[10px] font-bold text-emerald-800">
-                            {catMargin}%
-                          </span>
-                        </td>
-                        <td className="py-3.5 px-4 font-semibold text-[#1C1917]">
-                          {catSoldUnits} pcs
-                        </td>
-                        <td className="py-3.5 px-4 text-right font-bold text-emerald-800">
-                          +{formatBDT(catRealizedProfit)}
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </div>
+        <AdminAnalyticsTab
+          products={products}
+          productTypes={productTypes}
+          shippingCostPerPiece={shippingCostPerPiece}
+          onChangeShippingCost={setShippingCostPerPiece}
+          analyticsTimeframe={analyticsTimeframe}
+          onChangeTimeframe={setAnalyticsTimeframe}
+          analyticsOrderScope={analyticsOrderScope}
+          onChangeOrderScope={setAnalyticsOrderScope}
+          totalStock={totalStock}
+          totalInventoryBaseCost={totalInventoryBaseCost}
+          totalInventoryLandedCost={totalInventoryLandedCost}
+          totalExpectedRevenue={totalExpectedRevenue}
+          totalExpectedNetProfit={totalExpectedNetProfit}
+          expectedMarginPercent={expectedMarginPercent}
+          analyticsFilteredOrders={analyticsFilteredOrders}
+          realizedOrderStats={realizedOrderStats}
+          getUnitLandedCost={getUnitLandedCost}
+        />
       )}
 
-      {/* Main Content: Products View */}
+      {/* Tab 3: Products & Product Types Catalogue */}
       {activeTab === 'products' && (
         <div className="space-y-6">
           {/* Product Types Management Card (public.product_types) */}
@@ -1705,7 +1124,12 @@ export function AdminFeature() {
                   Manage Product Types (Add New Type Here First)
                 </h2>
                 <p className="text-xs text-[#78716C] mt-0.5">
-                  Before adding products of a new category (e.g. Necklaces, Anklets, Hair Clips), add the product type here first so it is registered in <code className="bg-[#FAF7F2] px-1.5 py-0.5 text-[#1C1917]">public.product_types</code>.
+                  Before adding products of a new category (e.g. Necklaces, Anklets, Hair Clips),
+                  add the product type here first so it is registered in{' '}
+                  <code className="bg-[#FAF7F2] px-1.5 py-0.5 text-[#1C1917]">
+                    public.product_types
+                  </code>
+                  .
                 </p>
               </div>
               <span className="text-xs font-semibold text-[#1C1917]">
@@ -1778,961 +1202,398 @@ export function AdminFeature() {
           </div>
 
           <div className="border border-[#E7E0D6] bg-white overflow-hidden">
-          <div className="px-6 py-4 border-b border-[#E7E0D6] flex flex-col gap-4">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-              <div>
-                <h2 className="text-xs font-semibold uppercase tracking-[0.2em] text-[#1C1917]">
-                  Product Catalogue &amp; Live Inventory Editor
-                </h2>
-                <p className="text-[11px] text-[#78716C] mt-0.5">
-                  Filter by category or stock state, use <strong>Import CSV</strong> (only changed rows update, the rest remain untouched), or click <strong>Sold 1 (-1)</strong> /{' '}
-                  <strong>Sold Out (0)</strong>.
-                </p>
-              </div>
-              <div className="flex flex-wrap items-center gap-2">
-                <button
-                  type="button"
-                  onClick={() => csvFileInputRef.current?.click()}
-                  className="inline-flex items-center gap-1.5 border border-[#C5A059] bg-[#FAF7F2] px-3 py-1.5 text-[11px] font-semibold uppercase tracking-wider text-[#1C1917] hover:bg-[#F3EDE4] transition cursor-pointer"
-                  title="Import a CSV file — only modified or new items will update"
-                >
-                  <Upload className="w-3.5 h-3.5 text-[#9A7B3E]" />
-                  <span>Import CSV (Diff Only)</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleExportCsv(true)}
-                  className="inline-flex items-center gap-1.5 border border-[#E7E0D6] bg-white px-3 py-1.5 text-[11px] font-semibold uppercase tracking-wider text-[#1C1917] hover:border-[#C5A059] transition cursor-pointer"
-                  title="Export currently shown products to CSV"
-                >
-                  <Download className="w-3.5 h-3.5 text-[#9A7B3E]" />
-                  <span>
-                    Export {selectedCategory === 'all' ? 'All' : selectedCategory} CSV (
-                    {filteredProducts.length})
-                  </span>
-                </button>
-              </div>
-            </div>
-
-            {/* Category, Stock Filter & Search Bar */}
-            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 pt-2 border-t border-[#F3EDE4]">
-              {/* Category Filter Pills (Dynamically loaded from public.product_types) */}
-              <div className="flex flex-wrap items-center gap-1.5">
-                <span className="text-[10px] font-semibold uppercase tracking-wider text-[#78716C] mr-1">
-                  Product Type:
-                </span>
-                <button
-                  type="button"
-                  onClick={() => setSelectedCategory('all')}
-                  className={`px-3 py-1.5 text-[11px] font-semibold uppercase tracking-wider border transition cursor-pointer ${
-                    selectedCategory === 'all'
-                      ? 'border-[#1C1917] bg-[#1C1917] text-[#FAF7F2]'
-                      : 'border-[#E7E0D6] bg-[#FAF7F2]/60 text-[#78716C] hover:border-[#C5A059] hover:text-[#1C1917]'
-                  }`}
-                >
-                  All ({products.length})
-                </button>
-                {productTypes.map((pt) => (
+            <div className="px-6 py-4 border-b border-[#E7E0D6] flex flex-col gap-4">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                <div>
+                  <h2 className="text-xs font-semibold uppercase tracking-[0.2em] text-[#1C1917]">
+                    Product Catalogue &amp; Live Inventory Editor
+                  </h2>
+                  <p className="text-[11px] text-[#78716C] mt-0.5">
+                    Filter by category or stock state, use <strong>Import CSV</strong> (only changed
+                    rows update, the rest remain untouched), or click <strong>Sold 1 (-1)</strong> /{' '}
+                    <strong>Sold Out (0)</strong>.
+                  </p>
+                </div>
+                <div className="flex flex-wrap items-center gap-2">
                   <button
-                    key={pt.slug}
                     type="button"
-                    onClick={() => setSelectedCategory(pt.slug)}
+                    onClick={() => csvFileInputRef.current?.click()}
+                    className="inline-flex items-center gap-1.5 border border-[#C5A059] bg-[#FAF7F2] px-3 py-1.5 text-[11px] font-semibold uppercase tracking-wider text-[#1C1917] hover:bg-[#F3EDE4] transition cursor-pointer"
+                    title="Import a CSV file — only modified or new items will update"
+                  >
+                    <Upload className="w-3.5 h-3.5 text-[#9A7B3E]" />
+                    <span>Import CSV (Diff Only)</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleExportCsv(true)}
+                    className="inline-flex items-center gap-1.5 border border-[#E7E0D6] bg-white px-3 py-1.5 text-[11px] font-semibold uppercase tracking-wider text-[#1C1917] hover:border-[#C5A059] transition cursor-pointer"
+                    title="Export currently shown products to CSV"
+                  >
+                    <Download className="w-3.5 h-3.5 text-[#9A7B3E]" />
+                    <span>
+                      Export {selectedCategory === 'all' ? 'All' : selectedCategory} CSV (
+                      {filteredProducts.length})
+                    </span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Category, Stock Filter & Search Bar */}
+              <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 pt-2 border-t border-[#F3EDE4]">
+                <div className="flex flex-wrap items-center gap-1.5">
+                  <span className="text-[10px] font-semibold uppercase tracking-wider text-[#78716C] mr-1">
+                    Product Type:
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setSelectedCategory('all')}
                     className={`px-3 py-1.5 text-[11px] font-semibold uppercase tracking-wider border transition cursor-pointer ${
-                      selectedCategory === pt.slug
+                      selectedCategory === 'all'
                         ? 'border-[#1C1917] bg-[#1C1917] text-[#FAF7F2]'
                         : 'border-[#E7E0D6] bg-[#FAF7F2]/60 text-[#78716C] hover:border-[#C5A059] hover:text-[#1C1917]'
                     }`}
                   >
-                    {pt.name} ({products.filter((p) => p.category === pt.slug).length})
+                    All ({products.length})
                   </button>
-                ))}
-              </div>
-
-              {/* Stock Status Filter & Search */}
-              <div className="flex flex-wrap items-center gap-2">
-                <div className="flex flex-wrap items-center gap-1">
-                  {(
-                    [
-                      { key: 'all', label: 'All Stock' },
-                      {
-                        key: 'in_stock',
-                        label: `In Stock (${products.filter((p) => p.stock > 0).length})`,
-                      },
-                      {
-                        key: 'low_stock',
-                        label: `Low ≤2 (${lowStockCount})`,
-                      },
-                      {
-                        key: 'sold_out',
-                        label: `Sold Out (${soldOutCount})`,
-                      },
-                    ] as const
-                  ).map((st) => (
+                  {productTypes.map((pt) => (
                     <button
-                      key={st.key}
+                      key={pt.slug}
                       type="button"
-                      onClick={() => setStockFilter(st.key)}
-                      className={`px-2.5 py-1.5 text-[10px] font-semibold uppercase tracking-wider border transition cursor-pointer ${
-                        stockFilter === st.key
-                          ? 'border-[#C5A059] bg-[#FAF7F2] text-[#1C1917]'
-                          : 'border-[#E7E0D6] bg-white text-[#78716C] hover:text-[#1C1917]'
+                      onClick={() => setSelectedCategory(pt.slug)}
+                      className={`px-3 py-1.5 text-[11px] font-semibold uppercase tracking-wider border transition cursor-pointer ${
+                        selectedCategory === pt.slug
+                          ? 'border-[#1C1917] bg-[#1C1917] text-[#FAF7F2]'
+                          : 'border-[#E7E0D6] bg-[#FAF7F2]/60 text-[#78716C] hover:border-[#C5A059] hover:text-[#1C1917]'
                       }`}
                     >
-                      {st.label}
+                      {pt.name} ({products.filter((p) => p.category === pt.slug).length})
                     </button>
                   ))}
                 </div>
 
-                <input
-                  type="text"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Search piece name..."
-                  className="border border-[#D6CFC5] bg-[#FAF7F2]/50 px-3 py-1.5 text-xs text-[#1C1917] focus:bg-white focus:outline-none focus:border-[#C5A059] w-44"
-                />
+                {/* Stock Status Filter & Search */}
+                <div className="flex flex-wrap items-center gap-2">
+                  <div className="flex flex-wrap items-center gap-1">
+                    {(
+                      [
+                        { key: 'all', label: 'All Stock' },
+                        {
+                          key: 'in_stock',
+                          label: `In Stock (${products.filter((p) => p.stock > 0).length})`,
+                        },
+                        {
+                          key: 'low_stock',
+                          label: `Low ≤2 (${lowStockCount})`,
+                        },
+                        {
+                          key: 'sold_out',
+                          label: `Sold Out (${soldOutCount})`,
+                        },
+                      ] as const
+                    ).map((st) => (
+                      <button
+                        key={st.key}
+                        type="button"
+                        onClick={() => setStockFilter(st.key)}
+                        className={`px-2.5 py-1.5 text-[10px] font-semibold uppercase tracking-wider border transition cursor-pointer ${
+                          stockFilter === st.key
+                            ? 'border-[#C5A059] bg-[#FAF7F2] text-[#1C1917]'
+                            : 'border-[#E7E0D6] bg-white text-[#78716C] hover:text-[#1C1917]'
+                        }`}
+                      >
+                        {st.label}
+                      </button>
+                    ))}
+                  </div>
+
+                  <input
+                    type="text"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    placeholder="Search piece name..."
+                    className="border border-[#D6CFC5] bg-[#FAF7F2]/50 px-3 py-1.5 text-xs text-[#1C1917] focus:bg-white focus:outline-none focus:border-[#C5A059] w-44"
+                  />
+                </div>
               </div>
             </div>
-          </div>
 
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs text-[#78716C]">
-              <thead className="bg-[#FAF7F2] border-b border-[#E7E0D6] text-[#1C1917] uppercase font-semibold text-[10px] tracking-[0.16em]">
-                <tr>
-                  <th className="py-3.5 px-4">Piece</th>
-                  <th className="py-3.5 px-4">Category</th>
-                  <th className="py-3.5 px-4">Per Piece Cost &amp; Landed</th>
-                  <th className="py-3.5 px-4">Selling / Revised Price &amp; Profit</th>
-                  <th className="py-3.5 px-4">Quick Stock &amp; Sold Controls</th>
-                  <th className="py-3.5 px-4">Status</th>
-                  <th className="py-3.5 px-4 text-right">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-[#F3EDE4]">
-                {filteredProducts.length === 0 ? (
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-xs text-[#78716C]">
+                <thead className="bg-[#FAF7F2] border-b border-[#E7E0D6] text-[#1C1917] uppercase font-semibold text-[10px] tracking-[0.16em]">
                   <tr>
-                    <td colSpan={7} className="py-12 text-center text-xs text-[#78716C]">
-                      No products match your selected category or filter.
-                    </td>
+                    <th className="py-3.5 px-4">Piece</th>
+                    <th className="py-3.5 px-4">Category</th>
+                    <th className="py-3.5 px-4">Per Piece Cost &amp; Landed</th>
+                    <th className="py-3.5 px-4">Selling / Revised Price &amp; Profit</th>
+                    <th className="py-3.5 px-4">Quick Stock &amp; Sold Controls</th>
+                    <th className="py-3.5 px-4">Status</th>
+                    <th className="py-3.5 px-4 text-right">Actions</th>
                   </tr>
-                ) : (
-                  filteredProducts.map((p) => {
-                    const rowEdit = inlineEdits[p.id];
-                    const currentPriceStr =
-                      rowEdit !== undefined ? rowEdit.priceBDT : String(p.priceBDT);
-                    const currentCostStr =
-                      rowEdit !== undefined
-                        ? rowEdit.costPriceCNY
-                        : String(p.costPriceCNY ?? 0);
-                    const unitLanded = getUnitLandedCost(p);
-                    const unitMinSell = getUnitMinSellPrice(p);
-                    const unitProfit = getUnitNetProfit(p);
-                    const hasUnsavedPricing =
-                      rowEdit !== undefined &&
-                      (Number(rowEdit.priceBDT) !== p.priceBDT ||
-                        Number(rowEdit.costPriceCNY) !== Number(p.costPriceCNY ?? 0));
+                </thead>
+                <tbody className="divide-y divide-[#F3EDE4]">
+                  {filteredProducts.length === 0 ? (
+                    <tr>
+                      <td colSpan={7} className="py-12 text-center text-xs text-[#78716C]">
+                        No products match your selected category or filter.
+                      </td>
+                    </tr>
+                  ) : (
+                    filteredProducts.map((p) => {
+                      const rowEdit = inlineEdits[p.id];
+                      const currentPriceStr =
+                        rowEdit !== undefined ? rowEdit.priceBDT : String(p.priceBDT);
+                      const currentCostStr =
+                        rowEdit !== undefined
+                          ? rowEdit.costPriceCNY
+                          : String(p.costPriceCNY ?? 0);
+                      const unitLanded = getUnitLandedCost(p);
+                      const unitMinSell = getUnitMinSellPrice(p);
+                      const unitProfit = getUnitNetProfit(p);
+                      const hasUnsavedPricing =
+                        rowEdit !== undefined &&
+                        (Number(rowEdit.priceBDT) !== p.priceBDT ||
+                          Number(rowEdit.costPriceCNY) !== Number(p.costPriceCNY ?? 0));
 
-                    return (
-                      <tr key={p.id} className="hover:bg-[#FAF7F2]/60">
-                        <td className="py-3 px-4">
-                          <div className="flex items-center gap-3">
-                            <div className="relative h-11 w-9 flex-shrink-0 overflow-hidden bg-[#F3EDE4] border border-[#E7E0D6]">
-                              <Image src={p.imageUrl} alt={p.name} fill className="object-cover" />
-                            </div>
-                            <div>
-                              <div className="font-serif-display text-base font-medium text-[#1C1917]">
-                                {p.name}
+                      return (
+                        <tr key={p.id} className="hover:bg-[#FAF7F2]/60">
+                          <td className="py-3 px-4">
+                            <div className="flex items-center gap-3">
+                              <div className="relative h-11 w-9 flex-shrink-0 overflow-hidden bg-[#F3EDE4] border border-[#E7E0D6]">
+                                <Image
+                                  src={p.imageUrl}
+                                  alt={p.name}
+                                  fill
+                                  className="object-cover"
+                                />
                               </div>
-                              <div className="text-[10px] text-[#A8A29E]">{p.slug}</div>
+                              <div>
+                                <div className="font-serif-display text-base font-medium text-[#1C1917]">
+                                  {p.name}
+                                </div>
+                                <div className="text-[10px] text-[#A8A29E]">{p.slug}</div>
+                              </div>
                             </div>
-                          </div>
-                        </td>
-                        <td className="py-3 px-4 capitalize font-medium text-[#1C1917]">
-                          {p.category}
-                        </td>
-                        <td className="py-3 px-4">
-                          <div className="flex items-center gap-1.5">
-                            <span className="text-[10px] text-[#78716C]">৳</span>
-                            <input
-                              type="number"
-                              min={0}
-                              value={currentCostStr}
-                              onChange={(e) =>
-                                handleInlinePriceChange(p, 'costPriceCNY', e.target.value)
-                              }
-                              onKeyDown={(e) => {
-                                if (e.key === 'Enter') handleSaveInlinePricing(p);
-                              }}
-                              className="w-16 border border-[#D6CFC5] bg-white px-2 py-1 text-xs font-mono font-semibold text-[#1C1917] focus:outline-none focus:border-[#C5A059]"
-                              title="Edit Per Piece Base Cost (BDT)"
-                            />
-                          </div>
-                          <div className="text-[10px] text-[#78716C] mt-1">
-                            Landed: <strong className="text-[#1C1917]">৳{unitLanded}</strong> · Min: ৳{unitMinSell}
-                          </div>
-                        </td>
-                        <td className="py-3 px-4">
-                          <div className="flex items-center gap-1.5">
-                            <span className="text-[10px] text-[#78716C]">৳</span>
-                            <input
-                              type="number"
-                              min={1}
-                              value={currentPriceStr}
-                              onChange={(e) =>
-                                handleInlinePriceChange(p, 'priceBDT', e.target.value)
-                              }
-                              onKeyDown={(e) => {
-                                if (e.key === 'Enter') handleSaveInlinePricing(p);
-                              }}
-                              className="w-20 border border-[#D6CFC5] bg-white px-2 py-1 text-xs font-mono font-bold text-[#1C1917] focus:outline-none focus:border-[#C5A059]"
-                              title="Edit Selling / Revised Sell Price (BDT)"
-                            />
-                            {hasUnsavedPricing && (
-                              <button
-                                type="button"
-                                onClick={() => handleSaveInlinePricing(p)}
-                                className="bg-[#1C1917] text-[#FAF7F2] px-2 py-1 text-[10px] font-semibold uppercase tracking-wider hover:bg-[#9A7B3E] cursor-pointer"
-                              >
-                                Save
-                              </button>
-                            )}
-                          </div>
-                          <div
-                            className={`text-[10px] font-semibold mt-1 ${
-                              unitProfit >= 0 ? 'text-emerald-700' : 'text-red-700'
-                            }`}
-                          >
-                            Net Profit: {unitProfit >= 0 ? `+৳${unitProfit}` : `-৳${Math.abs(unitProfit)}`} / pc
-                          </div>
-                        </td>
-                        <td className="py-3 px-4">
-                          <div className="flex flex-wrap items-center gap-2">
-                            <div className="inline-flex items-center border border-[#E7E0D6] bg-white">
-                              <button
-                                onClick={() => handleStockDelta(p.id, -1)}
-                                disabled={p.stock <= 0}
-                                className="p-1 text-[#78716C] hover:text-[#1C1917] disabled:opacity-30 cursor-pointer"
-                                aria-label="Decrease stock"
-                              >
-                                <Minus className="w-3 h-3" />
-                              </button>
-                              <span className="w-8 text-center font-semibold text-[#1C1917]">
-                                {p.stock}
-                              </span>
-                              <button
-                                onClick={() => handleStockDelta(p.id, 1)}
-                                className="p-1 text-[#78716C] hover:text-[#1C1917] cursor-pointer"
-                                aria-label="Increase stock"
-                              >
-                                <Plus className="w-3 h-3" />
-                              </button>
+                          </td>
+                          <td className="py-3 px-4 capitalize font-medium text-[#1C1917]">
+                            {p.category}
+                          </td>
+                          <td className="py-3 px-4">
+                            <div className="flex items-center gap-1.5">
+                              <span className="text-[10px] text-[#78716C]">৳</span>
+                              <input
+                                type="number"
+                                min={0}
+                                value={currentCostStr}
+                                onChange={(e) =>
+                                  handleInlinePriceChange(p, 'costPriceCNY', e.target.value)
+                                }
+                                onKeyDown={(e) => {
+                                  if (e.key === 'Enter') handleSaveInlinePricing(p);
+                                }}
+                                className="w-16 border border-[#D6CFC5] bg-white px-2 py-1 text-xs font-mono font-semibold text-[#1C1917] focus:outline-none focus:border-[#C5A059]"
+                                title="Edit Per Piece Base Cost (BDT)"
+                              />
                             </div>
+                            <div className="text-[10px] text-[#78716C] mt-1">
+                              Landed: <strong className="text-[#1C1917]">৳{unitLanded}</strong> ·
+                              Min: ৳{unitMinSell}
+                            </div>
+                          </td>
+                          <td className="py-3 px-4">
+                            <div className="flex items-center gap-1.5">
+                              <span className="text-[10px] text-[#78716C]">৳</span>
+                              <input
+                                type="number"
+                                min={1}
+                                value={currentPriceStr}
+                                onChange={(e) =>
+                                  handleInlinePriceChange(p, 'priceBDT', e.target.value)
+                                }
+                                onKeyDown={(e) => {
+                                  if (e.key === 'Enter') handleSaveInlinePricing(p);
+                                }}
+                                className="w-20 border border-[#D6CFC5] bg-white px-2 py-1 text-xs font-mono font-bold text-[#1C1917] focus:outline-none focus:border-[#C5A059]"
+                                title="Edit Selling / Revised Sell Price (BDT)"
+                              />
+                              {hasUnsavedPricing && (
+                                <button
+                                  type="button"
+                                  onClick={() => handleSaveInlinePricing(p)}
+                                  className="bg-[#1C1917] text-[#FAF7F2] px-2 py-1 text-[10px] font-semibold uppercase tracking-wider hover:bg-[#9A7B3E] cursor-pointer"
+                                >
+                                  Save ৳
+                                </button>
+                              )}
+                            </div>
+                            <div
+                              className={`text-[10px] font-semibold mt-1 ${
+                                unitProfit >= 0 ? 'text-emerald-700' : 'text-red-700'
+                              }`}
+                            >
+                              Net Profit:{' '}
+                              {unitProfit >= 0 ? `+৳${unitProfit}` : `-৳${Math.abs(unitProfit)}`} /
+                              pc
+                            </div>
+                          </td>
+                          <td className="py-3 px-4">
+                            <div className="flex flex-wrap items-center gap-2">
+                              <div className="inline-flex items-center border border-[#E7E0D6] bg-white">
+                                <button
+                                  onClick={() => handleStockDelta(p.id, -1)}
+                                  disabled={p.stock <= 0}
+                                  className="p-1 text-[#78716C] hover:text-[#1C1917] disabled:opacity-30 cursor-pointer"
+                                  aria-label="Decrease stock"
+                                >
+                                  <Minus className="w-3 h-3" />
+                                </button>
+                                <span className="w-8 text-center font-semibold text-[#1C1917]">
+                                  {p.stock}
+                                </span>
+                                <button
+                                  onClick={() => handleStockDelta(p.id, 1)}
+                                  className="p-1 text-[#78716C] hover:text-[#1C1917] cursor-pointer"
+                                  aria-label="Increase stock"
+                                >
+                                  <Plus className="w-3 h-3" />
+                                </button>
+                              </div>
 
-                            {p.stock > 0 ? (
-                              <>
+                              {p.stock > 0 ? (
+                                <>
+                                  <button
+                                    type="button"
+                                    onClick={() => handleMarkOneSold(p)}
+                                    className="border border-amber-300 bg-amber-50 px-2 py-1 text-[10px] font-semibold uppercase tracking-wider text-amber-900 hover:bg-amber-100 transition cursor-pointer"
+                                    title="Deduct 1 unit sold via WhatsApp/Messenger/Offline"
+                                  >
+                                    Sold 1 (-1)
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => handleMarkSoldOut(p)}
+                                    className="border border-red-200 bg-red-50 px-2 py-1 text-[10px] font-semibold uppercase tracking-wider text-red-800 hover:bg-red-100 transition cursor-pointer"
+                                    title="Set stock to 0 (Out of Stock on storefront)"
+                                  >
+                                    Sold Out (0)
+                                  </button>
+                                </>
+                              ) : (
                                 <button
                                   type="button"
-                                  onClick={() => handleMarkOneSold(p)}
-                                  className="border border-amber-300 bg-amber-50 px-2 py-1 text-[10px] font-semibold uppercase tracking-wider text-amber-900 hover:bg-amber-100 transition cursor-pointer"
-                                  title="Deduct 1 unit sold via WhatsApp/Messenger/Offline"
+                                  onClick={() => handleQuickRestock(p, 3)}
+                                  className="border border-emerald-300 bg-emerald-50 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider text-emerald-800 hover:bg-emerald-100 transition cursor-pointer"
+                                  title="Quickly restock +3 units"
                                 >
-                                  Sold 1 (-1)
+                                  + Restock 3
                                 </button>
-                                <button
-                                  type="button"
-                                  onClick={() => handleMarkSoldOut(p)}
-                                  className="border border-red-200 bg-red-50 px-2 py-1 text-[10px] font-semibold uppercase tracking-wider text-red-800 hover:bg-red-100 transition cursor-pointer"
-                                  title="Set stock to 0 (Out of Stock on storefront)"
-                                >
-                                  Sold Out (0)
-                                </button>
-                              </>
+                              )}
+                            </div>
+                          </td>
+                          <td className="py-3 px-4">
+                            {p.stock > 2 ? (
+                              <span className="inline-flex items-center border border-emerald-200 bg-emerald-50 px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-emerald-800">
+                                In Stock ({p.stock})
+                              </span>
+                            ) : p.stock > 0 ? (
+                              <span className="inline-flex items-center border border-amber-300 bg-amber-50 px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-amber-900">
+                                Low Stock ({p.stock})
+                              </span>
                             ) : (
-                              <button
-                                type="button"
-                                onClick={() => handleQuickRestock(p, 3)}
-                                className="border border-emerald-300 bg-emerald-50 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider text-emerald-800 hover:bg-emerald-100 transition cursor-pointer"
-                                title="Quickly restock +3 units"
-                              >
-                                + Restock 3
-                              </button>
+                              <span className="inline-flex items-center border border-red-200 bg-red-50 px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-red-800">
+                                Sold Out (0)
+                              </span>
                             )}
-                          </div>
-                        </td>
-                        <td className="py-3 px-4">
-                          {p.stock > 2 ? (
-                            <span className="inline-flex items-center border border-emerald-200 bg-emerald-50 px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-emerald-800">
-                              In Stock ({p.stock})
-                            </span>
-                          ) : p.stock > 0 ? (
-                            <span className="inline-flex items-center border border-amber-300 bg-amber-50 px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-amber-900">
-                              Low Stock ({p.stock})
-                            </span>
-                          ) : (
-                            <span className="inline-flex items-center border border-red-200 bg-red-50 px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-red-800">
-                              Sold Out (0)
-                            </span>
-                          )}
-                        </td>
-                        <td className="py-3 px-4 text-right">
-                          <div className="inline-flex items-center gap-2">
-                            <button
-                              onClick={() => openEditModal(p)}
-                              className="inline-flex items-center gap-1 border border-[#E7E0D6] bg-white px-2.5 py-1 text-[11px] font-semibold text-[#1C1917] hover:border-[#C5A059] cursor-pointer"
-                            >
-                              <Edit3 className="w-3 h-3 text-[#9A7B3E]" />
-                              <span>Edit</span>
-                            </button>
-                            <button
-                              onClick={() => handleDeleteProduct(p)}
-                              className="p-1.5 text-[#A8A29E] hover:text-red-600 cursor-pointer"
-                              aria-label={`Delete ${p.name}`}
-                            >
-                              <Trash2 className="w-3.5 h-3.5" />
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    );
-                  })
-                )}
-              </tbody>
-            </table>
-          </div>
+                          </td>
+                          <td className="py-3 px-4 text-right">
+                            <div className="inline-flex items-center gap-2">
+                              <button
+                                onClick={() => openEditModal(p)}
+                                className="inline-flex items-center gap-1 border border-[#E7E0D6] bg-white px-2.5 py-1 text-[11px] font-semibold text-[#1C1917] hover:border-[#C5A059] cursor-pointer"
+                              >
+                                <Edit3 className="w-3 h-3 text-[#9A7B3E]" />
+                                <span>Edit</span>
+                              </button>
+                              <button
+                                onClick={() => handleDeleteProduct(p)}
+                                className="p-1.5 text-[#A8A29E] hover:text-red-600 cursor-pointer"
+                                aria-label={`Delete ${p.name}`}
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })
+                  )}
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
       )}
 
-      {/* Links & Chat URLs Tab */}
+      {/* Tab 4: Storefront Chat & Social Links */}
       {activeTab === 'links' && (
-        <div className="space-y-6">
-          <div className="border border-[#E7E0D6] bg-white p-6">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-[#E7E0D6] gap-2">
-              <div className="flex items-center gap-2.5">
-                <Link2 className="w-5 h-5 text-[#9A7B3E]" />
-                <div>
-                  <h2 className="font-serif-display text-2xl font-medium text-[#1C1917]">
-                    Messenger, WhatsApp &amp; Custom Store URLs
-                  </h2>
-                  <p className="text-xs text-[#78716C]">
-                    Update your floating concierge chat links (WhatsApp &amp; Messenger) or add any custom social/external URL.
-                  </p>
-                </div>
-              </div>
-              <span className="text-[11px] text-[#78716C]">
-                Table: <code className="bg-[#FAF7F2] px-1.5 py-0.5 text-[#1C1917]">public.store_links</code>
-              </span>
-            </div>
-
-            <div className="mt-5 space-y-4">
-              {storeLinks.map((item) => (
-                <div
-                  key={item.key}
-                  className="grid grid-cols-1 md:grid-cols-12 gap-3 items-center border border-[#E7E0D6] bg-[#FAF7F2]/60 p-4"
-                >
-                  <div className="md:col-span-3">
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs font-semibold text-[#1C1917]">{item.label}</span>
-                      <span className="border border-[#E6D5B8] bg-white px-2 py-0.5 text-[9px] font-semibold uppercase tracking-wider text-[#9A7B3E]">
-                        {item.category}
-                      </span>
-                    </div>
-                    <div className="text-[10px] font-mono text-[#78716C] mt-0.5">key: {item.key}</div>
-                  </div>
-
-                  <div className="md:col-span-6">
-                    <input
-                      type="text"
-                      value={item.url}
-                      onChange={(e) => {
-                        const updated = storeLinks.map((l) =>
-                          l.key === item.key ? { ...l, url: e.target.value } : l
-                        );
-                        setStoreLinks(updated);
-                      }}
-                      placeholder={
-                        item.key === 'whatsapp'
-                          ? 'https://wa.me/88017XXXXXXXX or 017XXXXXXXX'
-                          : item.key === 'messenger'
-                          ? 'https://m.me/yourpage or page username'
-                          : 'https://...'
-                      }
-                      className="w-full border border-[#D6CFC5] bg-white px-3 py-2 text-xs text-[#1C1917] focus:outline-none focus:border-[#C5A059]"
-                    />
-                  </div>
-
-                  <div className="md:col-span-3 flex items-center justify-end gap-2">
-                    <label className="flex items-center gap-1.5 text-xs text-[#1C1917] cursor-pointer mr-2">
-                      <input
-                        type="checkbox"
-                        checked={item.isActive}
-                        onChange={(e) => {
-                          const updatedLink = { ...item, isActive: e.target.checked };
-                          handleUpdateStoreLink(updatedLink);
-                        }}
-                        className="accent-[#1C1917]"
-                      />
-                      <span className="text-[11px] font-semibold">Active</span>
-                    </label>
-
-                    <button
-                      type="button"
-                      onClick={() => handleUpdateStoreLink(item)}
-                      className="boutique-btn-primary px-3.5 py-2 text-[10px] cursor-pointer"
-                    >
-                      Save URL
-                    </button>
-
-                    {item.key !== 'whatsapp' && item.key !== 'messenger' && (
-                      <button
-                        type="button"
-                        onClick={() => handleDeleteStoreLink(item)}
-                        className="p-2 text-[#A8A29E] hover:text-red-600 cursor-pointer"
-                        title={`Delete ${item.label}`}
-                      >
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </button>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Add Any Custom URL Form */}
-          <form
-            onSubmit={handleAddNewStoreLink}
-            className="border border-[#C5A059] bg-white p-6 space-y-4"
-          >
-            <div>
-              <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[#9A7B3E] block">
-                Add Custom URL
-              </span>
-              <h3 className="font-serif-display text-2xl font-medium text-[#1C1917]">
-                Add Any New Chat, Social, or External URL
-              </h3>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-4 gap-4 text-xs">
-              <div>
-                <label className="block text-[11px] font-semibold uppercase tracking-wider text-[#1C1917] mb-1">
-                  Display Label *
-                </label>
-                <input
-                  type="text"
-                  required
-                  placeholder="e.g. Telegram Support / YouTube"
-                  value={newLinkLabel}
-                  onChange={(e) => setNewLinkLabel(e.target.value)}
-                  className="w-full border border-[#D6CFC5] px-3 py-2 text-[#1C1917] focus:outline-none focus:border-[#C5A059]"
-                />
-              </div>
-
-              <div>
-                <label className="block text-[11px] font-semibold uppercase tracking-wider text-[#1C1917] mb-1">
-                  Unique Key (Optional)
-                </label>
-                <input
-                  type="text"
-                  placeholder="e.g. telegram"
-                  value={newLinkKey}
-                  onChange={(e) => setNewLinkKey(e.target.value)}
-                  className="w-full border border-[#D6CFC5] px-3 py-2 font-mono text-[#1C1917] focus:outline-none focus:border-[#C5A059]"
-                />
-              </div>
-
-              <div>
-                <label className="block text-[11px] font-semibold uppercase tracking-wider text-[#1C1917] mb-1">
-                  Full URL *
-                </label>
-                <input
-                  type="text"
-                  required
-                  placeholder="https://..."
-                  value={newLinkUrl}
-                  onChange={(e) => setNewLinkUrl(e.target.value)}
-                  className="w-full border border-[#D6CFC5] px-3 py-2 text-[#1C1917] focus:outline-none focus:border-[#C5A059]"
-                />
-              </div>
-
-              <div>
-                <label className="block text-[11px] font-semibold uppercase tracking-wider text-[#1C1917] mb-1">
-                  Placement Category
-                </label>
-                <select
-                  value={newLinkCategory}
-                  onChange={(e) => setNewLinkCategory(e.target.value as StoreLinkCategory)}
-                  className="w-full border border-[#D6CFC5] px-3 py-2 text-[#1C1917] bg-white focus:outline-none focus:border-[#C5A059]"
-                >
-                  <option value="chat">Floating Chat Popup (chat)</option>
-                  <option value="social">Footer Social Link (social)</option>
-                  <option value="other">Footer Custom Link (other)</option>
-                </select>
-              </div>
-            </div>
-
-            <div className="flex justify-end">
-              <button type="submit" className="boutique-btn-primary px-6 py-2.5 cursor-pointer">
-                + Add URL to Store
-              </button>
-            </div>
-          </form>
-        </div>
+        <AdminLinksTab
+          storeLinks={storeLinks}
+          onChangeStoreLinks={setStoreLinks}
+          onUpdateStoreLink={handleUpdateStoreLink}
+          onDeleteStoreLink={handleDeleteStoreLink}
+          newLinkKey={newLinkKey}
+          onChangeNewLinkKey={setNewLinkKey}
+          newLinkLabel={newLinkLabel}
+          onChangeNewLinkLabel={setNewLinkLabel}
+          newLinkUrl={newLinkUrl}
+          onChangeNewLinkUrl={setNewLinkUrl}
+          newLinkCategory={newLinkCategory}
+          onChangeNewLinkCategory={setNewLinkCategory}
+          onAddNewStoreLink={handleAddNewStoreLink}
+        />
       )}
 
       {/* Add / Edit Product Modal */}
-      {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#181512]/60 backdrop-blur-xs p-4">
-          <div className="w-full max-w-lg border border-[#C5A059] bg-white shadow-2xl overflow-hidden">
-            <div className="flex items-center justify-between bg-[#181512] px-6 py-4 text-[#FAF7F2]">
-              <h3 className="font-serif-display text-2xl font-medium">
-                {editingId ? 'Update Jewellery Piece' : 'Add New Jewellery Piece'}
-              </h3>
-              <button
-                onClick={() => setIsModalOpen(false)}
-                className="text-[#A8A29E] hover:text-white cursor-pointer"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            <form onSubmit={handleSaveProduct} className="p-6 space-y-4 text-xs">
-              <div>
-                <label className="block text-[11px] font-semibold uppercase tracking-wider text-[#1C1917] mb-1">
-                  Product Name *
-                </label>
-                <input
-                  type="text"
-                  required
-                  value={form.name}
-                  onChange={(e) => setForm({ ...form, name: e.target.value })}
-                  placeholder="e.g. Pearl Camellia Ear Clip"
-                  className="w-full border border-[#D6CFC5] px-3 py-2 text-[#1C1917] focus:outline-none focus:border-[#C5A059]"
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-[11px] font-semibold uppercase tracking-wider text-[#1C1917] mb-1">
-                    Product Type (from public.product_types) *
-                  </label>
-                  <select
-                    value={form.category}
-                    onChange={(e) =>
-                      setForm({
-                        ...form,
-                        category: e.target.value,
-                      })
-                    }
-                    className="w-full border border-[#D6CFC5] bg-white px-3 py-2 text-[#1C1917] focus:outline-none focus:border-[#C5A059]"
-                  >
-                    {productTypes.map((pt) => (
-                      <option key={pt.slug} value={pt.slug}>
-                        {pt.name} ({pt.slug})
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-[11px] font-semibold uppercase tracking-wider text-[#1C1917] mb-1">
-                    Stock Quantity *
-                  </label>
-                  <input
-                    type="number"
-                    min={0}
-                    required
-                    value={form.stock}
-                    onChange={(e) => setForm({ ...form, stock: Number(e.target.value) })}
-                    className="w-full border border-[#D6CFC5] px-3 py-2 text-[#1C1917] focus:outline-none focus:border-[#C5A059]"
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-3 gap-3">
-                <div>
-                  <label className="block text-[11px] font-semibold uppercase tracking-wider text-[#1C1917] mb-1">
-                    Per Piece Cost (৳)
-                  </label>
-                  <input
-                    type="number"
-                    min={0}
-                    value={form.costPriceCNY}
-                    onChange={(e) => setForm({ ...form, costPriceCNY: Number(e.target.value) })}
-                    className="w-full border border-[#D6CFC5] px-3 py-2 text-[#1C1917] focus:outline-none focus:border-[#C5A059]"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-[11px] font-semibold uppercase tracking-wider text-[#1C1917] mb-1">
-                    Selling Price (BDT ৳) *
-                  </label>
-                  <input
-                    type="number"
-                    min={1}
-                    required
-                    value={form.priceBDT}
-                    onChange={(e) => setForm({ ...form, priceBDT: Number(e.target.value) })}
-                    className="w-full border border-[#D6CFC5] px-3 py-2 text-[#1C1917] focus:outline-none focus:border-[#C5A059]"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-[11px] font-semibold uppercase tracking-wider text-[#1C1917] mb-1">
-                    Original Price (BDT ৳)
-                  </label>
-                  <input
-                    type="number"
-                    min={1}
-                    value={form.originalPriceBDT}
-                    onChange={(e) => setForm({ ...form, originalPriceBDT: Number(e.target.value) })}
-                    className="w-full border border-[#D6CFC5] px-3 py-2 text-[#1C1917] focus:outline-none focus:border-[#C5A059]"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-[11px] font-semibold uppercase tracking-wider text-[#1C1917] mb-1">
-                  Image Path / URL *
-                </label>
-                <input
-                  type="text"
-                  required
-                  value={form.imageUrl}
-                  onChange={(e) => setForm({ ...form, imageUrl: e.target.value })}
-                  placeholder="/products/earrings/Wreath%20Flowers.webp"
-                  className="w-full border border-[#D6CFC5] px-3 py-2 text-[#1C1917] focus:outline-none focus:border-[#C5A059]"
-                />
-              </div>
-
-              <div>
-                <label className="block text-[11px] font-semibold uppercase tracking-wider text-[#1C1917] mb-1">
-                  Description *
-                </label>
-                <textarea
-                  rows={3}
-                  required
-                  value={form.description}
-                  onChange={(e) => setForm({ ...form, description: e.target.value })}
-                  className="w-full border border-[#D6CFC5] px-3 py-2 text-[#1C1917] focus:outline-none focus:border-[#C5A059]"
-                />
-              </div>
-
-              <div className="flex items-center gap-6 pt-1">
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={form.isFeatured}
-                    onChange={(e) => setForm({ ...form, isFeatured: e.target.checked })}
-                    className="accent-[#1C1917]"
-                  />
-                  <span className="font-semibold text-[#1C1917]">Featured on Homepage</span>
-                </label>
-
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={form.isNew}
-                    onChange={(e) => setForm({ ...form, isNew: e.target.checked })}
-                    className="accent-[#1C1917]"
-                  />
-                  <span className="font-semibold text-[#1C1917]">Mark as New Arrival</span>
-                </label>
-              </div>
-
-              <div className="flex justify-end gap-3 pt-4 border-t border-[#E7E0D6]">
-                <button
-                  type="button"
-                  onClick={() => setIsModalOpen(false)}
-                  className="boutique-btn-outline px-5 py-2.5 cursor-pointer"
-                >
-                  Cancel
-                </button>
-                <button type="submit" className="boutique-btn-primary px-6 py-2.5 cursor-pointer">
-                  {editingId ? 'Save Changes' : 'Add Piece'}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
+      <AdminProductModal
+        isOpen={isModalOpen}
+        editingId={editingId}
+        form={form}
+        productTypes={productTypes}
+        onClose={() => setIsModalOpen(false)}
+        onChangeForm={setForm}
+        onSaveProduct={handleSaveProduct}
+      />
 
       {/* Create Manual Order Modal (WhatsApp / Facebook Messenger) */}
-      {isManualOrderOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#181512]/60 backdrop-blur-xs p-4 overflow-y-auto">
-          <div className="w-full max-w-2xl border border-[#C5A059] bg-white shadow-2xl overflow-hidden my-8">
-            <div className="flex items-center justify-between bg-[#181512] px-6 py-4 text-[#FAF7F2]">
-              <div>
-                <h3 className="font-serif-display text-2xl font-medium">
-                  Create Manual Order (WhatsApp / Messenger)
-                </h3>
-                <p className="text-[11px] text-[#A8A29E] mt-0.5">
-                  Automatically deducts stock, saves to public.orders, and lets the customer track on /account by phone number.
-                </p>
-              </div>
-              <button
-                onClick={() => setIsManualOrderOpen(false)}
-                className="text-[#A8A29E] hover:text-white cursor-pointer"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            <form onSubmit={handleSubmitManualOrder} className="p-6 space-y-5 text-xs">
-              {/* Order Source Channel */}
-              <div>
-                <label className="block text-[11px] font-semibold uppercase tracking-wider text-[#1C1917] mb-2">
-                  Order Channel *
-                </label>
-                <div className="grid grid-cols-2 gap-3">
-                  <button
-                    type="button"
-                    onClick={() => setManualSource('whatsapp')}
-                    className={`flex items-center justify-center gap-2 border px-4 py-2.5 text-xs font-semibold uppercase tracking-wider transition cursor-pointer ${
-                      manualSource === 'whatsapp'
-                        ? 'border-emerald-700 bg-emerald-700 text-white'
-                        : 'border-[#D6CFC5] bg-[#FAF7F2] text-[#1C1917] hover:border-emerald-700'
-                    }`}
-                  >
-                    <MessageCircle className="w-4 h-4" />
-                    WhatsApp Order
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setManualSource('messenger')}
-                    className={`flex items-center justify-center gap-2 border px-4 py-2.5 text-xs font-semibold uppercase tracking-wider transition cursor-pointer ${
-                      manualSource === 'messenger'
-                        ? 'border-blue-700 bg-blue-700 text-white'
-                        : 'border-[#D6CFC5] bg-[#FAF7F2] text-[#1C1917] hover:border-blue-700'
-                    }`}
-                  >
-                    <MessageCircle className="w-4 h-4" />
-                    Facebook Messenger
-                  </button>
-                </div>
-              </div>
-
-              {/* Customer Info */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-[11px] font-semibold uppercase tracking-wider text-[#1C1917] mb-1">
-                    Customer Full Name *
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={manualCustName}
-                    onChange={(e) => setManualCustName(e.target.value)}
-                    placeholder="e.g. Tasnim Ahmed"
-                    className="w-full border border-[#D6CFC5] px-3 py-2 text-[#1C1917] focus:outline-none focus:border-[#C5A059]"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-[11px] font-semibold uppercase tracking-wider text-[#1C1917] mb-1">
-                    Customer Phone (For /account Tracking) *
-                  </label>
-                  <input
-                    type="tel"
-                    required
-                    value={manualCustPhone}
-                    onChange={(e) => setManualCustPhone(e.target.value)}
-                    placeholder="017XXXXXXXX"
-                    className="w-full border border-[#D6CFC5] px-3 py-2 text-[#1C1917] focus:outline-none focus:border-[#C5A059]"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-[11px] font-semibold uppercase tracking-wider text-[#1C1917] mb-1">
-                  Full Delivery Address *
-                </label>
-                <input
-                  type="text"
-                  required
-                  value={manualCustAddress}
-                  onChange={(e) => setManualCustAddress(e.target.value)}
-                  placeholder="House, Road, Area, City"
-                  className="w-full border border-[#D6CFC5] px-3 py-2 text-[#1C1917] focus:outline-none focus:border-[#C5A059]"
-                />
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-[11px] font-semibold uppercase tracking-wider text-[#1C1917] mb-1">
-                    Delivery Zone *
-                  </label>
-                  <select
-                    value={manualDeliveryZone}
-                    onChange={(e) => setManualDeliveryZone(e.target.value as DeliveryZone)}
-                    className="w-full border border-[#D6CFC5] bg-white px-3 py-2 text-[#1C1917] focus:outline-none focus:border-[#C5A059]"
-                  >
-                    <option value="inside_dhaka">Inside Dhaka (৳70)</option>
-                    <option value="outside_dhaka">Outside Dhaka (৳130)</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-[11px] font-semibold uppercase tracking-wider text-[#1C1917] mb-1">
-                    Payment Method *
-                  </label>
-                  <select
-                    value={manualPaymentMethod}
-                    onChange={(e) => setManualPaymentMethod(e.target.value as PaymentMethod)}
-                    className="w-full border border-[#D6CFC5] bg-white px-3 py-2 text-[#1C1917] focus:outline-none focus:border-[#C5A059]"
-                  >
-                    <option value="cod">Cash on Delivery (COD)</option>
-                    <option value="bkash">bKash Merchant Payment</option>
-                    <option value="card">Card Payment</option>
-                  </select>
-                </div>
-              </div>
-
-              {manualPaymentMethod === 'bkash' && (
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-[#FAF7F2] border border-[#E7E0D6] p-3">
-                  <div>
-                    <label className="block text-[10px] font-semibold uppercase tracking-wider text-[#1C1917] mb-1">
-                      bKash Sender Number (Optional)
-                    </label>
-                    <input
-                      type="text"
-                      value={manualSenderPhone}
-                      onChange={(e) => setManualSenderPhone(e.target.value)}
-                      placeholder="01XXXXXXXXX"
-                      className="w-full border border-[#D6CFC5] bg-white px-2.5 py-1.5 text-[#1C1917]"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-[10px] font-semibold uppercase tracking-wider text-[#1C1917] mb-1">
-                      bKash TrxID (Optional — Auto-Verifies)
-                    </label>
-                    <input
-                      type="text"
-                      value={manualTrxId}
-                      onChange={(e) => setManualTrxId(e.target.value)}
-                      placeholder="e.g. BKS982341A"
-                      className="w-full border border-[#D6CFC5] bg-white px-2.5 py-1.5 text-[#1C1917] uppercase"
-                    />
-                  </div>
-                </div>
-              )}
-
-              {/* Piece Selector */}
-              <div className="border border-[#E7E0D6] bg-[#FAF7F2] p-4 space-y-3">
-                <label className="block text-[11px] font-semibold uppercase tracking-wider text-[#1C1917]">
-                  Select Jewellery Piece(s) Bought *
-                </label>
-                <div className="flex flex-col sm:flex-row gap-2">
-                  <select
-                    value={manualSelectedProductId}
-                    onChange={(e) => setManualSelectedProductId(e.target.value)}
-                    className="flex-1 border border-[#D6CFC5] bg-white px-3 py-2 text-xs text-[#1C1917] focus:outline-none focus:border-[#C5A059]"
-                  >
-                    {products
-                      .filter((p) => p.stock > 0)
-                      .map((p) => (
-                        <option key={p.id} value={p.id}>
-                          [{p.category.toUpperCase()}] {p.name} — ৳{p.priceBDT.toLocaleString()} ({p.stock} in stock)
-                        </option>
-                      ))}
-                  </select>
-
-                  <input
-                    type="number"
-                    min={1}
-                    max={
-                      products.find((p) => p.id === manualSelectedProductId)?.stock ?? 1
-                    }
-                    value={manualSelectedQty}
-                    onChange={(e) => setManualSelectedQty(Math.max(1, Number(e.target.value)))}
-                    className="w-20 border border-[#D6CFC5] bg-white px-3 py-2 text-xs font-semibold text-[#1C1917]"
-                  />
-
-                  <button
-                    type="button"
-                    onClick={handleAddManualItem}
-                    className="bg-[#1C1917] text-white px-4 py-2 text-[11px] font-semibold uppercase tracking-wider hover:bg-[#332E2A] cursor-pointer"
-                  >
-                    + Add Piece
-                  </button>
-                </div>
-
-                {/* Selected Items List */}
-                {manualItems.length === 0 ? (
-                  <p className="text-[11px] text-[#78716C] italic">
-                    No pieces added yet. Choose a piece above and click &ldquo;+ Add Piece&rdquo;.
-                  </p>
-                ) : (
-                  <div className="space-y-2 pt-2">
-                    {manualItems.map((item) => (
-                      <div
-                        key={item.product.id}
-                        className="flex items-center justify-between bg-white border border-[#E7E0D6] px-3 py-2"
-                      >
-                        <div className="flex items-center gap-2.5">
-                          <Image
-                            src={item.product.imageUrl}
-                            alt={item.product.name}
-                            width={32}
-                            height={32}
-                            className="w-8 h-8 object-cover border border-[#E7E0D6]"
-                          />
-                          <div>
-                            <p className="font-semibold text-[#1C1917]">{item.product.name}</p>
-                            <p className="text-[10px] text-[#78716C]">
-                              Qty: {item.quantity} × ৳{item.product.priceBDT.toLocaleString()} ={' '}
-                              <span className="font-semibold text-[#1C1917]">
-                                ৳{(item.product.priceBDT * item.quantity).toLocaleString()}
-                              </span>
-                            </p>
-                          </div>
-                        </div>
-                        <button
-                          type="button"
-                          onClick={() => handleRemoveManualItem(item.product.id)}
-                          className="text-red-600 hover:text-red-800 text-[11px] font-semibold cursor-pointer"
-                        >
-                          Remove
-                        </button>
-                      </div>
-                    ))}
-
-                    <div className="flex items-center justify-between pt-2 border-t border-[#E7E0D6] text-xs">
-                      <span className="text-[#78716C]">
-                        Subtotal + Delivery (৳{manualDeliveryZone === 'inside_dhaka' ? 70 : 130}):
-                      </span>
-                      <span className="font-serif-display text-lg font-semibold text-[#1C1917]">
-                        ৳
-                        {(
-                          manualItems.reduce(
-                            (acc, i) => acc + i.product.priceBDT * i.quantity,
-                            0
-                          ) + (manualDeliveryZone === 'inside_dhaka' ? 70 : 130)
-                        ).toLocaleString()}
-                      </span>
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              <div className="flex justify-end gap-3 pt-4 border-t border-[#E7E0D6]">
-                <button
-                  type="button"
-                  onClick={() => setIsManualOrderOpen(false)}
-                  className="boutique-btn-outline px-5 py-2.5 cursor-pointer"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="boutique-btn-primary px-6 py-2.5 cursor-pointer"
-                >
-                  Create Order & Deduct Stock
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
+      <AdminManualOrderModal
+        isOpen={isManualOrderOpen}
+        onClose={() => setIsManualOrderOpen(false)}
+        products={products}
+        manualSource={manualSource}
+        onChangeManualSource={setManualSource}
+        manualCustName={manualCustName}
+        onChangeManualCustName={setManualCustName}
+        manualCustPhone={manualCustPhone}
+        onChangeManualCustPhone={setManualCustPhone}
+        manualCustAddress={manualCustAddress}
+        onChangeManualCustAddress={setManualCustAddress}
+        manualDeliveryZone={manualDeliveryZone}
+        onChangeManualDeliveryZone={setManualDeliveryZone}
+        manualPaymentMethod={manualPaymentMethod}
+        onChangeManualPaymentMethod={setManualPaymentMethod}
+        manualTrxId={manualTrxId}
+        onChangeManualTrxId={setManualTrxId}
+        manualSenderPhone={manualSenderPhone}
+        onChangeManualSenderPhone={setManualSenderPhone}
+        manualSelectedProductId={manualSelectedProductId}
+        onChangeManualSelectedProductId={setManualSelectedProductId}
+        manualSelectedQty={manualSelectedQty}
+        onChangeManualSelectedQty={setManualSelectedQty}
+        manualItems={manualItems}
+        onAddManualItem={handleAddManualItem}
+        onRemoveManualItem={handleRemoveManualItem}
+        onSubmitManualOrder={handleSubmitManualOrder}
+      />
     </div>
   );
 }

@@ -1,36 +1,28 @@
 import { Product } from '../models/product.model';
 import { INITIAL_PRODUCTS } from '../data/products.data';
-import { supabaseService } from './supabase.service';
+import { productRepository } from '../repositories/product.repository';
 
-const PRODUCTS_STORAGE_KEY = 'melo_products_catalogue_v3';
-
+/**
+ * ProductService — Domain service for catalogue management, pricing, stock,
+ * and differential CSV synchronization. Delegates all DB & storage I/O to ProductRepository.
+ */
 class ProductService {
   private products: Product[] = [...INITIAL_PRODUCTS];
   private loadedFromStorage = false;
 
   private ensureLoaded(): void {
-    if (this.loadedFromStorage || typeof window === 'undefined') return;
-    try {
-      const stored = localStorage.getItem(PRODUCTS_STORAGE_KEY);
-      if (stored) {
-        const parsed = JSON.parse(stored) as Product[];
-        if (Array.isArray(parsed) && parsed.length > 0) {
-          this.products = parsed;
-        }
-      }
+    if (this.loadedFromStorage) return;
+    const stored = productRepository.loadLocal();
+    if (stored && stored.length > 0) {
+      this.products = stored;
+    }
+    if (typeof window !== 'undefined') {
       this.loadedFromStorage = true;
-    } catch {
-      // ignore storage errors
     }
   }
 
   private persist(): void {
-    if (typeof window === 'undefined') return;
-    try {
-      localStorage.setItem(PRODUCTS_STORAGE_KEY, JSON.stringify(this.products));
-    } catch {
-      // ignore storage errors
-    }
+    productRepository.saveLocal(this.products);
   }
 
   getAllProducts(): Product[] {
@@ -85,7 +77,7 @@ class ProductService {
     if (!product) return false;
     product.stock = Math.max(0, product.stock + delta);
     this.persist();
-    void supabaseService.upsertProduct(product);
+    void productRepository.upsertInDb(product);
     return true;
   }
 
@@ -95,7 +87,7 @@ class ProductService {
     if (!product) return false;
     product.stock = Math.max(0, Math.floor(exactStock));
     this.persist();
-    void supabaseService.upsertProduct(product);
+    void productRepository.upsertInDb(product);
     return true;
   }
 
@@ -118,7 +110,7 @@ class ProductService {
       product.originalPriceBDT = Math.round(originalPriceBDT);
     }
     this.persist();
-    void supabaseService.upsertProduct(product);
+    void productRepository.upsertInDb(product);
     return true;
   }
 
@@ -126,7 +118,7 @@ class ProductService {
     this.ensureLoaded();
     this.products = [newProduct, ...this.products];
     this.persist();
-    void supabaseService.upsertProduct(newProduct);
+    void productRepository.upsertInDb(newProduct);
     return newProduct;
   }
 
@@ -136,7 +128,7 @@ class ProductService {
     if (idx === -1) return false;
     this.products[idx] = { ...updatedProduct };
     this.persist();
-    void supabaseService.upsertProduct(updatedProduct);
+    void productRepository.upsertInDb(updatedProduct);
     return true;
   }
 
@@ -146,12 +138,12 @@ class ProductService {
     this.products = this.products.filter((p) => p.id !== id);
     if (this.products.length === prevLen) return false;
     this.persist();
-    void supabaseService.deleteProduct(id);
+    void productRepository.deleteFromDb(id);
     return true;
   }
 
   async syncFromDatabase(): Promise<Product[]> {
-    const remote = await supabaseService.fetchProducts();
+    const remote = await productRepository.fetchAllFromDb();
     if (remote && remote.length > 0) {
       this.products = remote;
       this.persist();
@@ -161,7 +153,7 @@ class ProductService {
 
   async pushAllToDatabase(): Promise<boolean> {
     this.ensureLoaded();
-    return supabaseService.seedProducts(this.products);
+    return productRepository.upsertBatchInDb(this.products);
   }
 
   async applyImportedProductsDiff(
@@ -174,7 +166,7 @@ class ProductService {
     if (changedProducts.length === 0) {
       return true;
     }
-    return supabaseService.seedProducts(changedProducts);
+    return productRepository.upsertBatchInDb(changedProducts);
   }
 }
 

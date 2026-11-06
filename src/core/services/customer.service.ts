@@ -1,64 +1,18 @@
 import { CustomerProfile } from '../models/customer.model';
 import { DeliveryZone } from '../models/order.model';
-import { supabaseService } from './supabase.service';
+import { customerRepository } from '../repositories/customer.repository';
 
-const CURRENT_CUSTOMER_KEY = 'melo_current_customer';
-const CUSTOMERS_LIST_KEY = 'melo_customers_list';
-
+/**
+ * CustomerService — Domain service for customer registration, login, and profile management.
+ * Delegates all DB & storage I/O to CustomerRepository.
+ */
 class CustomerService {
-  private getAllLocalCustomers(): Array<CustomerProfile & { password?: string }> {
-    if (typeof window === 'undefined') return [];
-    try {
-      const raw = localStorage.getItem(CUSTOMERS_LIST_KEY);
-      if (raw) {
-        return JSON.parse(raw);
-      }
-    } catch {
-      // ignore
-    }
-    return [];
-  }
-
-  private saveLocalCustomer(customer: CustomerProfile & { password?: string }): void {
-    if (typeof window === 'undefined') return;
-    try {
-      const all = this.getAllLocalCustomers();
-      const idx = all.findIndex((c) => c.phone === customer.phone);
-      if (idx >= 0) {
-        all[idx] = { ...all[idx], ...customer };
-      } else {
-        all.push(customer);
-      }
-      localStorage.setItem(CUSTOMERS_LIST_KEY, JSON.stringify(all));
-    } catch {
-      // ignore
-    }
-  }
-
   getCurrentCustomer(): CustomerProfile | null {
-    if (typeof window === 'undefined') return null;
-    try {
-      const raw = localStorage.getItem(CURRENT_CUSTOMER_KEY);
-      if (raw) {
-        return JSON.parse(raw) as CustomerProfile;
-      }
-    } catch {
-      // ignore
-    }
-    return null;
+    return customerRepository.loadCurrentLocal();
   }
 
   setCurrentCustomer(customer: CustomerProfile | null): void {
-    if (typeof window === 'undefined') return;
-    try {
-      if (customer) {
-        localStorage.setItem(CURRENT_CUSTOMER_KEY, JSON.stringify(customer));
-      } else {
-        localStorage.removeItem(CURRENT_CUSTOMER_KEY);
-      }
-    } catch {
-      // ignore
-    }
+    customerRepository.saveCurrentLocal(customer);
   }
 
   async register(params: {
@@ -81,8 +35,8 @@ class CustomerService {
       createdAt: new Date().toISOString(),
     };
 
-    this.saveLocalCustomer({ ...profile, password: params.password.trim() });
-    const remote = await supabaseService.upsertCustomer(profile, params.password.trim());
+    customerRepository.saveLocalCustomer({ ...profile, password: params.password.trim() });
+    const remote = await customerRepository.upsertInDb(profile, params.password.trim());
     const finalProfile = remote || profile;
     this.setCurrentCustomer(finalProfile);
     return finalProfile;
@@ -92,15 +46,15 @@ class CustomerService {
     const cleanPhone = phone.trim().replace(/\s+/g, '');
     const cleanPass = password.trim();
 
-    // 1. Check Supabase public.customers table first
-    const remote = await supabaseService.loginCustomer(cleanPhone, cleanPass);
+    // 1. Check Supabase public.customers table via CustomerRepository
+    const remote = await customerRepository.findByCredentialsInDb(cleanPhone, cleanPass);
     if (remote) {
-      this.saveLocalCustomer({ ...remote, password: cleanPass });
+      customerRepository.saveLocalCustomer({ ...remote, password: cleanPass });
       this.setCurrentCustomer(remote);
       return remote;
     }
 
-    // 2. Fallback to local customer records (or demo customer 01700000000 / melo1234)
+    // 2. Fallback to demo customer (01700000000 / melo1234)
     if (cleanPhone === '01700000000' && cleanPass === 'melo1234') {
       const demo: CustomerProfile = {
         id: 'cust-demo',
@@ -116,9 +70,10 @@ class CustomerService {
       return demo;
     }
 
-    const local = this.getAllLocalCustomers().find(
-      (c) => c.phone === cleanPhone && c.password === cleanPass
-    );
+    // 3. Fallback to local customer records
+    const local = customerRepository
+      .loadAllLocal()
+      .find((c) => c.phone === cleanPhone && c.password === cleanPass);
     if (local) {
       this.setCurrentCustomer(local);
       return local;
@@ -139,8 +94,8 @@ class CustomerService {
         savedTrxIds: nextTrxIds,
       };
       this.setCurrentCustomer(updated);
-      this.saveLocalCustomer(updated);
-      await supabaseService.upsertCustomer(updated);
+      customerRepository.saveLocalCustomer(updated);
+      await customerRepository.upsertInDb(updated);
     }
   }
 
@@ -150,4 +105,3 @@ class CustomerService {
 }
 
 export const customerService = new CustomerService();
-

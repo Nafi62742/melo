@@ -1,54 +1,31 @@
 import { ProductType } from '../models/product-type.model';
-import { supabaseService } from './supabase.service';
+import { DEFAULT_PRODUCT_TYPES } from '../data/product-types.data';
+import { productTypeRepository } from '../repositories/product-type.repository';
 import { slugify } from '../utils/slug.util';
 
-const PRODUCT_TYPES_STORAGE_KEY = 'melo_product_types_v1';
+export { DEFAULT_PRODUCT_TYPES };
 
-export const DEFAULT_PRODUCT_TYPES: ProductType[] = [
-  {
-    slug: 'earrings',
-    name: 'Earrings',
-    description: 'Hypoallergenic French-style ear clips and pearl earrings',
-  },
-  {
-    slug: 'rings',
-    name: 'Rings',
-    description: 'Korean-style adjustable open rings and zircon bands',
-  },
-  {
-    slug: 'bracelets',
-    name: 'Bracelets',
-    description: 'Light luxury crystal and four-leaf clover bracelets',
-  },
-];
-
+/**
+ * ProductTypeService — Domain service for managing product types (`public.product_types`).
+ * Delegates all DB & storage I/O to ProductTypeRepository.
+ */
 class ProductTypeService {
   private productTypes: ProductType[] = [...DEFAULT_PRODUCT_TYPES];
   private loadedFromStorage = false;
 
   private ensureLoaded(): void {
-    if (this.loadedFromStorage || typeof window === 'undefined') return;
-    try {
-      const stored = localStorage.getItem(PRODUCT_TYPES_STORAGE_KEY);
-      if (stored) {
-        const parsed = JSON.parse(stored) as ProductType[];
-        if (Array.isArray(parsed) && parsed.length > 0) {
-          this.productTypes = parsed;
-        }
-      }
+    if (this.loadedFromStorage) return;
+    const stored = productTypeRepository.loadLocal();
+    if (stored && stored.length > 0) {
+      this.productTypes = stored;
+    }
+    if (typeof window !== 'undefined') {
       this.loadedFromStorage = true;
-    } catch {
-      // ignore storage errors
     }
   }
 
   private persist(): void {
-    if (typeof window === 'undefined') return;
-    try {
-      localStorage.setItem(PRODUCT_TYPES_STORAGE_KEY, JSON.stringify(this.productTypes));
-    } catch {
-      // ignore storage errors
-    }
+    productTypeRepository.saveLocal(this.productTypes);
   }
 
   getAllProductTypes(): ProductType[] {
@@ -78,7 +55,7 @@ class ProductTypeService {
     }
 
     this.persist();
-    void supabaseService.upsertProductType(entry);
+    void productTypeRepository.upsertInDb(entry);
     return entry;
   }
 
@@ -88,12 +65,12 @@ class ProductTypeService {
     this.productTypes = this.productTypes.filter((pt) => pt.slug !== slug);
     if (this.productTypes.length === prevLen) return false;
     this.persist();
-    void supabaseService.deleteProductType(slug);
+    void productTypeRepository.deleteFromDb(slug);
     return true;
   }
 
   async syncFromDatabase(): Promise<ProductType[]> {
-    const remote = await supabaseService.fetchProductTypes();
+    const remote = await productTypeRepository.fetchAllFromDb();
     if (remote && remote.length > 0) {
       this.productTypes = remote;
       this.persist();
@@ -103,9 +80,8 @@ class ProductTypeService {
 
   async pushAllToDatabase(): Promise<boolean> {
     this.ensureLoaded();
-    return supabaseService.seedProductTypes(this.productTypes);
+    return productTypeRepository.upsertBatchInDb(this.productTypes);
   }
 }
 
 export const productTypeService = new ProductTypeService();
-

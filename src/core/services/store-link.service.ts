@@ -1,37 +1,33 @@
-import { DEFAULT_STORE_LINKS, StoreLink } from '../models/store-link.model';
-import { supabaseService } from './supabase.service';
+import { StoreLink } from '../models/store-link.model';
+import { DEFAULT_STORE_LINKS } from '../data/store-links.data';
+import {
+  storeLinkRepository,
+  STORE_LINKS_UPDATED_EVENT,
+} from '../repositories/store-link.repository';
 
-const STORE_LINKS_STORAGE_KEY = 'melo_store_links';
-export const STORE_LINKS_UPDATED_EVENT = 'melo-links-updated';
+export { STORE_LINKS_UPDATED_EVENT };
 
+/**
+ * StoreLinkService — Domain service for storefront chat & social links.
+ * Delegates all DB & storage I/O to StoreLinkRepository.
+ */
 class StoreLinkService {
   private links: StoreLink[] = [...DEFAULT_STORE_LINKS];
   private loadedFromStorage = false;
 
   private ensureLoaded(): void {
-    if (this.loadedFromStorage || typeof window === 'undefined') return;
-    try {
-      const stored = localStorage.getItem(STORE_LINKS_STORAGE_KEY);
-      if (stored) {
-        const parsed = JSON.parse(stored) as StoreLink[];
-        if (Array.isArray(parsed) && parsed.length > 0) {
-          this.links = parsed;
-        }
-      }
+    if (this.loadedFromStorage) return;
+    const stored = storeLinkRepository.loadLocal();
+    if (stored && stored.length > 0) {
+      this.links = stored;
+    }
+    if (typeof window !== 'undefined') {
       this.loadedFromStorage = true;
-    } catch {
-      // ignore storage errors
     }
   }
 
   private persist(): void {
-    if (typeof window === 'undefined') return;
-    try {
-      localStorage.setItem(STORE_LINKS_STORAGE_KEY, JSON.stringify(this.links));
-      window.dispatchEvent(new CustomEvent(STORE_LINKS_UPDATED_EVENT));
-    } catch {
-      // ignore storage errors
-    }
+    storeLinkRepository.saveLocal(this.links);
   }
 
   /**
@@ -99,7 +95,7 @@ class StoreLinkService {
     }
 
     this.persist();
-    void supabaseService.upsertStoreLink(normalized);
+    void storeLinkRepository.upsertInDb(normalized);
     return normalized;
   }
 
@@ -109,13 +105,13 @@ class StoreLinkService {
     this.links = this.links.filter((l) => l.key !== key);
     if (this.links.length === prevLen) return false;
     this.persist();
-    void supabaseService.deleteStoreLink(key);
+    void storeLinkRepository.deleteFromDb(key);
     return true;
   }
 
   async syncFromDatabase(): Promise<StoreLink[]> {
     this.ensureLoaded();
-    const remote = await supabaseService.fetchStoreLinks();
+    const remote = await storeLinkRepository.fetchAllFromDb();
     if (remote && remote.length > 0) {
       this.links = remote;
       this.persist();
@@ -125,9 +121,8 @@ class StoreLinkService {
 
   async pushAllToDatabase(): Promise<boolean> {
     this.ensureLoaded();
-    return supabaseService.seedStoreLinks(this.links);
+    return storeLinkRepository.upsertBatchInDb(this.links);
   }
 }
 
 export const storeLinkService = new StoreLinkService();
-
