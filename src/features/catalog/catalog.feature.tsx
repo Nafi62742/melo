@@ -226,7 +226,7 @@ export function CatalogFeature() {
             The Curated Collection
           </h1>
           <p className="mt-2 text-xs sm:text-sm text-[#78716C] max-w-lg mx-auto">
-            Handcrafted everyday elegance with nationwide Cash on Delivery.
+            Everyday elegance, aesthetic gadgets &amp; playful wonders with nationwide Cash on Delivery.
           </p>
         </div>
       </div>
@@ -263,7 +263,7 @@ export function CatalogFeature() {
               <div className="relative w-full sm:w-64">
                 <input
                   type="text"
-                  placeholder="Search jewellery..."
+                  placeholder="Search collection, gadgets & gifts..."
                   value={searchQuery}
                   onChange={(e) => setCustomSearchQuery(e.target.value)}
                   className="w-full border border-[#D6CFC5] bg-white pl-9 pr-7 py-2 text-xs text-[#1C1917] placeholder-[#A8A29E] focus:outline-none focus:border-[#C5A059] transition"
@@ -378,7 +378,7 @@ export function CatalogFeature() {
               No matching pieces found
             </h3>
             <p className="mt-1.5 text-xs text-[#78716C] max-w-md mx-auto leading-relaxed">
-              We couldn&apos;t find any jewellery matching your active filters. Try broadening your
+              We couldn&apos;t find any items matching your active filters. Try broadening your
               selection or clearing the filters.
             </p>
             <button

@@ -27,9 +27,9 @@ const jakarta = Plus_Jakarta_Sans({
 });
 
 export const metadata: Metadata = {
-  title: 'MELO | Curated French Light Luxury Jewellery — Dhaka, Bangladesh',
+  title: 'MELO | Curated Lifestyle, Accessories & Little Wonders — Dhaka, Bangladesh',
   description:
-    'MELO is your boutique destination for hypoallergenic French ear clips, tarnish-resistant 316L stainless steel rings, and delicate bracelets in Bangladesh. Card, bKash & Cash on Delivery.',
+    'MELO is your boutique destination for curated lifestyle finds, aesthetic gadgets, French ear clips, and charming accessories in Bangladesh. Card, bKash & Cash on Delivery.',
 };
 
 export default function RootLayout({

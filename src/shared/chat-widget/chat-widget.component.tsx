@@ -35,7 +35,7 @@ export function ChatWidget() {
     ? whatsappLink.url.includes('?')
       ? whatsappLink.url
       : `${whatsappLink.url}?text=${encodeURIComponent(
-          'Hello MELO! I have a question about your jewellery collection.'
+          'Hello MELO! I have a question about your collection.'
         )}`
     : '';
   const messengerUrl = messengerLink ? messengerLink.url : '';
