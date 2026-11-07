@@ -7,6 +7,7 @@ import { useRouter } from 'next/navigation';
 import { Product } from '@/core/models/product.model';
 import { productService } from '@/core/services/product.service';
 import { storeLinkService } from '@/core/services/store-link.service';
+import { orderService } from '@/core/services/order.service';
 import { formatBDT } from '@/core/utils/currency.util';
 import { useCart } from '@/core/services/cart.context';
 import { useWishlist } from '@/core/services/wishlist.context';
@@ -112,13 +113,27 @@ export function ProductDetailFeature({ product: initialProduct }: ProductDetailF
   const handleWhatsAppOrder = () => {
     const rawLink = storeLinkService.getLinkByKey('whatsapp')?.url || '';
     // Normalize phone number (digits only or wa.me)
-    let cleanPhone = '8801700000000';
+    let cleanPhone = '';
     if (rawLink) {
       const match = rawLink.match(/\d+/g);
       if (match) {
         const digits = match.join('');
+        if (digits && digits !== '8801700000000' && digits !== '01700000000') {
+          cleanPhone = digits.startsWith('01') ? `88${digits}` : digits;
+        }
+      }
+    }
+    // Fallback to active store phone / bKash contact if WhatsApp link not configured
+    if (!cleanPhone) {
+      const storePhone = orderService.getBkashNumber();
+      const match = storePhone.match(/\d+/g);
+      if (match) {
+        const digits = match.join('');
         cleanPhone = digits.startsWith('01') ? `88${digits}` : digits;
       }
+    }
+    if (!cleanPhone) {
+      cleanPhone = '8801760887297';
     }
 
     const currentUrl = typeof window !== 'undefined' ? window.location.href : '';

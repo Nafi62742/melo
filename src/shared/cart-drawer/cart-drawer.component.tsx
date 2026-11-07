@@ -209,9 +209,17 @@ export function CartDrawer() {
                 <span>{t.cart.subtotal}</span>
                 <span className="font-medium text-[#1C1917]">{formatBDT(subtotal)}</span>
               </div>
-              <div className="flex justify-between">
+              <div className="flex justify-between items-center">
                 <span>{t.cart.estimatedDelivery}</span>
-                <span className="font-medium text-[#1C1917]">{formatBDT(deliveryFee)}</span>
+                <span className="font-medium text-[#1C1917]">
+                  {subtotal >= 1500 ? (
+                    <span className="text-emerald-700 font-semibold uppercase tracking-wider text-[11px]">
+                      Complimentary (Over ৳1,500)
+                    </span>
+                  ) : (
+                    formatBDT(deliveryFee)
+                  )}
+                </span>
               </div>
               <div className="flex justify-between pt-2.5 border-t border-[#E7E0D6] text-sm font-semibold text-[#1C1917]">
                 <span className="uppercase tracking-wider text-xs">Total</span>

@@ -430,7 +430,8 @@ export function AdminFeature() {
       (sum, item) => sum + item.product.priceBDT * item.quantity,
       0
     );
-    const deliveryFee = manualDeliveryZone === 'inside_dhaka' ? 70 : 130;
+    const deliveryFee =
+      subtotal >= 1500 ? 0 : manualDeliveryZone === 'inside_dhaka' ? 60 : 120;
     const total = subtotal + deliveryFee;
     const orderNumber = `MELO-${Math.floor(100000 + Math.random() * 900000)}`;
 

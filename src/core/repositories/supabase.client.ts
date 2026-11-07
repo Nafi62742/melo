@@ -21,7 +21,7 @@ export class SupabaseClient {
       Prefer: 'return=representation',
       ...extraHeaders,
     };
-    if (SUPABASE_ANON_KEY.startsWith('eyJ')) {
+    if (SUPABASE_ANON_KEY) {
       headers.Authorization = `Bearer ${SUPABASE_ANON_KEY}`;
     }
     return headers;

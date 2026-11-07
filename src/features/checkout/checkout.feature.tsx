@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useSyncExternalStore } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useCart } from '@/core/services/cart.context';
@@ -21,7 +21,26 @@ import {
   Check,
 } from 'lucide-react';
 
+const emptySubscribe = () => () => {};
+
 export function CheckoutFeature() {
+  const isMounted = useSyncExternalStore(emptySubscribe, () => true, () => false);
+
+  if (!isMounted) {
+    return (
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-20 flex flex-col items-center justify-center min-h-[40vh]">
+        <div className="w-8 h-8 border-2 border-[#C5A059] border-t-transparent rounded-full animate-spin mb-3" />
+        <span className="text-xs uppercase tracking-widest text-[#78716C] font-mono">
+          Loading Secure Checkout...
+        </span>
+      </div>
+    );
+  }
+
+  return <CheckoutContent />;
+}
+
+function CheckoutContent() {
   const { items, subtotal, deliveryZone, setDeliveryZone, deliveryFee, total, clearCart } = useCart();
   const initialCustomer = customerService.getCurrentCustomer();
 
@@ -37,6 +56,13 @@ export function CheckoutFeature() {
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [completedOrder, setCompletedOrder] = useState<Order | null>(null);
+
+  useEffect(() => {
+    if (initialCustomer?.deliveryZone) {
+      setDeliveryZone(initialCustomer.deliveryZone);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const storeBkashNumber = orderService.getBkashNumber();
 
@@ -583,11 +609,19 @@ export function CheckoutFeature() {
                 <span>Subtotal</span>
                 <span className="font-semibold text-[#1C1917]">{formatBDT(subtotal)}</span>
               </div>
-              <div className="flex justify-between">
+              <div className="flex justify-between items-center">
                 <span>
                   Delivery ({deliveryZone === 'inside_dhaka' ? 'Inside Dhaka' : 'Outside Dhaka'})
                 </span>
-                <span className="font-semibold text-[#1C1917]">{formatBDT(deliveryFee)}</span>
+                <span className="font-semibold text-[#1C1917]">
+                  {subtotal >= 1500 ? (
+                    <span className="text-emerald-700 font-bold uppercase tracking-wider text-[11px]">
+                      FREE (Over ৳1,500)
+                    </span>
+                  ) : (
+                    formatBDT(deliveryFee)
+                  )}
+                </span>
               </div>
               <div className="flex justify-between">
                 <span>Selected Payment</span>
