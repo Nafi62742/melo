@@ -14,6 +14,8 @@ import { adminService, ADMIN_AUTH_CHANGED_EVENT } from '@/core/services/admin.se
 import { useI18n } from '@/core/i18n/i18n.context';
 import { ShoppingBag, Search, Menu, X, Sparkles, User, ShieldCheck, Heart } from 'lucide-react';
 
+const emptySubscribe = () => () => {};
+
 const subscribeTypes = (callback: () => void) => {
   window.addEventListener(PRODUCT_TYPES_UPDATED_EVENT, callback);
   return () => window.removeEventListener(PRODUCT_TYPES_UPDATED_EVENT, callback);
@@ -30,6 +32,7 @@ export function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [isAdminLoggedIn, setIsAdminLoggedIn] = useState(false);
+  const isMounted = useSyncExternalStore(emptySubscribe, () => true, () => false);
   const productTypes = useSyncExternalStore(
     subscribeTypes,
     () => productTypeService.getAllProductTypes(),
@@ -54,6 +57,11 @@ export function Navbar() {
   useEffect(() => {
     void productTypeService.syncFromDatabase();
   }, []);
+
+  // Hide storefront navbar on admin dashboard
+  if (pathname?.startsWith('/admin')) {
+    return null;
+  }
 
   const getTypeLabel = (slug: string, fallbackName: string): string => {
     if (slug === 'earrings') return t.nav.earrings;
@@ -210,10 +218,10 @@ export function Navbar() {
           >
             <Heart
               className={`w-4 h-4 ${
-                totalWishlist > 0 ? 'fill-[#9A7B3E] text-[#9A7B3E]' : 'text-[#1C1917]'
+                isMounted && totalWishlist > 0 ? 'fill-[#9A7B3E] text-[#9A7B3E]' : 'text-[#1C1917]'
               }`}
             />
-            {totalWishlist > 0 && (
+            {isMounted && totalWishlist > 0 && (
               <span
                 suppressHydrationWarning
                 className="absolute -top-1.5 -right-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-[#1C1917] px-1 text-[9px] font-bold text-white shadow-xs"
@@ -237,7 +245,7 @@ export function Navbar() {
               suppressHydrationWarning
               className="flex h-4 min-w-4 items-center justify-center rounded-full bg-[#C5A059] px-1 text-[10px] font-bold text-[#181512]"
             >
-              {totalQuantity}
+              {isMounted ? totalQuantity : 0}
             </span>
           </button>
         </div>

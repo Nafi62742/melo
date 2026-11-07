@@ -115,8 +115,17 @@ function ProductLightboxContent({
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
     if (!isZoomed) return;
     const rect = e.currentTarget.getBoundingClientRect();
-    const x = ((e.clientX - rect.left) / rect.width) * 100;
-    const y = ((e.clientY - rect.top) / rect.height) * 100;
+    const x = Math.max(0, Math.min(100, ((e.clientX - rect.left) / rect.width) * 100));
+    const y = Math.max(0, Math.min(100, ((e.clientY - rect.top) / rect.height) * 100));
+    setZoomOrigin({ x, y });
+  };
+
+  const handleTouchMove = (e: React.TouchEvent<HTMLDivElement>) => {
+    if (!isZoomed || e.touches.length === 0) return;
+    const touch = e.touches[0];
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = Math.max(0, Math.min(100, ((touch.clientX - rect.left) / rect.width) * 100));
+    const y = Math.max(0, Math.min(100, ((touch.clientY - rect.top) / rect.height) * 100));
     setZoomOrigin({ x, y });
   };
 
@@ -269,6 +278,7 @@ function ProductLightboxContent({
               setIsZoomed((prev) => !prev);
             }}
             onMouseMove={handleMouseMove}
+            onTouchMove={handleTouchMove}
             className={`relative transition-transform duration-200 ease-out flex items-center justify-center ${
               isZoomed ? 'cursor-zoom-out' : 'cursor-zoom-in'
             }`}
@@ -280,6 +290,11 @@ function ProductLightboxContent({
             {/* Native <img> guarantees support for all local/remote formats and uncompressed raw display */}
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
+              ref={(el) => {
+                if (el && el.complete && el.naturalWidth > 0 && isLoading) {
+                  setIsLoading(false);
+                }
+              }}
               src={currentImage}
               alt={`${productName} view ${currentIndex + 1}`}
               onLoad={() => setIsLoading(false)}

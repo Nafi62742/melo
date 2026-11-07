@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useSyncExternalStore } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useSearchParams } from 'next/navigation';
@@ -24,7 +24,26 @@ import {
   AlertCircle,
 } from 'lucide-react';
 
+const emptySubscribe = () => () => {};
+
 export function AccountFeature() {
+  const isMounted = useSyncExternalStore(emptySubscribe, () => true, () => false);
+
+  if (!isMounted) {
+    return (
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-20 flex flex-col items-center justify-center min-h-[40vh]">
+        <div className="w-8 h-8 border-2 border-[#C5A059] border-t-transparent rounded-full animate-spin mb-3" />
+        <span className="text-xs uppercase tracking-widest text-[#78716C] font-mono">
+          Loading Account Portal...
+        </span>
+      </div>
+    );
+  }
+
+  return <AccountContent />;
+}
+
+function AccountContent() {
   const searchParams = useSearchParams();
   const initialQuery = searchParams?.get('orderNumber') || searchParams?.get('phone') || '';
 

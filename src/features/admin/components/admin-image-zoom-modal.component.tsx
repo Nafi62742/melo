@@ -112,6 +112,15 @@ function AdminImageZoomContent({
     setZoomOrigin({ x, y });
   };
 
+  const handleTouchMove = (e: React.TouchEvent<HTMLDivElement>) => {
+    if (scale <= 1 || e.touches.length === 0) return;
+    const touch = e.touches[0];
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = Math.max(0, Math.min(100, ((touch.clientX - rect.left) / rect.width) * 100));
+    const y = Math.max(0, Math.min(100, ((touch.clientY - rect.top) / rect.height) * 100));
+    setZoomOrigin({ x, y });
+  };
+
   return (
     <div
       role="dialog"
@@ -268,6 +277,7 @@ function AdminImageZoomContent({
           <div
             onClick={toggleScale}
             onMouseMove={handleMouseMove}
+            onTouchMove={handleTouchMove}
             className={`relative transition-transform duration-200 ease-out flex items-center justify-center ${
               scale > 1 ? 'cursor-zoom-out' : 'cursor-zoom-in'
             }`}
@@ -279,6 +289,11 @@ function AdminImageZoomContent({
             {/* Native <img> for raw quality and fast loading */}
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
+              ref={(el) => {
+                if (el && el.complete && el.naturalWidth > 0 && isLoading) {
+                  setIsLoading(false);
+                }
+              }}
               src={image.src}
               alt={image.title}
               onLoad={() => setIsLoading(false)}

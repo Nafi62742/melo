@@ -129,7 +129,8 @@ export function CartProvider({ children }: { children: ReactNode }) {
     (sum, item) => sum + (Number(item.product.priceBDT) || 0) * (Number(item.quantity) || 0),
     0
   );
-  const deliveryFee = items.length === 0 ? 0 : deliveryZone === 'inside_dhaka' ? 60 : 120;
+  const deliveryFee =
+    items.length === 0 ? 0 : subtotal >= 1500 ? 0 : deliveryZone === 'inside_dhaka' ? 60 : 120;
   const total = subtotal + deliveryFee;
 
   return (

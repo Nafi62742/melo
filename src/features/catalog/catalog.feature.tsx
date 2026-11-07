@@ -72,17 +72,20 @@ export function CatalogFeature() {
 
   // Compute live dynamic min, max, and price brackets from catalog
   const { catalogMinPrice, catalogMaxPrice, priceBrackets } = useMemo(() => {
-    if (allProducts.length === 0) {
+    const prices = allProducts
+      .map((p) => Number(p.priceBDT))
+      .filter((p) => !isNaN(p) && p > 0);
+
+    if (prices.length === 0) {
       return {
         catalogMinPrice: 150,
         catalogMaxPrice: 850,
         priceBrackets: { tier1: 300, tier2: 500 },
       };
     }
-    const prices = allProducts.map((p) => p.priceBDT);
     const min = Math.min(...prices);
     const max = Math.max(...prices);
-    const spread = max - min;
+    const spread = Math.max(1, max - min);
     const tier1 = Math.round((min + spread * 0.35) / 25) * 25;
     const tier2 = Math.round((min + spread * 0.68) / 25) * 25;
 
