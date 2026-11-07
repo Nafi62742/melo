@@ -1,11 +1,13 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { usePathname } from 'next/navigation';
 import { MessageCircle, Send, X, Sparkles, PhoneCall, ExternalLink } from 'lucide-react';
 import { storeLinkService, STORE_LINKS_UPDATED_EVENT } from '@/core/services/store-link.service';
 import { StoreLink, DEFAULT_STORE_LINKS } from '@/core/models/store-link.model';
 
 export function ChatWidget() {
+  const pathname = usePathname();
   const [isOpen, setIsOpen] = useState(false);
   const [links, setLinks] = useState<StoreLink[]>(DEFAULT_STORE_LINKS);
 
@@ -35,10 +37,14 @@ export function ChatWidget() {
     ? whatsappLink.url.includes('?')
       ? whatsappLink.url
       : `${whatsappLink.url}?text=${encodeURIComponent(
-          'Hello MELO! I have a question about your jewellery collection.'
+          'Hello MELO! I have a question about your collection.'
         )}`
     : '';
   const messengerUrl = messengerLink ? messengerLink.url : '';
+
+  if (pathname?.startsWith('/admin')) {
+    return null;
+  }
 
   if (!whatsappUrl && !messengerUrl && customChatLinks.length === 0) {
     return null;

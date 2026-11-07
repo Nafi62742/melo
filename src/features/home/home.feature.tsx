@@ -374,7 +374,7 @@ export function HomeFeature() {
               Curated Selection
             </span>
             <h2 className="font-serif-display text-3xl sm:text-5xl font-medium text-[#1C1917]">
-              Signature Jewellery
+              The Curated Collection
             </h2>
           </div>
 

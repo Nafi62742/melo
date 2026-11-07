@@ -68,10 +68,13 @@ export function ProductDetailFeature({ product: initialProduct }: ProductDetailF
   const maxSelectableQty = Math.max(1, remainingAvailable);
   const isPlusLocked = isOutOfStock || isBagAtMax || quantity >= maxSelectableQty;
 
+  const extraImages = Array.isArray(product.images)
+    ? product.images.filter((img) => typeof img === 'string' && img && img !== product.imageUrl)
+    : [];
   const galleryImages = [
     product.imageUrl,
-    ...(product.images || []).filter((img) => img !== product.imageUrl),
-  ];
+    ...extraImages,
+  ].filter(Boolean);
 
   const relatedProducts = productService
     .getProductsByCategory(product.category)
@@ -206,14 +209,24 @@ Please confirm availability and Cash on Delivery details. Thank you!`;
         <div className="md:col-span-6 space-y-3">
           {/* Main Large Image Frame */}
           <div
+            role="button"
+            tabIndex={0}
             onClick={() => openLightboxWithImage(selectedImage || product.imageUrl)}
-            className="group relative aspect-[4/5] w-full overflow-hidden bg-[#F3EDE4] border border-[#E7E0D6] cursor-zoom-in"
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                openLightboxWithImage(selectedImage || product.imageUrl);
+              }
+            }}
+            className="group relative aspect-[4/5] w-full overflow-hidden bg-[#F3EDE4] border border-[#E7E0D6] cursor-zoom-in text-left block select-none"
+            aria-label={`Enlarge and inspect ${product.name} image`}
           >
             <Image
               src={selectedImage || product.imageUrl}
               alt={product.name}
               fill
               priority
+              unoptimized
               sizes="(max-width: 768px) 100vw, 50vw"
               className={`object-cover transition-transform duration-500 group-hover:scale-105 ${
                 isOutOfStock ? 'opacity-65 grayscale-[30%]' : ''
@@ -265,7 +278,7 @@ Please confirm availability and Cash on Delivery details. Thank you!`;
                   }`}
                   aria-label={`Select product image view ${idx + 1}`}
                 >
-                  <Image src={img} alt={`View ${idx + 1}`} fill className="object-cover" />
+                  <Image src={img} alt={`View ${idx + 1}`} fill unoptimized className="object-cover" />
                 </button>
               ))}
             </div>

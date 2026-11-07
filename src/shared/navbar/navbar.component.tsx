@@ -1,17 +1,23 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useSyncExternalStore } from 'react';
 import Link from 'next/link';
 import { usePathname, useSearchParams, useRouter } from 'next/navigation';
 import { useCart } from '@/core/services/cart.context';
 import { useWishlist } from '@/core/services/wishlist.context';
 import {
   productTypeService,
+  DEFAULT_PRODUCT_TYPES,
   PRODUCT_TYPES_UPDATED_EVENT,
 } from '@/core/services/product-type.service';
 import { adminService, ADMIN_AUTH_CHANGED_EVENT } from '@/core/services/admin.service';
 import { useI18n } from '@/core/i18n/i18n.context';
 import { ShoppingBag, Search, Menu, X, Sparkles, User, ShieldCheck, Heart } from 'lucide-react';
+
+const subscribeTypes = (callback: () => void) => {
+  window.addEventListener(PRODUCT_TYPES_UPDATED_EVENT, callback);
+  return () => window.removeEventListener(PRODUCT_TYPES_UPDATED_EVENT, callback);
+};
 
 export function Navbar() {
   const router = useRouter();
@@ -24,8 +30,10 @@ export function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [isAdminLoggedIn, setIsAdminLoggedIn] = useState(false);
-  const [productTypes, setProductTypes] = useState(() =>
-    productTypeService.getAllProductTypes()
+  const productTypes = useSyncExternalStore(
+    subscribeTypes,
+    () => productTypeService.getAllProductTypes(),
+    () => DEFAULT_PRODUCT_TYPES
   );
 
   useEffect(() => {
@@ -44,18 +52,7 @@ export function Navbar() {
   }, [pathname]);
 
   useEffect(() => {
-    const refreshProductTypes = () => {
-      setProductTypes([...productTypeService.getAllProductTypes()]);
-    };
-
-    void productTypeService.syncFromDatabase().then((remote) => {
-      setProductTypes([...remote]);
-    });
-
-    window.addEventListener(PRODUCT_TYPES_UPDATED_EVENT, refreshProductTypes);
-    return () => {
-      window.removeEventListener(PRODUCT_TYPES_UPDATED_EVENT, refreshProductTypes);
-    };
+    void productTypeService.syncFromDatabase();
   }, []);
 
   const getTypeLabel = (slug: string, fallbackName: string): string => {
@@ -90,6 +87,11 @@ export function Navbar() {
     }
     router.push(`/shop?search=${encodeURIComponent(trimmed)}`);
   };
+
+  // Hide the storefront navbar in the admin panel
+  if (pathname?.startsWith('/admin')) {
+    return null;
+  }
 
   return (
     <header className="sticky top-0 z-40 w-full glass-nav">
@@ -212,7 +214,10 @@ export function Navbar() {
               }`}
             />
             {totalWishlist > 0 && (
-              <span className="absolute -top-1.5 -right-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-[#1C1917] px-1 text-[9px] font-bold text-white shadow-xs">
+              <span
+                suppressHydrationWarning
+                className="absolute -top-1.5 -right-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-[#1C1917] px-1 text-[9px] font-bold text-white shadow-xs"
+              >
                 {totalWishlist}
               </span>
             )}
@@ -228,7 +233,10 @@ export function Navbar() {
             <span className="hidden sm:inline text-[11px] font-semibold uppercase tracking-[0.14em]">
               {t.nav.cart}
             </span>
-            <span className="flex h-4 min-w-4 items-center justify-center rounded-full bg-[#C5A059] px-1 text-[10px] font-bold text-[#181512]">
+            <span
+              suppressHydrationWarning
+              className="flex h-4 min-w-4 items-center justify-center rounded-full bg-[#C5A059] px-1 text-[10px] font-bold text-[#181512]"
+            >
               {totalQuantity}
             </span>
           </button>

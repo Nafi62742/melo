@@ -2,8 +2,8 @@ import { Suspense } from 'react';
 import { CatalogFeature } from '@/features/catalog/catalog.feature';
 
 export const metadata = {
-  title: 'Shop All Jewellery & Accessories | MELO Bangladesh',
-  description: 'Browse our full collection of French ear clips, stylish rings, and bracelets.',
+  title: 'Shop All Curated Finds, Gadgets & Gifts | MELO Bangladesh',
+  description: 'Browse our full collection of lifestyle wonders, aesthetic gadgets, ear clips, and accessories.',
 };
 
 export default function ShopPage() {

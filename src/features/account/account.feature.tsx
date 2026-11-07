@@ -552,7 +552,7 @@ function OrderTrackingDisplayCard({
               </span>
             )}
           </div>
-          <div className="text-[11px] text-[#78716C] mt-0.5">
+          <div className="text-[11px] text-[#78716C] mt-0.5" suppressHydrationWarning>
             Placed on {new Date(order.createdAt).toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
           </div>
         </div>

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useSyncExternalStore, ReactNode } from 'react';
 import { EN, TranslationType } from './en';
 import { BN } from './bn';
 
@@ -15,22 +15,55 @@ interface I18nContextType {
 
 const I18nContext = createContext<I18nContextType | undefined>(undefined);
 
-export function I18nProvider({ children }: { children: ReactNode }) {
-  const [language, setLanguageState] = useState<SupportedLanguage>(() => {
-    if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem('melo_lang') as SupportedLanguage;
-      if (saved === 'en' || saved === 'bn') {
-        return saved;
-      }
+let storedLang: SupportedLanguage = 'en';
+const listeners = new Set<() => void>();
+
+function subscribe(callback: () => void) {
+  listeners.add(callback);
+  const handleStorage = (e: StorageEvent) => {
+    if (e.key === 'melo_lang') {
+      storedLang = (e.newValue as SupportedLanguage) || 'en';
+      callback();
     }
-    return 'en';
-  });
+  };
+  if (typeof window !== 'undefined') {
+    window.addEventListener('storage', handleStorage);
+  }
+  return () => {
+    listeners.delete(callback);
+    if (typeof window !== 'undefined') {
+      window.removeEventListener('storage', handleStorage);
+    }
+  };
+}
+
+function getSnapshot(): SupportedLanguage {
+  if (typeof window !== 'undefined') {
+    const saved = localStorage.getItem('melo_lang') as SupportedLanguage;
+    if (saved === 'en' || saved === 'bn') {
+      storedLang = saved;
+    }
+  }
+  return storedLang;
+}
+
+function getServerSnapshot(): SupportedLanguage {
+  return 'en';
+}
+
+export function I18nProvider({ children }: { children: ReactNode }) {
+  const syncedLang = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
+  const [overrideLang, setOverrideLang] = useState<SupportedLanguage | null>(null);
+
+  const language = overrideLang ?? syncedLang;
 
   const setLanguage = (lang: SupportedLanguage) => {
-    setLanguageState(lang);
+    setOverrideLang(lang);
+    storedLang = lang;
     if (typeof window !== 'undefined') {
       localStorage.setItem('melo_lang', lang);
     }
+    listeners.forEach((l) => l());
   };
 
   const toggleLanguage = () => {

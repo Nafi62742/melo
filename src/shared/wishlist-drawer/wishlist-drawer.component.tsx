@@ -91,7 +91,7 @@ export function WishlistDrawer() {
                 Your Wishlist is Empty
               </h3>
               <p className="mt-2 text-xs text-[#78716C] max-w-xs leading-relaxed">
-                Click the heart icon on any jewellery piece you love to save it here for later.
+                Click the heart icon on any item or gadget you love to save it here for later.
               </p>
               <button
                 type="button"
