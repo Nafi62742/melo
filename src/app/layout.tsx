@@ -10,6 +10,7 @@ import { Footer } from '@/shared/footer/footer.component';
 import { CartDrawer } from '@/shared/cart-drawer/cart-drawer.component';
 import { WishlistDrawer } from '@/shared/wishlist-drawer/wishlist-drawer.component';
 import { ChatWidget } from '@/shared/chat-widget/chat-widget.component';
+import { Analytics } from '@vercel/analytics/next';
 
 const cormorant = Cormorant_Garamond({
   subsets: ['latin'],
@@ -54,6 +55,7 @@ export default function RootLayout({
             </WishlistProvider>
           </CartProvider>
         </I18nProvider>
+        <Analytics />
       </body>
     </html>
   );
