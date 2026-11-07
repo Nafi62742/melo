@@ -53,7 +53,7 @@ export function AdminAnalyticsTab({
   return (
     <div className="space-y-6">
       {/* Controls & Shipping Cost Configuration */}
-      <div className="border border-[#C5A059] bg-white p-5 flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+      <div className="border border-[#C5A059] bg-white p-5 flex flex-col lg:flex-row lg:items-center justify-between gap-4 rounded-xl shadow-xs">
         <div>
           <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[#9A7B3E] block">
             Hippo Tracker Cost &amp; Profit Engine
@@ -68,7 +68,7 @@ export function AdminAnalyticsTab({
         </div>
 
         <div className="flex flex-wrap items-center gap-3 text-xs">
-          <div className="flex items-center gap-2 border border-[#E7E0D6] bg-[#FAF7F2] px-3 py-1.5">
+          <div className="flex items-center gap-2 border border-[#E7E0D6] bg-[#FAF7F2] px-3 py-1.5 rounded-lg">
             <span className="text-[11px] font-semibold text-[#1C1917]">
               Import Shipping / Piece (৳):
             </span>
@@ -77,11 +77,11 @@ export function AdminAnalyticsTab({
               min={0}
               value={shippingCostPerPiece}
               onChange={(e) => onChangeShippingCost(Math.max(0, Number(e.target.value)))}
-              className="w-16 border border-[#D6CFC5] bg-white px-2 py-1 text-center font-mono font-semibold text-[#1C1917] focus:outline-none focus:border-[#C5A059]"
+              className="w-16 border border-[#D6CFC5] bg-white px-2 py-1 text-center font-mono font-semibold text-[#1C1917] focus:outline-none focus:border-[#C5A059] rounded-md"
             />
           </div>
 
-          <div className="flex border border-[#E7E0D6] bg-white p-0.5">
+          <div className="flex border border-[#E7E0D6] bg-white p-0.5 rounded-lg gap-0.5">
             {(
               [
                 { key: 'all', label: 'All Time' },
@@ -94,9 +94,9 @@ export function AdminAnalyticsTab({
                 key={tf.key}
                 type="button"
                 onClick={() => onChangeTimeframe(tf.key)}
-                className={`px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider cursor-pointer ${
+                className={`px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider cursor-pointer rounded-md transition ${
                   analyticsTimeframe === tf.key
-                    ? 'bg-[#1C1917] text-[#FAF7F2]'
+                    ? 'bg-[#1C1917] text-[#FAF7F2] shadow-2xs'
                     : 'text-[#78716C] hover:text-[#1C1917]'
                 }`}
               >
@@ -108,7 +108,7 @@ export function AdminAnalyticsTab({
           <select
             value={analyticsOrderScope}
             onChange={(e) => onChangeOrderScope(e.target.value as 'delivered' | 'active')}
-            className="border border-[#D6CFC5] bg-white px-3 py-1.5 text-[11px] font-semibold text-[#1C1917] focus:outline-none focus:border-[#C5A059] cursor-pointer"
+            className="border border-[#D6CFC5] bg-white px-3 py-1.5 text-[11px] font-semibold text-[#1C1917] focus:outline-none focus:border-[#C5A059] cursor-pointer rounded-lg shadow-2xs"
           >
             <option value="delivered">Delivered Orders Only (Realized)</option>
             <option value="active">All Non-Cancelled Orders</option>
@@ -118,7 +118,7 @@ export function AdminAnalyticsTab({
 
       {/* 4 Financial KPI Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="border border-[#E7E0D6] bg-white p-5">
+        <div className="border border-[#E7E0D6] bg-white p-5 rounded-xl shadow-xs">
           <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#78716C]">
             Total Inventory Landed Cost
           </div>
@@ -131,7 +131,7 @@ export function AdminAnalyticsTab({
           </div>
         </div>
 
-        <div className="border border-[#E7E0D6] bg-white p-5">
+        <div className="border border-[#E7E0D6] bg-white p-5 rounded-xl shadow-xs">
           <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#78716C]">
             Expected Stock Revenue
           </div>
@@ -143,7 +143,7 @@ export function AdminAnalyticsTab({
           </div>
         </div>
 
-        <div className="border border-[#C5A059] bg-[#FAF7F2]/60 p-5">
+        <div className="border border-[#C5A059] bg-[#FAF7F2]/60 p-5 rounded-xl shadow-xs">
           <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#9A7B3E]">
             Expected Inventory Net Profit
           </div>
@@ -155,7 +155,7 @@ export function AdminAnalyticsTab({
           </div>
         </div>
 
-        <div className="border border-emerald-300 bg-emerald-50/50 p-5">
+        <div className="border border-emerald-300 bg-emerald-50/50 p-5 rounded-xl shadow-xs">
           <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-emerald-900">
             {analyticsOrderScope === 'delivered'
               ? 'Realized Profit (Delivered)'
@@ -172,7 +172,7 @@ export function AdminAnalyticsTab({
       </div>
 
       {/* Category Profit & Valuation Breakdown Table */}
-      <div className="border border-[#E7E0D6] bg-white overflow-hidden">
+      <div className="border border-[#E7E0D6] bg-white overflow-hidden rounded-xl shadow-xs">
         <div className="px-6 py-4 border-b border-[#E7E0D6] flex items-center justify-between">
           <h3 className="text-xs font-semibold uppercase tracking-[0.2em] text-[#1C1917]">
             Profit &amp; Stock Breakdown by Product Type

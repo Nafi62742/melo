@@ -2,6 +2,7 @@
 
 import React, { useSyncExternalStore } from 'react';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import {
   Truck,
   ShieldCheck,
@@ -30,6 +31,7 @@ const subscribeTypes = (callback: () => void) => {
 };
 
 export function Footer() {
+  const pathname = usePathname();
   const links = useSyncExternalStore(
     subscribeLinks,
     () => storeLinkService.getAllLinks(),
@@ -40,6 +42,11 @@ export function Footer() {
     () => productTypeService.getAllProductTypes(),
     () => DEFAULT_PRODUCT_TYPES
   );
+
+  // Hide storefront footer on admin dashboard
+  if (pathname?.startsWith('/admin')) {
+    return null;
+  }
 
   const activeSocialAndCustomLinks = links.filter((l) => l.isActive && Boolean(l.url));
   return (

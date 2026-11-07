@@ -339,7 +339,7 @@ export function AdminOperationsTab() {
   return (
     <div className="space-y-6">
       {/* Overview Info Header */}
-      <div className="bg-[#FAF7F2] border border-[#E7E0D6] p-5">
+      <div className="bg-[#FAF7F2] border border-[#E7E0D6] p-5 rounded-xl shadow-xs">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <div className="flex items-center gap-2">
@@ -356,7 +356,7 @@ export function AdminOperationsTab() {
 
           {/* Quick Metrics */}
           <div className="flex items-center gap-3">
-            <div className="bg-white border border-[#E7E0D6] px-3.5 py-2 text-center">
+            <div className="bg-white border border-[#E7E0D6] px-3.5 py-2 text-center rounded-lg shadow-2xs">
               <span className="text-[10px] uppercase font-semibold text-[#78716C] block">
                 Sourced Items
               </span>
@@ -364,7 +364,7 @@ export function AdminOperationsTab() {
                 {sourcingItems.length}
               </span>
             </div>
-            <div className="bg-white border border-[#E7E0D6] px-3.5 py-2 text-center">
+            <div className="bg-white border border-[#E7E0D6] px-3.5 py-2 text-center rounded-lg shadow-2xs">
               <span className="text-[10px] uppercase font-semibold text-[#78716C] block">
                 Logged Overhead
               </span>
@@ -380,9 +380,9 @@ export function AdminOperationsTab() {
           <button
             type="button"
             onClick={() => setSubTab('sourcing')}
-            className={`inline-flex items-center gap-2 px-3.5 py-2 text-xs font-semibold uppercase tracking-wider transition cursor-pointer ${
+            className={`inline-flex items-center gap-2 px-3.5 py-2 text-xs font-semibold uppercase tracking-wider transition cursor-pointer rounded-lg ${
               subTab === 'sourcing'
-                ? 'bg-[#1C1917] text-white'
+                ? 'bg-[#1C1917] text-white shadow-2xs'
                 : 'bg-white border border-[#E7E0D6] text-[#78716C] hover:text-[#1C1917]'
             }`}
           >
@@ -393,9 +393,9 @@ export function AdminOperationsTab() {
           <button
             type="button"
             onClick={() => setSubTab('expenses')}
-            className={`inline-flex items-center gap-2 px-3.5 py-2 text-xs font-semibold uppercase tracking-wider transition cursor-pointer ${
+            className={`inline-flex items-center gap-2 px-3.5 py-2 text-xs font-semibold uppercase tracking-wider transition cursor-pointer rounded-lg ${
               subTab === 'expenses'
-                ? 'bg-[#1C1917] text-white'
+                ? 'bg-[#1C1917] text-white shadow-2xs'
                 : 'bg-white border border-[#E7E0D6] text-[#78716C] hover:text-[#1C1917]'
             }`}
           >
@@ -406,9 +406,9 @@ export function AdminOperationsTab() {
           <button
             type="button"
             onClick={() => setSubTab('tasks')}
-            className={`inline-flex items-center gap-2 px-3.5 py-2 text-xs font-semibold uppercase tracking-wider transition cursor-pointer ${
+            className={`inline-flex items-center gap-2 px-3.5 py-2 text-xs font-semibold uppercase tracking-wider transition cursor-pointer rounded-lg ${
               subTab === 'tasks'
-                ? 'bg-[#1C1917] text-white'
+                ? 'bg-[#1C1917] text-white shadow-2xs'
                 : 'bg-white border border-[#E7E0D6] text-[#78716C] hover:text-[#1C1917]'
             }`}
           >
@@ -421,9 +421,9 @@ export function AdminOperationsTab() {
           <button
             type="button"
             onClick={() => setSubTab('notes')}
-            className={`inline-flex items-center gap-2 px-3.5 py-2 text-xs font-semibold uppercase tracking-wider transition cursor-pointer ${
+            className={`inline-flex items-center gap-2 px-3.5 py-2 text-xs font-semibold uppercase tracking-wider transition cursor-pointer rounded-lg ${
               subTab === 'notes'
-                ? 'bg-[#1C1917] text-white'
+                ? 'bg-[#1C1917] text-white shadow-2xs'
                 : 'bg-white border border-[#E7E0D6] text-[#78716C] hover:text-[#1C1917]'
             }`}
           >
@@ -445,7 +445,7 @@ export function AdminOperationsTab() {
             <button
               type="button"
               onClick={() => setIsAddingSourcing(!isAddingSourcing)}
-              className="inline-flex items-center gap-1.5 boutique-btn-primary px-3.5 py-2 text-xs cursor-pointer"
+              className="inline-flex items-center gap-1.5 boutique-btn-primary px-3.5 py-2 text-xs cursor-pointer rounded-lg shadow-2xs"
             >
               <Plus className="w-3.5 h-3.5" />
               <span>{isAddingSourcing ? 'Close Form' : 'Log Sourced Item'}</span>
@@ -456,7 +456,7 @@ export function AdminOperationsTab() {
           {isAddingSourcing && (
             <form
               onSubmit={handleAddSourcing}
-              className="bg-white border border-[#C5A059] p-4 space-y-3"
+              className="bg-white border border-[#C5A059] p-4 space-y-3 rounded-xl shadow-xs"
             >
               <h4 className="text-xs font-bold uppercase tracking-wider text-[#1C1917]">
                 New Sourced Item Record
@@ -472,7 +472,7 @@ export function AdminOperationsTab() {
                     placeholder="e.g. Robot Desktop Fidget Toy"
                     value={newSrcName}
                     onChange={(e) => setNewSrcName(e.target.value)}
-                    className="w-full border border-[#D6CFC5] px-3 py-2 text-xs"
+                    className="w-full border border-[#D6CFC5] px-3 py-2 text-xs rounded-lg"
                   />
                 </div>
                 <div>
@@ -482,7 +482,7 @@ export function AdminOperationsTab() {
                   <select
                     value={newSrcCat}
                     onChange={(e) => setNewSrcCat(e.target.value as SourcingItem['category'])}
-                    className="w-full border border-[#D6CFC5] bg-white px-3 py-2 text-xs"
+                    className="w-full border border-[#D6CFC5] bg-white px-3 py-2 text-xs rounded-lg"
                   >
                     <option value="gadgets">Gadgets &amp; Desk Tech</option>
                     <option value="toys">Toys &amp; Collectibles</option>
@@ -499,7 +499,7 @@ export function AdminOperationsTab() {
                     placeholder="e.g. 1688 Factory / Shenzhen"
                     value={newSrcSupplier}
                     onChange={(e) => setNewSrcSupplier(e.target.value)}
-                    className="w-full border border-[#D6CFC5] px-3 py-2 text-xs"
+                    className="w-full border border-[#D6CFC5] px-3 py-2 text-xs rounded-lg"
                   />
                 </div>
                 <div>
@@ -512,7 +512,7 @@ export function AdminOperationsTab() {
                     placeholder="25.0"
                     value={newSrcCny}
                     onChange={(e) => setNewSrcCny(e.target.value)}
-                    className="w-full border border-[#D6CFC5] px-3 py-2 text-xs"
+                    className="w-full border border-[#D6CFC5] px-3 py-2 text-xs rounded-lg"
                   />
                 </div>
                 <div>
@@ -524,7 +524,7 @@ export function AdminOperationsTab() {
                     placeholder="580"
                     value={newSrcBdt}
                     onChange={(e) => setNewSrcBdt(e.target.value)}
-                    className="w-full border border-[#D6CFC5] px-3 py-2 text-xs"
+                    className="w-full border border-[#D6CFC5] px-3 py-2 text-xs rounded-lg"
                   />
                 </div>
                 <div>
@@ -537,12 +537,12 @@ export function AdminOperationsTab() {
                       placeholder="MOQ"
                       value={newSrcMoq}
                       onChange={(e) => setNewSrcMoq(e.target.value)}
-                      className="w-20 border border-[#D6CFC5] px-3 py-2 text-xs"
+                      className="w-20 border border-[#D6CFC5] px-3 py-2 text-xs rounded-lg"
                     />
                     <select
                       value={newSrcStatus}
                       onChange={(e) => setNewSrcStatus(e.target.value as SourcingItem['status'])}
-                      className="flex-1 border border-[#D6CFC5] bg-white px-2 py-2 text-xs"
+                      className="flex-1 border border-[#D6CFC5] bg-white px-2 py-2 text-xs rounded-lg"
                     >
                       <option value="researching">Researching</option>
                       <option value="sample_ordered">Sample Ordered</option>
@@ -562,18 +562,21 @@ export function AdminOperationsTab() {
                   placeholder="e.g. Needs USB-C charging cable, test packaging size..."
                   value={newSrcNotes}
                   onChange={(e) => setNewSrcNotes(e.target.value)}
-                  className="w-full border border-[#D6CFC5] px-3 py-2 text-xs"
+                  className="w-full border border-[#D6CFC5] px-3 py-2 text-xs rounded-lg"
                 />
               </div>
               <div className="flex justify-end gap-2 pt-2">
                 <button
                   type="button"
                   onClick={() => setIsAddingSourcing(false)}
-                  className="boutique-btn-outline px-4 py-1.5 text-xs"
+                  className="boutique-btn-outline px-4 py-1.5 text-xs rounded-lg shadow-2xs cursor-pointer"
                 >
                   Cancel
                 </button>
-                <button type="submit" className="boutique-btn-primary px-4 py-1.5 text-xs">
+                <button
+                  type="submit"
+                  className="boutique-btn-primary px-4 py-1.5 text-xs rounded-lg shadow-2xs cursor-pointer"
+                >
                   Save Sourcing Item
                 </button>
               </div>
@@ -581,7 +584,7 @@ export function AdminOperationsTab() {
           )}
 
           {/* Sourcing Items Table */}
-          <div className="bg-white border border-[#E7E0D6] overflow-x-auto">
+          <div className="bg-white border border-[#E7E0D6] overflow-x-auto rounded-xl shadow-xs">
             <table className="w-full text-left text-xs">
               <thead className="bg-[#FAF7F2] border-b border-[#E7E0D6] text-[10px] font-semibold uppercase tracking-wider text-[#78716C]">
                 <tr>
@@ -672,7 +675,7 @@ export function AdminOperationsTab() {
             <button
               type="button"
               onClick={() => setIsAddingExpense(!isAddingExpense)}
-              className="inline-flex items-center gap-1.5 boutique-btn-primary px-3.5 py-2 text-xs cursor-pointer"
+              className="inline-flex items-center gap-1.5 boutique-btn-primary px-3.5 py-2 text-xs cursor-pointer rounded-lg shadow-2xs"
             >
               <Plus className="w-3.5 h-3.5" />
               <span>{isAddingExpense ? 'Close Form' : 'Log Expense'}</span>
@@ -683,7 +686,7 @@ export function AdminOperationsTab() {
           {isAddingExpense && (
             <form
               onSubmit={handleAddExpense}
-              className="bg-white border border-[#C5A059] p-4 space-y-3"
+              className="bg-white border border-[#C5A059] p-4 space-y-3 rounded-xl shadow-xs"
             >
               <h4 className="text-xs font-bold uppercase tracking-wider text-[#1C1917]">
                 Record Business Overhead Expense
@@ -699,7 +702,7 @@ export function AdminOperationsTab() {
                     placeholder="e.g. Courier advance balance"
                     value={newExpTitle}
                     onChange={(e) => setNewExpTitle(e.target.value)}
-                    className="w-full border border-[#D6CFC5] px-3 py-2 text-xs"
+                    className="w-full border border-[#D6CFC5] px-3 py-2 text-xs rounded-lg"
                   />
                 </div>
                 <div>
@@ -709,7 +712,7 @@ export function AdminOperationsTab() {
                   <select
                     value={newExpCat}
                     onChange={(e) => setNewExpCat(e.target.value as BusinessExpense['category'])}
-                    className="w-full border border-[#D6CFC5] bg-white px-3 py-2 text-xs"
+                    className="w-full border border-[#D6CFC5] bg-white px-3 py-2 text-xs rounded-lg"
                   >
                     <option value="packaging">Packaging &amp; Boxes</option>
                     <option value="courier_deposit">Courier COD Advance</option>
@@ -728,7 +731,7 @@ export function AdminOperationsTab() {
                     placeholder="2500"
                     value={newExpAmount}
                     onChange={(e) => setNewExpAmount(e.target.value)}
-                    className="w-full border border-[#D6CFC5] px-3 py-2 text-xs"
+                    className="w-full border border-[#D6CFC5] px-3 py-2 text-xs rounded-lg"
                   />
                 </div>
               </div>
@@ -741,18 +744,21 @@ export function AdminOperationsTab() {
                   placeholder="Receipt number or details..."
                   value={newExpNotes}
                   onChange={(e) => setNewExpNotes(e.target.value)}
-                  className="w-full border border-[#D6CFC5] px-3 py-2 text-xs"
+                  className="w-full border border-[#D6CFC5] px-3 py-2 text-xs rounded-lg"
                 />
               </div>
               <div className="flex justify-end gap-2 pt-1">
                 <button
                   type="button"
                   onClick={() => setIsAddingExpense(false)}
-                  className="boutique-btn-outline px-4 py-1.5 text-xs"
+                  className="boutique-btn-outline px-4 py-1.5 text-xs rounded-lg shadow-2xs cursor-pointer"
                 >
                   Cancel
                 </button>
-                <button type="submit" className="boutique-btn-primary px-4 py-1.5 text-xs">
+                <button
+                  type="submit"
+                  className="boutique-btn-primary px-4 py-1.5 text-xs rounded-lg shadow-2xs cursor-pointer"
+                >
                   Save Expense
                 </button>
               </div>
@@ -760,7 +766,7 @@ export function AdminOperationsTab() {
           )}
 
           {/* Expenses List */}
-          <div className="bg-white border border-[#E7E0D6] overflow-x-auto">
+          <div className="bg-white border border-[#E7E0D6] overflow-x-auto rounded-xl shadow-xs">
             <table className="w-full text-left text-xs">
               <thead className="bg-[#FAF7F2] border-b border-[#E7E0D6] text-[10px] font-semibold uppercase tracking-wider text-[#78716C]">
                 <tr>
@@ -778,7 +784,7 @@ export function AdminOperationsTab() {
                     <td className="py-3.5 px-4 font-mono text-[#78716C]">{exp.date}</td>
                     <td className="py-3.5 px-4 font-semibold text-[#1C1917]">{exp.title}</td>
                     <td className="py-3.5 px-4">
-                      <span className="inline-block text-[9px] uppercase tracking-wider font-bold px-1.5 py-0.5 bg-stone-100 text-[#78716C]">
+                      <span className="inline-block text-[9px] uppercase tracking-wider font-bold px-1.5 py-0.5 bg-stone-100 text-[#78716C] rounded">
                         {exp.category.replace('_', ' ')}
                       </span>
                     </td>
@@ -790,7 +796,7 @@ export function AdminOperationsTab() {
                       <button
                         type="button"
                         onClick={() => deleteExpense(exp.id)}
-                        className="text-stone-400 hover:text-red-700 transition p-1"
+                        className="text-stone-400 hover:text-red-700 transition p-1 rounded-full hover:bg-red-50 cursor-pointer"
                         title="Delete expense"
                       >
                         <Trash2 className="w-3.5 h-3.5" />
@@ -823,12 +829,12 @@ export function AdminOperationsTab() {
               placeholder="Add an internal task or operational reminder..."
               value={newTaskTitle}
               onChange={(e) => setNewTaskTitle(e.target.value)}
-              className="flex-1 border border-[#D6CFC5] bg-white px-3.5 py-2 text-xs"
+              className="flex-1 border border-[#D6CFC5] bg-white px-3.5 py-2 text-xs rounded-lg"
             />
             <select
               value={newTaskPriority}
               onChange={(e) => setNewTaskPriority(e.target.value as BusinessTask['priority'])}
-              className="border border-[#D6CFC5] bg-white px-3 py-2 text-xs"
+              className="border border-[#D6CFC5] bg-white px-3 py-2 text-xs rounded-lg"
             >
               <option value="high">High Priority</option>
               <option value="medium">Medium Priority</option>
@@ -836,14 +842,14 @@ export function AdminOperationsTab() {
             </select>
             <button
               type="submit"
-              className="boutique-btn-primary px-4 py-2 text-xs uppercase tracking-wider cursor-pointer"
+              className="boutique-btn-primary px-4 py-2 text-xs uppercase tracking-wider cursor-pointer rounded-lg shadow-2xs"
             >
               Add Task
             </button>
           </form>
 
           {/* Tasks List */}
-          <div className="bg-white border border-[#E7E0D6] divide-y divide-[#E7E0D6]">
+          <div className="bg-white border border-[#E7E0D6] divide-y divide-[#E7E0D6] rounded-xl shadow-xs overflow-hidden">
             {tasks.map((task) => (
               <div
                 key={task.id}
@@ -854,7 +860,7 @@ export function AdminOperationsTab() {
                     type="checkbox"
                     checked={task.completed}
                     onChange={() => toggleTask(task.id)}
-                    className="accent-[#9A7B3E] h-4 w-4 cursor-pointer"
+                    className="accent-[#9A7B3E] h-4 w-4 cursor-pointer rounded"
                   />
                   <span
                     className={`text-xs ${
@@ -866,7 +872,7 @@ export function AdminOperationsTab() {
                     {task.title}
                   </span>
                   <span
-                    className={`text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.2 ${
+                    className={`text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.2 rounded ${
                       task.priority === 'high'
                         ? 'bg-red-50 text-red-700'
                         : task.priority === 'medium'
@@ -880,7 +886,7 @@ export function AdminOperationsTab() {
                 <button
                   type="button"
                   onClick={() => deleteTask(task.id)}
-                  className="text-stone-400 hover:text-red-700 p-1"
+                  className="text-stone-400 hover:text-red-700 p-1 rounded-full hover:bg-red-50 transition cursor-pointer"
                 >
                   <Trash2 className="w-3.5 h-3.5" />
                 </button>
@@ -907,7 +913,7 @@ export function AdminOperationsTab() {
             <button
               type="button"
               onClick={handleSaveNotes}
-              className="inline-flex items-center gap-1.5 boutique-btn-primary px-4 py-2 text-xs cursor-pointer"
+              className="inline-flex items-center gap-1.5 boutique-btn-primary px-4 py-2 text-xs cursor-pointer rounded-lg shadow-2xs"
             >
               {notesSaved ? <CheckCircle className="w-3.5 h-3.5 text-emerald-300" /> : <Save className="w-3.5 h-3.5" />}
               <span>{notesSaved ? 'Notes Saved!' : 'Save Notes'}</span>
@@ -918,7 +924,7 @@ export function AdminOperationsTab() {
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
             rows={16}
-            className="w-full border border-[#D6CFC5] bg-white p-4 font-mono text-xs text-[#1C1917] leading-relaxed focus:outline-none focus:border-[#C5A059]"
+            className="w-full border border-[#D6CFC5] bg-white p-4 font-mono text-xs text-[#1C1917] leading-relaxed focus:outline-none focus:border-[#C5A059] rounded-xl shadow-xs"
           />
         </div>
       )}

@@ -179,7 +179,7 @@ export function AdminOrdersTab({
   };
 
   return (
-    <div className="border border-[#E7E0D6] bg-white overflow-hidden shadow-sm space-y-0">
+    <div className="border border-[#E7E0D6] bg-white overflow-hidden shadow-xs rounded-xl space-y-0">
       {/* Top Action & View Toggle Header */}
       <div className="px-6 py-4 border-b border-[#E7E0D6] flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
@@ -187,13 +187,13 @@ export function AdminOrdersTab({
             <h2 className="text-xs font-semibold uppercase tracking-[0.2em] text-[#1C1917]">
               Customer &amp; Order Fulfillment Hub
             </h2>
-            <div className="inline-flex border border-[#E7E0D6] p-0.5 bg-[#FAF7F2] text-xs">
+            <div className="inline-flex border border-[#E7E0D6] p-0.5 bg-[#FAF7F2] text-xs rounded-lg gap-0.5">
               <button
                 type="button"
                 onClick={() => setViewMode('orders')}
-                className={`px-3 py-1 text-[11px] font-semibold uppercase tracking-wider cursor-pointer ${
+                className={`px-3 py-1 text-[11px] font-semibold uppercase tracking-wider cursor-pointer rounded-md transition ${
                   viewMode === 'orders'
-                    ? 'bg-[#1C1917] text-[#FAF7F2]'
+                    ? 'bg-[#1C1917] text-[#FAF7F2] shadow-2xs'
                     : 'text-[#78716C] hover:text-[#1C1917]'
                 }`}
               >
@@ -202,9 +202,9 @@ export function AdminOrdersTab({
               <button
                 type="button"
                 onClick={() => setViewMode('customers')}
-                className={`inline-flex items-center gap-1.5 px-3 py-1 text-[11px] font-semibold uppercase tracking-wider cursor-pointer ${
+                className={`inline-flex items-center gap-1.5 px-3 py-1 text-[11px] font-semibold uppercase tracking-wider cursor-pointer rounded-md transition ${
                   viewMode === 'customers'
-                    ? 'bg-[#1C1917] text-[#FAF7F2]'
+                    ? 'bg-[#1C1917] text-[#FAF7F2] shadow-2xs'
                     : 'text-[#78716C] hover:text-[#1C1917]'
                 }`}
               >
@@ -222,7 +222,7 @@ export function AdminOrdersTab({
           <button
             type="button"
             onClick={onOpenManualOrderModal}
-            className="inline-flex items-center gap-1.5 bg-emerald-700 text-white px-3.5 py-2 text-[11px] font-semibold uppercase tracking-wider hover:bg-emerald-800 transition cursor-pointer"
+            className="inline-flex items-center gap-1.5 bg-emerald-700 text-white px-3.5 py-2 text-[11px] font-semibold uppercase tracking-wider hover:bg-emerald-800 transition cursor-pointer rounded-lg shadow-2xs"
           >
             <Plus className="w-3.5 h-3.5" />
             <span>+ Manual Order (WhatsApp/FB)</span>
@@ -230,7 +230,7 @@ export function AdminOrdersTab({
 
           <button
             onClick={onRefreshOrders}
-            className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#9A7B3E] hover:text-[#1C1917] cursor-pointer"
+            className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#9A7B3E] hover:text-[#1C1917] cursor-pointer rounded-lg px-2.5 py-1.5 transition"
           >
             <RefreshCw className="w-3.5 h-3.5" />
             <span>Refresh</span>
@@ -272,9 +272,9 @@ export function AdminOrdersTab({
                   key={pill.key}
                   type="button"
                   onClick={() => setStatusFilter(pill.key)}
-                  className={`px-3 py-1.5 text-[10px] font-semibold uppercase tracking-wider border transition cursor-pointer ${
+                  className={`px-3 py-1.5 text-[10px] font-semibold uppercase tracking-wider border transition cursor-pointer rounded-lg ${
                     statusFilter === pill.key
-                      ? 'border-[#1C1917] bg-[#1C1917] text-[#FAF7F2]'
+                      ? 'border-[#1C1917] bg-[#1C1917] text-[#FAF7F2] shadow-2xs'
                       : 'border-[#E7E0D6] bg-white text-[#78716C] hover:text-[#1C1917]'
                   }`}
                 >
@@ -290,7 +290,7 @@ export function AdminOrdersTab({
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search by Order #, Phone, Name, TrxID..."
-                className="w-72 border border-[#D6CFC5] bg-white pl-8 pr-3 py-1.5 text-xs text-[#1C1917] focus:outline-none focus:border-[#C5A059]"
+                className="w-72 border border-[#D6CFC5] bg-white pl-8 pr-3 py-1.5 text-xs text-[#1C1917] focus:outline-none focus:border-[#C5A059] rounded-lg shadow-2xs"
               />
               <Search className="w-3.5 h-3.5 text-[#78716C] absolute left-2.5 top-2.5" />
             </div>
@@ -418,7 +418,7 @@ export function AdminOrdersTab({
                         {/* 5. Payment & TrxID */}
                         <td className="py-3.5 px-4">
                           <span
-                            className={`inline-block px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider ${
+                            className={`inline-block px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider rounded-md ${
                               o.paymentMethod === 'bkash'
                                 ? 'bg-pink-50 text-pink-700 border border-pink-200'
                                 : o.paymentMethod === 'card'
@@ -435,7 +435,7 @@ export function AdminOrdersTab({
                               onChange={(e) =>
                                 onPaymentStatusChange(o.id, e.target.value as PaymentStatus)
                               }
-                              className={`border px-2 py-0.5 text-[10px] font-semibold focus:outline-none cursor-pointer ${
+                              className={`border px-2 py-0.5 text-[10px] font-semibold focus:outline-none cursor-pointer rounded-md ${
                                 o.paymentStatus === 'verified'
                                   ? 'border-emerald-300 bg-emerald-50 text-emerald-800'
                                   : o.paymentStatus === 'failed'
@@ -490,7 +490,7 @@ export function AdminOrdersTab({
                             <button
                               type="button"
                               onClick={() => openTrackingModal(o)}
-                              className="inline-flex items-center gap-1 border border-[#D6CFC5] bg-white px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider text-[#1C1917] hover:border-[#9A7B3E] cursor-pointer"
+                              className="inline-flex items-center gap-1 border border-[#D6CFC5] bg-white px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider text-[#1C1917] hover:border-[#9A7B3E] cursor-pointer rounded-lg shadow-2xs"
                             >
                               <Truck className="w-3 h-3 text-[#9A7B3E]" />
                               <span>+ Add Courier</span>
@@ -503,7 +503,7 @@ export function AdminOrdersTab({
                           <select
                             value={o.status}
                             onChange={(e) => onOrderStatusChange(o.id, e.target.value as OrderStatus)}
-                            className="border border-[#D6CFC5] bg-white px-2.5 py-1 text-xs font-semibold text-[#1C1917] focus:outline-none focus:border-[#C5A059] cursor-pointer"
+                            className="border border-[#D6CFC5] bg-white px-2.5 py-1 text-xs font-semibold text-[#1C1917] focus:outline-none focus:border-[#C5A059] cursor-pointer rounded-lg shadow-2xs"
                           >
                             <option value="pending">Pending</option>
                             <option value="confirmed">Confirmed</option>
@@ -585,7 +585,7 @@ export function AdminOrdersTab({
       {/* COURIER & TRACKING ASSIGNMENT MODAL */}
       {trackingModalOrder && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-          <div className="w-full max-w-md border border-[#E7E0D6] bg-white p-6 shadow-2xl space-y-4">
+          <div className="w-full max-w-md border border-[#E7E0D6] bg-white p-6 shadow-2xl rounded-2xl space-y-4">
             <div className="flex items-center justify-between border-b border-[#E7E0D6] pb-3">
               <div className="flex items-center gap-2">
                 <Truck className="w-4 h-4 text-[#9A7B3E]" />
@@ -596,7 +596,7 @@ export function AdminOrdersTab({
               <button
                 type="button"
                 onClick={() => setTrackingModalOrder(null)}
-                className="p-1 text-[#78716C] hover:text-[#1C1917] cursor-pointer"
+                className="p-1 text-[#78716C] hover:text-[#1C1917] rounded-full hover:bg-stone-100 transition cursor-pointer"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -614,7 +614,7 @@ export function AdminOrdersTab({
                 <select
                   value={courierKey}
                   onChange={(e) => setCourierKey(e.target.value)}
-                  className="w-full border border-[#D6CFC5] bg-white px-3 py-2 font-medium text-[#1C1917] focus:outline-none focus:border-[#C5A059]"
+                  className="w-full border border-[#D6CFC5] bg-white px-3 py-2 font-medium text-[#1C1917] focus:outline-none focus:border-[#C5A059] rounded-lg shadow-2xs"
                 >
                   {COURIER_OPTIONS.map((c) => (
                     <option key={c.key} value={c.key}>
@@ -634,7 +634,7 @@ export function AdminOrdersTab({
                     value={customCourierName}
                     onChange={(e) => setCustomCourierName(e.target.value)}
                     placeholder="e.g. In-house Delivery"
-                    className="w-full border border-[#D6CFC5] bg-white px-3 py-2 text-[#1C1917]"
+                    className="w-full border border-[#D6CFC5] bg-white px-3 py-2 text-[#1C1917] rounded-lg shadow-2xs"
                   />
                 </div>
               )}
@@ -648,7 +648,7 @@ export function AdminOrdersTab({
                   value={trackingCode}
                   onChange={(e) => setTrackingCode(e.target.value)}
                   placeholder="e.g. CID-9284102 or Pathao ID"
-                  className="w-full border border-[#D6CFC5] bg-white px-3 py-2 font-mono font-bold text-[#1C1917] focus:outline-none focus:border-[#C5A059]"
+                  className="w-full border border-[#D6CFC5] bg-white px-3 py-2 font-mono font-bold text-[#1C1917] focus:outline-none focus:border-[#C5A059] rounded-lg shadow-2xs"
                 />
               </div>
 
@@ -661,7 +661,7 @@ export function AdminOrdersTab({
                   value={estimatedDelivery}
                   onChange={(e) => setEstimatedDelivery(e.target.value)}
                   placeholder="e.g. 24–48 hours"
-                  className="w-full border border-[#D6CFC5] bg-white px-3 py-2 text-[#1C1917]"
+                  className="w-full border border-[#D6CFC5] bg-white px-3 py-2 text-[#1C1917] rounded-lg shadow-2xs"
                 />
               </div>
 
@@ -683,7 +683,7 @@ export function AdminOrdersTab({
               <button
                 type="button"
                 onClick={() => setTrackingModalOrder(null)}
-                className="border border-[#E7E0D6] bg-white px-4 py-2 text-xs font-semibold text-[#78716C] hover:text-[#1C1917] cursor-pointer"
+                className="border border-[#E7E0D6] bg-white px-4 py-2 text-xs font-semibold text-[#78716C] hover:text-[#1C1917] cursor-pointer rounded-lg shadow-2xs"
               >
                 Cancel
               </button>
@@ -691,7 +691,7 @@ export function AdminOrdersTab({
                 type="button"
                 onClick={handleSaveTracking}
                 disabled={!trackingCode.trim()}
-                className="bg-[#1C1917] text-[#FAF7F2] hover:bg-[#9A7B3E] disabled:opacity-40 px-5 py-2 text-xs font-semibold uppercase tracking-wider transition cursor-pointer"
+                className="bg-[#1C1917] text-[#FAF7F2] hover:bg-[#9A7B3E] disabled:opacity-40 px-5 py-2 text-xs font-semibold uppercase tracking-wider transition cursor-pointer rounded-lg shadow-2xs"
               >
                 Save &amp; Update Customer
               </button>

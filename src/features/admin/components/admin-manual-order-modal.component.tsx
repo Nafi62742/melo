@@ -70,7 +70,7 @@ export function AdminManualOrderModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#181512]/60 backdrop-blur-xs p-4 overflow-y-auto">
-      <div className="w-full max-w-2xl border border-[#C5A059] bg-white shadow-2xl overflow-hidden my-8">
+      <div className="w-full max-w-2xl border border-[#C5A059] bg-white shadow-2xl rounded-2xl overflow-hidden my-8">
         <div className="flex items-center justify-between bg-[#181512] px-6 py-4 text-[#FAF7F2]">
           <div>
             <h3 className="font-serif-display text-2xl font-medium">
@@ -81,7 +81,10 @@ export function AdminManualOrderModal({
               /account by phone number.
             </p>
           </div>
-          <button onClick={onClose} className="text-[#A8A29E] hover:text-white cursor-pointer">
+          <button
+            onClick={onClose}
+            className="text-[#A8A29E] hover:text-white p-1 rounded-full hover:bg-white/10 transition cursor-pointer"
+          >
             <X className="w-5 h-5" />
           </button>
         </div>
@@ -96,9 +99,9 @@ export function AdminManualOrderModal({
               <button
                 type="button"
                 onClick={() => onChangeManualSource('whatsapp')}
-                className={`flex items-center justify-center gap-2 border px-4 py-2.5 text-xs font-semibold uppercase tracking-wider transition cursor-pointer ${
+                className={`flex items-center justify-center gap-2 border px-4 py-2.5 text-xs font-semibold uppercase tracking-wider transition cursor-pointer rounded-lg ${
                   manualSource === 'whatsapp'
-                    ? 'border-emerald-700 bg-emerald-700 text-white'
+                    ? 'border-emerald-700 bg-emerald-700 text-white shadow-2xs'
                     : 'border-[#D6CFC5] bg-[#FAF7F2] text-[#1C1917] hover:border-emerald-700'
                 }`}
               >
@@ -108,9 +111,9 @@ export function AdminManualOrderModal({
               <button
                 type="button"
                 onClick={() => onChangeManualSource('messenger')}
-                className={`flex items-center justify-center gap-2 border px-4 py-2.5 text-xs font-semibold uppercase tracking-wider transition cursor-pointer ${
+                className={`flex items-center justify-center gap-2 border px-4 py-2.5 text-xs font-semibold uppercase tracking-wider transition cursor-pointer rounded-lg ${
                   manualSource === 'messenger'
-                    ? 'border-blue-700 bg-blue-700 text-white'
+                    ? 'border-blue-700 bg-blue-700 text-white shadow-2xs'
                     : 'border-[#D6CFC5] bg-[#FAF7F2] text-[#1C1917] hover:border-blue-700'
                 }`}
               >
@@ -132,7 +135,7 @@ export function AdminManualOrderModal({
                 value={manualCustName}
                 onChange={(e) => onChangeManualCustName(e.target.value)}
                 placeholder="e.g. Tasnim Ahmed"
-                className="w-full border border-[#D6CFC5] px-3 py-2 text-[#1C1917] focus:outline-none focus:border-[#C5A059]"
+                className="w-full border border-[#D6CFC5] px-3 py-2 text-[#1C1917] focus:outline-none focus:border-[#C5A059] rounded-lg"
               />
             </div>
 
@@ -146,7 +149,7 @@ export function AdminManualOrderModal({
                 value={manualCustPhone}
                 onChange={(e) => onChangeManualCustPhone(e.target.value)}
                 placeholder="017XXXXXXXX"
-                className="w-full border border-[#D6CFC5] px-3 py-2 text-[#1C1917] focus:outline-none focus:border-[#C5A059]"
+                className="w-full border border-[#D6CFC5] px-3 py-2 text-[#1C1917] focus:outline-none focus:border-[#C5A059] rounded-lg"
               />
             </div>
           </div>
@@ -161,7 +164,7 @@ export function AdminManualOrderModal({
               value={manualCustAddress}
               onChange={(e) => onChangeManualCustAddress(e.target.value)}
               placeholder="House, Road, Area, City"
-              className="w-full border border-[#D6CFC5] px-3 py-2 text-[#1C1917] focus:outline-none focus:border-[#C5A059]"
+              className="w-full border border-[#D6CFC5] px-3 py-2 text-[#1C1917] focus:outline-none focus:border-[#C5A059] rounded-lg"
             />
           </div>
 
@@ -173,7 +176,7 @@ export function AdminManualOrderModal({
               <select
                 value={manualDeliveryZone}
                 onChange={(e) => onChangeManualDeliveryZone(e.target.value as DeliveryZone)}
-                className="w-full border border-[#D6CFC5] bg-white px-3 py-2 text-[#1C1917] focus:outline-none focus:border-[#C5A059]"
+                className="w-full border border-[#D6CFC5] bg-white px-3 py-2 text-[#1C1917] focus:outline-none focus:border-[#C5A059] rounded-lg"
               >
                 <option value="inside_dhaka">Inside Dhaka (৳70)</option>
                 <option value="outside_dhaka">Outside Dhaka (৳130)</option>
@@ -187,7 +190,7 @@ export function AdminManualOrderModal({
               <select
                 value={manualPaymentMethod}
                 onChange={(e) => onChangeManualPaymentMethod(e.target.value as PaymentMethod)}
-                className="w-full border border-[#D6CFC5] bg-white px-3 py-2 text-[#1C1917] focus:outline-none focus:border-[#C5A059]"
+                className="w-full border border-[#D6CFC5] bg-white px-3 py-2 text-[#1C1917] focus:outline-none focus:border-[#C5A059] rounded-lg"
               >
                 <option value="cod">Cash on Delivery (COD)</option>
                 <option value="bkash">bKash Merchant Payment</option>
@@ -197,7 +200,7 @@ export function AdminManualOrderModal({
           </div>
 
           {manualPaymentMethod === 'bkash' && (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-[#FAF7F2] border border-[#E7E0D6] p-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-[#FAF7F2] border border-[#E7E0D6] p-3 rounded-xl">
               <div>
                 <label className="block text-[10px] font-semibold uppercase tracking-wider text-[#1C1917] mb-1">
                   bKash Sender Number (Optional)
@@ -207,7 +210,7 @@ export function AdminManualOrderModal({
                   value={manualSenderPhone}
                   onChange={(e) => onChangeManualSenderPhone(e.target.value)}
                   placeholder="01XXXXXXXXX"
-                  className="w-full border border-[#D6CFC5] bg-white px-2.5 py-1.5 text-[#1C1917]"
+                  className="w-full border border-[#D6CFC5] bg-white px-2.5 py-1.5 text-[#1C1917] rounded-lg"
                 />
               </div>
               <div>
@@ -219,14 +222,14 @@ export function AdminManualOrderModal({
                   value={manualTrxId}
                   onChange={(e) => onChangeManualTrxId(e.target.value)}
                   placeholder="e.g. BKS982341A"
-                  className="w-full border border-[#D6CFC5] bg-white px-2.5 py-1.5 text-[#1C1917] uppercase"
+                  className="w-full border border-[#D6CFC5] bg-white px-2.5 py-1.5 text-[#1C1917] uppercase rounded-lg"
                 />
               </div>
             </div>
           )}
 
           {/* Piece Selector */}
-          <div className="border border-[#E7E0D6] bg-[#FAF7F2] p-4 space-y-3">
+          <div className="border border-[#E7E0D6] bg-[#FAF7F2] p-4 space-y-3 rounded-xl">
             <label className="block text-[11px] font-semibold uppercase tracking-wider text-[#1C1917]">
               Select Jewellery Piece(s) Bought *
             </label>
@@ -234,7 +237,7 @@ export function AdminManualOrderModal({
               <select
                 value={manualSelectedProductId}
                 onChange={(e) => onChangeManualSelectedProductId(e.target.value)}
-                className="flex-1 border border-[#D6CFC5] bg-white px-3 py-2 text-xs text-[#1C1917] focus:outline-none focus:border-[#C5A059]"
+                className="flex-1 border border-[#D6CFC5] bg-white px-3 py-2 text-xs text-[#1C1917] focus:outline-none focus:border-[#C5A059] rounded-lg"
               >
                 {products
                   .filter((p) => p.stock > 0)
@@ -252,13 +255,13 @@ export function AdminManualOrderModal({
                 max={products.find((p) => p.id === manualSelectedProductId)?.stock ?? 1}
                 value={manualSelectedQty}
                 onChange={(e) => onChangeManualSelectedQty(Math.max(1, Number(e.target.value)))}
-                className="w-20 border border-[#D6CFC5] bg-white px-3 py-2 text-xs font-semibold text-[#1C1917]"
+                className="w-20 border border-[#D6CFC5] bg-white px-3 py-2 text-xs font-semibold text-[#1C1917] rounded-lg"
               />
 
               <button
                 type="button"
                 onClick={onAddManualItem}
-                className="bg-[#1C1917] text-white px-4 py-2 text-[11px] font-semibold uppercase tracking-wider hover:bg-[#332E2A] cursor-pointer"
+                className="bg-[#1C1917] text-white px-4 py-2 text-[11px] font-semibold uppercase tracking-wider hover:bg-[#332E2A] cursor-pointer rounded-lg shadow-2xs"
               >
                 + Add Piece
               </button>
@@ -273,7 +276,7 @@ export function AdminManualOrderModal({
                 {manualItems.map((item) => (
                   <div
                     key={item.product.id}
-                    className="flex items-center justify-between bg-white border border-[#E7E0D6] px-3 py-2"
+                    className="flex items-center justify-between bg-white border border-[#E7E0D6] px-3 py-2 rounded-lg"
                   >
                     <div className="flex items-center gap-2.5">
                       <Image
@@ -281,7 +284,7 @@ export function AdminManualOrderModal({
                         alt={item.product.name}
                         width={32}
                         height={32}
-                        className="w-8 h-8 object-cover border border-[#E7E0D6]"
+                        className="w-8 h-8 object-cover border border-[#E7E0D6] rounded"
                       />
                       <div>
                         <p className="font-semibold text-[#1C1917]">{item.product.name}</p>
@@ -296,7 +299,7 @@ export function AdminManualOrderModal({
                     <button
                       type="button"
                       onClick={() => onRemoveManualItem(item.product.id)}
-                      className="text-red-600 hover:text-red-800 text-[11px] font-semibold cursor-pointer"
+                      className="text-red-600 hover:text-red-800 text-[11px] font-semibold cursor-pointer p-1 rounded hover:bg-red-50"
                     >
                       Remove
                     </button>
@@ -323,11 +326,14 @@ export function AdminManualOrderModal({
             <button
               type="button"
               onClick={onClose}
-              className="boutique-btn-outline px-5 py-2.5 cursor-pointer"
+              className="boutique-btn-outline px-5 py-2.5 cursor-pointer rounded-lg shadow-2xs"
             >
               Cancel
             </button>
-            <button type="submit" className="boutique-btn-primary px-6 py-2.5 cursor-pointer">
+            <button
+              type="submit"
+              className="boutique-btn-primary px-6 py-2.5 cursor-pointer rounded-lg shadow-2xs"
+            >
               Create Order &amp; Deduct Stock
             </button>
           </div>

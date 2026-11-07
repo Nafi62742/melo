@@ -88,6 +88,11 @@ export function Navbar() {
     router.push(`/shop?search=${encodeURIComponent(trimmed)}`);
   };
 
+  // Hide the storefront navbar in the admin panel
+  if (pathname?.startsWith('/admin')) {
+    return null;
+  }
+
   return (
     <header className="sticky top-0 z-40 w-full glass-nav">
       {/* Top Boutique Announcement Bar */}

@@ -91,7 +91,7 @@ export function AdminFeature() {
   const [adminSystem, setAdminSystem] = useState<'store' | 'operations'>('store');
   const [zoomedImage, setZoomedImage] = useState<AdminZoomImage | null>(null);
   const [activeTab, setActiveTab] = useState<
-    'products' | 'orders' | 'analytics' | 'links' | 'homepage'
+    'products' | 'types' | 'orders' | 'analytics' | 'links' | 'homepage'
   >('products');
   const [products, setProducts] = useState<Product[]>(() => [...productService.getAllProducts()]);
   const [productTypes, setProductTypes] = useState<ProductType[]>(() => [
@@ -737,8 +737,8 @@ export function AdminFeature() {
   if (!isAuthenticated) {
     return (
       <div className="mx-auto max-w-md px-4 py-16 md:py-24">
-        <div className="border border-[#C5A059] bg-white p-8 shadow-xl">
-          <div className="flex h-12 w-12 items-center justify-center border border-[#E6D5B8] bg-[#FAF7F2] text-[#9A7B3E] mb-5">
+        <div className="border border-[#C5A059] bg-white p-8 shadow-xl rounded-2xl">
+          <div className="flex h-12 w-12 items-center justify-center border border-[#E6D5B8] bg-[#FAF7F2] text-[#9A7B3E] mb-5 rounded-xl">
             <Lock className="w-5 h-5" />
           </div>
 
@@ -754,7 +754,7 @@ export function AdminFeature() {
           </p>
 
           {loginError && (
-            <div className="mt-4 border border-red-300 bg-red-50 px-3.5 py-2.5 text-xs font-medium text-red-800">
+            <div className="mt-4 border border-red-300 bg-red-50 px-3.5 py-2.5 text-xs font-medium text-red-800 rounded-lg">
               {loginError}
             </div>
           )}
@@ -770,7 +770,7 @@ export function AdminFeature() {
                 placeholder="Enter admin email"
                 value={loginId}
                 onChange={(e) => setLoginId(e.target.value)}
-                className="w-full border border-[#D6CFC5] bg-[#FAF7F2]/50 px-3.5 py-2.5 text-xs text-[#1C1917] focus:bg-white focus:outline-none focus:border-[#C5A059]"
+                className="w-full border border-[#D6CFC5] bg-[#FAF7F2]/50 px-3.5 py-2.5 text-xs text-[#1C1917] focus:bg-white focus:outline-none focus:border-[#C5A059] rounded-lg"
               />
             </div>
 
@@ -784,14 +784,14 @@ export function AdminFeature() {
                 placeholder="••••••••••••"
                 value={loginPass}
                 onChange={(e) => setLoginPass(e.target.value)}
-                className="w-full border border-[#D6CFC5] bg-[#FAF7F2]/50 px-3.5 py-2.5 text-xs text-[#1C1917] focus:bg-white focus:outline-none focus:border-[#C5A059]"
+                className="w-full border border-[#D6CFC5] bg-[#FAF7F2]/50 px-3.5 py-2.5 text-xs text-[#1C1917] focus:bg-white focus:outline-none focus:border-[#C5A059] rounded-lg"
               />
             </div>
 
             <button
               type="submit"
               disabled={isCheckingAuth}
-              className="w-full boutique-btn-primary py-3.5 mt-2 cursor-pointer disabled:opacity-50"
+              className="w-full boutique-btn-primary py-3.5 mt-2 cursor-pointer disabled:opacity-50 rounded-lg shadow-sm"
             >
               {isCheckingAuth ? 'Verifying Credentials...' : 'Sign In to Admin Panel'}
             </button>
@@ -800,7 +800,7 @@ export function AdminFeature() {
           <div className="mt-6 pt-5 border-t border-[#E7E0D6] text-center">
             <Link
               href="/"
-              className="inline-flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-[0.16em] text-[#78716C] hover:text-[#1C1917]"
+              className="inline-flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-[0.16em] text-[#78716C] hover:text-[#1C1917] rounded-lg px-3 py-1.5 transition"
             >
               <ArrowLeft className="w-3.5 h-3.5" />
               <span>Return to Storefront</span>
@@ -857,7 +857,7 @@ export function AdminFeature() {
             href="/"
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-1.5 border border-[#E7E0D6] bg-white px-3.5 py-2.5 text-[11px] font-semibold uppercase tracking-wider text-[#78716C] hover:border-[#1C1917] hover:text-[#1C1917] transition cursor-pointer"
+            className="inline-flex items-center gap-1.5 border border-[#E7E0D6] bg-white px-3.5 py-2.5 text-[11px] font-semibold uppercase tracking-wider text-[#78716C] hover:border-[#1C1917] hover:text-[#1C1917] transition cursor-pointer rounded-lg shadow-2xs"
             title="Open live storefront in new tab"
           >
             <ExternalLink className="w-3.5 h-3.5 text-[#9A7B3E]" />
@@ -866,7 +866,7 @@ export function AdminFeature() {
 
           <button
             onClick={handleLogout}
-            className="inline-flex items-center gap-1.5 border border-[#E7E0D6] bg-white px-3.5 py-2.5 text-[11px] font-semibold uppercase tracking-wider text-[#78716C] hover:border-red-400 hover:text-red-700 transition cursor-pointer"
+            className="inline-flex items-center gap-1.5 border border-[#E7E0D6] bg-white px-3.5 py-2.5 text-[11px] font-semibold uppercase tracking-wider text-[#78716C] hover:border-red-400 hover:text-red-700 transition cursor-pointer rounded-lg shadow-2xs"
             title="Sign Out"
           >
             <LogOut className="w-3.5 h-3.5" />
@@ -880,7 +880,7 @@ export function AdminFeature() {
         <button
           type="button"
           onClick={() => setAdminSystem('store')}
-          className={`inline-flex items-center gap-2 px-5 py-2.5 text-xs font-semibold uppercase tracking-[0.14em] transition cursor-pointer ${
+          className={`inline-flex items-center gap-2 px-5 py-2.5 text-xs font-semibold uppercase tracking-[0.14em] transition cursor-pointer rounded-xl ${
             adminSystem === 'store'
               ? 'bg-[#1C1917] text-[#FAF7F2] shadow-xs'
               : 'bg-white border border-[#E7E0D6] text-[#78716C] hover:border-[#1C1917] hover:text-[#1C1917]'
@@ -896,7 +896,7 @@ export function AdminFeature() {
         <button
           type="button"
           onClick={() => setAdminSystem('operations')}
-          className={`inline-flex items-center gap-2 px-5 py-2.5 text-xs font-semibold uppercase tracking-[0.14em] transition cursor-pointer ${
+          className={`inline-flex items-center gap-2 px-5 py-2.5 text-xs font-semibold uppercase tracking-[0.14em] transition cursor-pointer rounded-xl ${
             adminSystem === 'operations'
               ? 'bg-[#1C1917] text-[#FAF7F2] shadow-xs'
               : 'bg-white border border-[#E7E0D6] text-[#78716C] hover:border-[#1C1917] hover:text-[#1C1917]'
@@ -914,7 +914,7 @@ export function AdminFeature() {
       {adminSystem === 'store' && (
         <>
           {/* Action Controls & Store Sub-Tab Switch */}
-          <div className="flex flex-wrap items-center justify-between gap-3 mb-6 bg-white border border-[#E7E0D6] p-3 sm:p-4">
+          <div className="flex flex-wrap items-center justify-between gap-3 mb-6 bg-white border border-[#E7E0D6] p-3 sm:p-4 rounded-xl shadow-xs">
             <div className="flex flex-wrap items-center gap-2">
               <input
                 ref={csvFileInputRef}
@@ -926,7 +926,7 @@ export function AdminFeature() {
 
               <button
                 onClick={openAddModal}
-                className="inline-flex items-center gap-2 boutique-btn-primary px-3.5 py-2 cursor-pointer text-xs"
+                className="inline-flex items-center gap-2 boutique-btn-primary px-3.5 py-2 cursor-pointer text-xs rounded-lg shadow-2xs"
               >
                 <Plus className="w-3.5 h-3.5" />
                 <span>Add New Piece</span>
@@ -935,7 +935,7 @@ export function AdminFeature() {
               <button
                 type="button"
                 onClick={openManualOrderModal}
-                className="inline-flex items-center gap-2 border border-emerald-600 bg-emerald-700 text-white px-3.5 py-2 text-xs font-semibold uppercase tracking-wider hover:bg-emerald-800 transition cursor-pointer"
+                className="inline-flex items-center gap-2 border border-emerald-600 bg-emerald-700 text-white px-3.5 py-2 text-xs font-semibold uppercase tracking-wider hover:bg-emerald-800 transition cursor-pointer rounded-lg shadow-2xs"
                 title="Create an order from WhatsApp or Facebook Messenger and automatically deduct stock"
               >
                 <Plus className="w-3.5 h-3.5" />
@@ -945,7 +945,7 @@ export function AdminFeature() {
               <button
                 type="button"
                 onClick={() => csvFileInputRef.current?.click()}
-                className="inline-flex items-center gap-1.5 boutique-btn-outline px-3.5 py-2 cursor-pointer text-xs"
+                className="inline-flex items-center gap-1.5 boutique-btn-outline px-3.5 py-2 cursor-pointer text-xs rounded-lg shadow-2xs"
                 title="Import CSV — only changed rows update, everything else stays untouched"
               >
                 <Upload className="w-3.5 h-3.5 text-[#9A7B3E]" />
@@ -955,7 +955,7 @@ export function AdminFeature() {
               <button
                 type="button"
                 onClick={() => handleExportCsv(false)}
-                className="inline-flex items-center gap-1.5 boutique-btn-outline px-3.5 py-2 cursor-pointer text-xs"
+                className="inline-flex items-center gap-1.5 boutique-btn-outline px-3.5 py-2 cursor-pointer text-xs rounded-lg shadow-2xs"
                 title="Export full product catalogue to CSV"
               >
                 <Download className="w-3.5 h-3.5 text-[#9A7B3E]" />
@@ -964,7 +964,7 @@ export function AdminFeature() {
 
               <button
                 onClick={handlePushToDatabase}
-                className="inline-flex items-center gap-1.5 boutique-btn-outline px-3.5 py-2 cursor-pointer text-xs"
+                className="inline-flex items-center gap-1.5 boutique-btn-outline px-3.5 py-2 cursor-pointer text-xs rounded-lg shadow-2xs"
                 title="Push local catalogue to Supabase PostgreSQL"
               >
                 <Database className="w-3.5 h-3.5 text-[#9A7B3E]" />
@@ -973,22 +973,32 @@ export function AdminFeature() {
             </div>
 
             {/* Store Sub-Tabs */}
-            <div className="flex flex-wrap border border-[#E7E0D6] bg-stone-50 p-1 text-xs font-semibold">
+            <div className="flex flex-wrap border border-[#E7E0D6] bg-stone-50 p-1 text-xs font-semibold rounded-xl gap-1">
               <button
                 onClick={() => setActiveTab('products')}
-                className={`px-3.5 py-1.5 text-[11px] uppercase tracking-[0.12em] transition cursor-pointer ${
+                className={`px-3.5 py-1.5 text-[11px] uppercase tracking-[0.12em] transition cursor-pointer rounded-lg ${
                   activeTab === 'products'
-                    ? 'bg-[#1C1917] text-[#FAF7F2]'
+                    ? 'bg-[#1C1917] text-[#FAF7F2] shadow-xs'
                     : 'text-[#78716C] hover:text-[#1C1917]'
                 }`}
               >
                 Products ({products.length})
               </button>
               <button
+                onClick={() => setActiveTab('types')}
+                className={`px-3.5 py-1.5 text-[11px] uppercase tracking-[0.12em] transition cursor-pointer rounded-lg ${
+                  activeTab === 'types'
+                    ? 'bg-[#1C1917] text-[#FAF7F2] shadow-xs'
+                    : 'text-[#78716C] hover:text-[#1C1917]'
+                }`}
+              >
+                Product Types ({productTypes.length})
+              </button>
+              <button
                 onClick={() => setActiveTab('orders')}
-                className={`px-3.5 py-1.5 text-[11px] uppercase tracking-[0.12em] transition cursor-pointer ${
+                className={`px-3.5 py-1.5 text-[11px] uppercase tracking-[0.12em] transition cursor-pointer rounded-lg ${
                   activeTab === 'orders'
-                    ? 'bg-[#1C1917] text-[#FAF7F2]'
+                    ? 'bg-[#1C1917] text-[#FAF7F2] shadow-xs'
                     : 'text-[#78716C] hover:text-[#1C1917]'
                 }`}
               >
@@ -999,9 +1009,9 @@ export function AdminFeature() {
                   setNowMs(Date.now());
                   setActiveTab('analytics');
                 }}
-                className={`inline-flex items-center gap-1.5 px-3.5 py-1.5 text-[11px] uppercase tracking-[0.12em] transition cursor-pointer ${
+                className={`inline-flex items-center gap-1.5 px-3.5 py-1.5 text-[11px] uppercase tracking-[0.12em] transition cursor-pointer rounded-lg ${
                   activeTab === 'analytics'
-                    ? 'bg-[#1C1917] text-[#FAF7F2]'
+                    ? 'bg-[#1C1917] text-[#FAF7F2] shadow-xs'
                     : 'text-[#78716C] hover:text-[#1C1917]'
                 }`}
               >
@@ -1010,9 +1020,9 @@ export function AdminFeature() {
               </button>
               <button
                 onClick={() => setActiveTab('links')}
-                className={`px-3.5 py-1.5 text-[11px] uppercase tracking-[0.12em] transition cursor-pointer ${
+                className={`px-3.5 py-1.5 text-[11px] uppercase tracking-[0.12em] transition cursor-pointer rounded-lg ${
                   activeTab === 'links'
-                    ? 'bg-[#1C1917] text-[#FAF7F2]'
+                    ? 'bg-[#1C1917] text-[#FAF7F2] shadow-xs'
                     : 'text-[#78716C] hover:text-[#1C1917]'
                 }`}
               >
@@ -1020,9 +1030,9 @@ export function AdminFeature() {
               </button>
               <button
                 onClick={() => setActiveTab('homepage')}
-                className={`inline-flex items-center gap-1.5 px-3.5 py-1.5 text-[11px] uppercase tracking-[0.12em] transition cursor-pointer ${
+                className={`inline-flex items-center gap-1.5 px-3.5 py-1.5 text-[11px] uppercase tracking-[0.12em] transition cursor-pointer rounded-lg ${
                   activeTab === 'homepage'
-                    ? 'bg-[#1C1917] text-[#FAF7F2]'
+                    ? 'bg-[#1C1917] text-[#FAF7F2] shadow-xs'
                     : 'text-[#78716C] hover:text-[#1C1917]'
                 }`}
               >
@@ -1034,14 +1044,14 @@ export function AdminFeature() {
 
       {/* Status / Sync Toast */}
       {syncMessage && (
-        <div className="mt-4 flex items-center justify-between border border-[#C5A059] bg-white px-4 py-3 text-xs font-medium text-[#1C1917]">
+        <div className="mt-4 flex items-center justify-between border border-[#C5A059] bg-white px-4 py-3 text-xs font-medium text-[#1C1917] rounded-xl shadow-xs">
           <div className="flex items-center gap-2">
             <CheckCircle className="w-4 h-4 text-[#9A7B3E]" />
             <span>{syncMessage}</span>
           </div>
           <button
             onClick={() => setSyncMessage(null)}
-            className="text-[#78716C] hover:text-[#1C1917]"
+            className="text-[#78716C] hover:text-[#1C1917] p-1 rounded-full hover:bg-stone-100 transition cursor-pointer"
           >
             <X className="w-4 h-4" />
           </button>
@@ -1051,10 +1061,10 @@ export function AdminFeature() {
       {/* Store bKash Number Configuration Bar */}
       <form
         onSubmit={handleSaveBkashNumber}
-        className="mt-6 border border-[#E7E0D6] bg-white p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4"
+        className="mt-6 border border-[#E7E0D6] bg-white p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 rounded-xl shadow-xs"
       >
         <div className="flex items-center gap-3">
-          <div className="flex h-9 w-9 items-center justify-center bg-pink-50 border border-pink-200 text-pink-700">
+          <div className="flex h-9 w-9 items-center justify-center bg-pink-50 border border-pink-200 text-pink-700 rounded-lg">
             <Smartphone className="w-4 h-4" />
           </div>
           <div>
@@ -1074,11 +1084,11 @@ export function AdminFeature() {
             value={bkashNumber}
             onChange={(e) => setBkashNumber(e.target.value)}
             placeholder="01700-000000"
-            className="border border-[#D6CFC5] bg-[#FAF7F2]/50 px-3 py-2 text-xs font-mono font-semibold text-[#1C1917] focus:bg-white focus:outline-none focus:border-pink-600 w-44"
+            className="border border-[#D6CFC5] bg-[#FAF7F2]/50 px-3 py-2 text-xs font-mono font-semibold text-[#1C1917] focus:bg-white focus:outline-none focus:border-pink-600 w-44 rounded-lg"
           />
           <button
             type="submit"
-            className="bg-pink-700 text-white px-4 py-2 text-[11px] font-semibold uppercase tracking-wider hover:bg-pink-800 transition cursor-pointer"
+            className="bg-pink-700 text-white px-4 py-2 text-[11px] font-semibold uppercase tracking-wider hover:bg-pink-800 transition cursor-pointer rounded-lg shadow-2xs"
           >
             Update Number
           </button>
@@ -1087,7 +1097,7 @@ export function AdminFeature() {
 
       {/* Metrics Row */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 my-6">
-        <div className="border border-[#E7E0D6] bg-white p-5">
+        <div className="border border-[#E7E0D6] bg-white p-5 rounded-xl shadow-xs">
           <div className="flex items-center justify-between mb-2">
             <span className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#78716C]">
               Total Products
@@ -1104,7 +1114,7 @@ export function AdminFeature() {
           </div>
         </div>
 
-        <div className="border border-[#E7E0D6] bg-white p-5">
+        <div className="border border-[#E7E0D6] bg-white p-5 rounded-xl shadow-xs">
           <div className="flex items-center justify-between mb-2">
             <span className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#78716C]">
               Total Inventory
@@ -1119,7 +1129,7 @@ export function AdminFeature() {
           </div>
         </div>
 
-        <div className="border border-[#E7E0D6] bg-white p-5">
+        <div className="border border-[#E7E0D6] bg-white p-5 rounded-xl shadow-xs">
           <div className="flex items-center justify-between mb-2">
             <span className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#78716C]">
               Pending bKash Checks
@@ -1137,7 +1147,7 @@ export function AdminFeature() {
           </div>
         </div>
 
-        <div className="border border-[#E7E0D6] bg-white p-5">
+        <div className="border border-[#E7E0D6] bg-white p-5 rounded-xl shadow-xs">
           <div className="flex items-center justify-between mb-2">
             <span className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#78716C]">
               Database Connection
@@ -1197,52 +1207,51 @@ export function AdminFeature() {
         />
       )}
 
-      {/* Tab 3: Products & Product Types Catalogue */}
-      {activeTab === 'products' && (
+      {/* Tab: Manage Product Types */}
+      {activeTab === 'types' && (
         <div className="space-y-6">
-          {/* Product Types Management Card (public.product_types) */}
-          <div className="border border-[#C5A059] bg-white p-5">
+          <div className="border border-[#C5A059] bg-white p-6 rounded-xl shadow-xs">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-4 border-b border-[#E7E0D6]">
               <div>
                 <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[#9A7B3E] block">
-                  Step 1 · Product Types Table (public.product_types)
+                  Product Types Directory (public.product_types)
                 </span>
                 <h2 className="font-serif-display text-2xl font-medium text-[#1C1917]">
-                  Manage Product Types (Add New Type Here First)
+                  Manage Product Types
                 </h2>
                 <p className="text-xs text-[#78716C] mt-0.5">
                   Before adding products of a new category (e.g. Necklaces, Anklets, Hair Clips),
                   add the product type here first so it is registered in{' '}
-                  <code className="bg-[#FAF7F2] px-1.5 py-0.5 text-[#1C1917]">
+                  <code className="bg-[#FAF7F2] px-1.5 py-0.5 text-[#1C1917] rounded">
                     public.product_types
                   </code>
                   .
                 </p>
               </div>
-              <span className="text-xs font-semibold text-[#1C1917]">
+              <span className="text-xs font-semibold text-[#1C1917] bg-[#FAF7F2] border border-[#E7E0D6] px-3 py-1 rounded-full">
                 {productTypes.length} Active Types
               </span>
             </div>
 
             {/* Existing Product Types List */}
-            <div className="flex flex-wrap items-center gap-2.5 my-4">
+            <div className="flex flex-wrap items-center gap-2.5 my-5">
               {productTypes.map((pt) => {
                 const count = products.filter((p) => p.category === pt.slug).length;
                 return (
                   <div
                     key={pt.slug}
-                    className="inline-flex items-center gap-2 border border-[#E7E0D6] bg-[#FAF7F2] px-3 py-1.5 text-xs"
+                    className="inline-flex items-center gap-2 border border-[#E7E0D6] bg-[#FAF7F2] px-3.5 py-2 text-xs rounded-lg shadow-2xs"
                   >
                     <span className="font-semibold text-[#1C1917]">{pt.name}</span>
                     <span className="font-mono text-[10px] text-[#78716C]">({pt.slug})</span>
-                    <span className="bg-white border border-[#E6D5B8] px-1.5 py-0.5 text-[10px] font-semibold text-[#9A7B3E]">
+                    <span className="bg-white border border-[#E6D5B8] px-2 py-0.5 text-[10px] font-semibold text-[#9A7B3E] rounded-md">
                       {count} pcs
                     </span>
                     {count === 0 && (
                       <button
                         type="button"
                         onClick={() => handleDeleteProductType(pt)}
-                        className="text-[#A8A29E] hover:text-red-600 ml-1 cursor-pointer"
+                        className="text-[#A8A29E] hover:text-red-600 ml-1 p-0.5 rounded-full hover:bg-red-50 cursor-pointer transition"
                         title={`Remove unused type ${pt.name}`}
                       >
                         <X className="w-3.5 h-3.5" />
@@ -1256,7 +1265,7 @@ export function AdminFeature() {
             {/* Add New Product Type Form */}
             <form
               onSubmit={handleAddProductType}
-              className="grid grid-cols-1 sm:grid-cols-12 gap-3 pt-3 border-t border-[#F3EDE4] text-xs"
+              className="grid grid-cols-1 sm:grid-cols-12 gap-3 pt-4 border-t border-[#F3EDE4] text-xs"
             >
               <div className="sm:col-span-4">
                 <input
@@ -1265,7 +1274,7 @@ export function AdminFeature() {
                   value={newTypeName}
                   onChange={(e) => setNewTypeName(e.target.value)}
                   placeholder="New Product Type Name (e.g. Necklaces)"
-                  className="w-full border border-[#D6CFC5] bg-[#FAF7F2]/50 px-3 py-2 text-[#1C1917] focus:bg-white focus:outline-none focus:border-[#C5A059]"
+                  className="w-full border border-[#D6CFC5] bg-[#FAF7F2]/50 px-3.5 py-2.5 text-[#1C1917] focus:bg-white focus:outline-none focus:border-[#C5A059] rounded-lg shadow-2xs"
                 />
               </div>
               <div className="sm:col-span-5">
@@ -1274,21 +1283,26 @@ export function AdminFeature() {
                   value={newTypeDesc}
                   onChange={(e) => setNewTypeDesc(e.target.value)}
                   placeholder="Optional description (e.g. Light luxury chains and pendants)"
-                  className="w-full border border-[#D6CFC5] bg-[#FAF7F2]/50 px-3 py-2 text-[#1C1917] focus:bg-white focus:outline-none focus:border-[#C5A059]"
+                  className="w-full border border-[#D6CFC5] bg-[#FAF7F2]/50 px-3.5 py-2.5 text-[#1C1917] focus:bg-white focus:outline-none focus:border-[#C5A059] rounded-lg shadow-2xs"
                 />
               </div>
               <div className="sm:col-span-3">
                 <button
                   type="submit"
-                  className="w-full boutique-btn-primary py-2 px-4 text-[11px] cursor-pointer"
+                  className="w-full boutique-btn-primary py-2.5 px-4 text-xs font-semibold cursor-pointer rounded-lg shadow-2xs"
                 >
                   + Add Product Type
                 </button>
               </div>
             </form>
           </div>
+        </div>
+      )}
 
-          <div className="border border-[#E7E0D6] bg-white overflow-hidden">
+      {/* Tab: Products Catalogue & Live Inventory Editor */}
+      {activeTab === 'products' && (
+        <div className="space-y-6">
+          <div className="border border-[#E7E0D6] bg-white overflow-hidden rounded-xl shadow-xs">
             <div className="px-6 py-4 border-b border-[#E7E0D6] flex flex-col gap-4">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                 <div>
@@ -1305,7 +1319,7 @@ export function AdminFeature() {
                   <button
                     type="button"
                     onClick={() => csvFileInputRef.current?.click()}
-                    className="inline-flex items-center gap-1.5 border border-[#C5A059] bg-[#FAF7F2] px-3 py-1.5 text-[11px] font-semibold uppercase tracking-wider text-[#1C1917] hover:bg-[#F3EDE4] transition cursor-pointer"
+                    className="inline-flex items-center gap-1.5 border border-[#C5A059] bg-[#FAF7F2] px-3 py-1.5 text-[11px] font-semibold uppercase tracking-wider text-[#1C1917] hover:bg-[#F3EDE4] transition cursor-pointer rounded-lg shadow-2xs"
                     title="Import a CSV file — only modified or new items will update"
                   >
                     <Upload className="w-3.5 h-3.5 text-[#9A7B3E]" />
@@ -1314,7 +1328,7 @@ export function AdminFeature() {
                   <button
                     type="button"
                     onClick={() => handleExportCsv(true)}
-                    className="inline-flex items-center gap-1.5 border border-[#E7E0D6] bg-white px-3 py-1.5 text-[11px] font-semibold uppercase tracking-wider text-[#1C1917] hover:border-[#C5A059] transition cursor-pointer"
+                    className="inline-flex items-center gap-1.5 border border-[#E7E0D6] bg-white px-3 py-1.5 text-[11px] font-semibold uppercase tracking-wider text-[#1C1917] hover:border-[#C5A059] transition cursor-pointer rounded-lg shadow-2xs"
                     title="Export currently shown products to CSV"
                   >
                     <Download className="w-3.5 h-3.5 text-[#9A7B3E]" />
@@ -1335,9 +1349,9 @@ export function AdminFeature() {
                   <button
                     type="button"
                     onClick={() => setSelectedCategory('all')}
-                    className={`px-3 py-1.5 text-[11px] font-semibold uppercase tracking-wider border transition cursor-pointer ${
+                    className={`px-3 py-1.5 text-[11px] font-semibold uppercase tracking-wider border transition cursor-pointer rounded-lg ${
                       selectedCategory === 'all'
-                        ? 'border-[#1C1917] bg-[#1C1917] text-[#FAF7F2]'
+                        ? 'border-[#1C1917] bg-[#1C1917] text-[#FAF7F2] shadow-2xs'
                         : 'border-[#E7E0D6] bg-[#FAF7F2]/60 text-[#78716C] hover:border-[#C5A059] hover:text-[#1C1917]'
                     }`}
                   >
@@ -1348,9 +1362,9 @@ export function AdminFeature() {
                       key={pt.slug}
                       type="button"
                       onClick={() => setSelectedCategory(pt.slug)}
-                      className={`px-3 py-1.5 text-[11px] font-semibold uppercase tracking-wider border transition cursor-pointer ${
+                      className={`px-3 py-1.5 text-[11px] font-semibold uppercase tracking-wider border transition cursor-pointer rounded-lg ${
                         selectedCategory === pt.slug
-                          ? 'border-[#1C1917] bg-[#1C1917] text-[#FAF7F2]'
+                          ? 'border-[#1C1917] bg-[#1C1917] text-[#FAF7F2] shadow-2xs'
                           : 'border-[#E7E0D6] bg-[#FAF7F2]/60 text-[#78716C] hover:border-[#C5A059] hover:text-[#1C1917]'
                       }`}
                     >
@@ -1387,9 +1401,9 @@ export function AdminFeature() {
                         key={st.key}
                         type="button"
                         onClick={() => setStockFilter(st.key)}
-                        className={`px-2.5 py-1.5 text-[10px] font-semibold uppercase tracking-wider border transition cursor-pointer ${
+                        className={`px-2.5 py-1.5 text-[10px] font-semibold uppercase tracking-wider border transition cursor-pointer rounded-lg ${
                           stockFilter === st.key
-                            ? 'border-[#C5A059] bg-[#FAF7F2] text-[#1C1917]'
+                            ? 'border-[#C5A059] bg-[#FAF7F2] text-[#1C1917] shadow-2xs'
                             : 'border-[#E7E0D6] bg-white text-[#78716C] hover:text-[#1C1917]'
                         }`}
                       >
@@ -1403,7 +1417,7 @@ export function AdminFeature() {
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     placeholder="Search piece name..."
-                    className="border border-[#D6CFC5] bg-[#FAF7F2]/50 px-3 py-1.5 text-xs text-[#1C1917] focus:bg-white focus:outline-none focus:border-[#C5A059] w-44"
+                    className="border border-[#D6CFC5] bg-[#FAF7F2]/50 px-3 py-1.5 text-xs text-[#1C1917] focus:bg-white focus:outline-none focus:border-[#C5A059] w-44 rounded-lg"
                   />
                 </div>
               </div>
@@ -1448,7 +1462,7 @@ export function AdminFeature() {
                                     subtitle: `${p.categoryName} • ৳${p.priceBDT}`,
                                   })
                                 }
-                                className="relative h-12 w-10 flex-shrink-0 overflow-hidden bg-[#F3EDE4] border border-[#E7E0D6] group cursor-zoom-in hover:border-[#9A7B3E] transition shadow-2xs"
+                                className="relative h-12 w-10 flex-shrink-0 overflow-hidden bg-[#F3EDE4] border border-[#E7E0D6] rounded-lg group cursor-zoom-in hover:border-[#9A7B3E] transition shadow-2xs"
                                 title="Click to view full zoomed image"
                               >
                                 <Image
@@ -1472,7 +1486,7 @@ export function AdminFeature() {
                                         ? 'Featured on Storefront (Click to unfeature)'
                                         : 'Click to feature on Storefront'
                                     }
-                                    className="p-0.5 hover:scale-125 transition cursor-pointer"
+                                    className="p-1 rounded-full hover:scale-125 hover:bg-amber-50 transition cursor-pointer"
                                   >
                                     <Star
                                       className={`w-3.5 h-3.5 ${
