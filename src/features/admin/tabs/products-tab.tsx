@@ -6,6 +6,7 @@ import { Product } from '@/core/models/product.model';
 import { ProductType } from '@/core/models/product-type.model';
 import { AdminZoomImage } from '../modals/image-zoom-modal';
 import { Upload, Download, ZoomIn, Star, Minus, Plus, Edit3, Trash2 } from 'lucide-react';
+import { useI18n } from '@/core/i18n/i18n.context';
 
 export type StockFilterType = 'all' | 'in_stock' | 'low_stock' | 'sold_out' | 'featured';
 
@@ -62,6 +63,7 @@ export function AdminProductsTab({
   onOpenEditModal,
   onDeleteProduct,
 }: AdminProductsTabProps) {
+  const { t } = useI18n();
   return (
     <div className="space-y-6">
       <div className="border border-[#E7E0D6] bg-white overflow-hidden rounded-xl shadow-xs">
@@ -69,12 +71,10 @@ export function AdminProductsTab({
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
             <div>
               <h2 className="text-xs font-semibold uppercase tracking-[0.2em] text-[#1C1917]">
-                Product Catalogue &amp; Live Inventory Editor
+                {t.admin.productsTab.title}
               </h2>
               <p className="text-[11px] text-[#78716C] mt-0.5">
-                Filter by category or stock state, use <strong>Import CSV</strong> (only changed
-                rows update, the rest remain untouched), or click <strong>Sold 1 (-1)</strong> /{' '}
-                <strong>Sold Out (0)</strong>.
+                {t.admin.productsTab.subtitle}
               </p>
             </div>
             <div className="flex flex-wrap items-center gap-2">
@@ -85,7 +85,7 @@ export function AdminProductsTab({
                 title="Import a CSV file — only modified or new items will update"
               >
                 <Upload className="w-3.5 h-3.5 text-[#9A7B3E]" />
-                <span>Import CSV (Diff Only)</span>
+                <span>{t.admin.productsTab.importCsvDiff}</span>
               </button>
               <button
                 type="button"
@@ -95,8 +95,7 @@ export function AdminProductsTab({
               >
                 <Download className="w-3.5 h-3.5 text-[#9A7B3E]" />
                 <span>
-                  Export {selectedCategory === 'all' ? 'All' : selectedCategory} CSV (
-                  {filteredProducts.length})
+                  {t.admin.productsTab.exportCsvBtn} ({filteredProducts.length})
                 </span>
               </button>
             </div>
@@ -106,7 +105,7 @@ export function AdminProductsTab({
           <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 pt-2 border-t border-[#F3EDE4]">
             <div className="flex flex-wrap items-center gap-1.5">
               <span className="text-[10px] font-semibold uppercase tracking-wider text-[#78716C] mr-1">
-                Product Type:
+                {t.admin.productsTab.productTypeLabel}
               </span>
               <button
                 type="button"
@@ -117,7 +116,7 @@ export function AdminProductsTab({
                     : 'border-[#E7E0D6] bg-[#FAF7F2]/60 text-[#78716C] hover:border-[#C5A059] hover:text-[#1C1917]'
                 }`}
               >
-                All ({products.length})
+                {t.admin.productsTab.all} ({products.length})
               </button>
               {productTypes.map((pt) => (
                 <button
@@ -140,22 +139,22 @@ export function AdminProductsTab({
               <div className="flex flex-wrap items-center gap-1">
                 {(
                   [
-                    { key: 'all', label: 'All Stock' },
+                    { key: 'all', label: t.admin.productsTab.allStock },
                     {
                       key: 'featured',
-                      label: `★ Featured (${products.filter((p) => p.isFeatured).length})`,
+                      label: `${t.admin.productsTab.featured} (${products.filter((p) => p.isFeatured).length})`,
                     },
                     {
                       key: 'in_stock',
-                      label: `In Stock (${products.filter((p) => p.stock > 0).length})`,
+                      label: `${t.admin.productsTab.inStock} (${products.filter((p) => p.stock > 0).length})`,
                     },
                     {
                       key: 'low_stock',
-                      label: `Low ≤2 (${lowStockCount})`,
+                      label: `${t.admin.productsTab.lowStock} (${lowStockCount})`,
                     },
                     {
                       key: 'sold_out',
-                      label: `Sold Out (${soldOutCount})`,
+                      label: `${t.admin.productsTab.soldOut} (${soldOutCount})`,
                     },
                   ] as const
                 ).map((st) => (
@@ -178,7 +177,7 @@ export function AdminProductsTab({
                 type="text"
                 value={searchQuery}
                 onChange={(e) => onChangeSearchQuery(e.target.value)}
-                placeholder="Search piece name..."
+                placeholder={t.admin.productsTab.searchPlaceholder}
                 className="border border-[#D6CFC5] bg-[#FAF7F2]/50 px-3 py-1.5 text-xs text-[#1C1917] focus:bg-white focus:outline-none focus:border-[#C5A059] w-44 rounded-lg"
               />
             </div>
@@ -189,20 +188,20 @@ export function AdminProductsTab({
           <table className="w-full text-left text-xs text-[#78716C]">
             <thead className="bg-[#FAF7F2] border-b border-[#E7E0D6] text-[#1C1917] uppercase font-semibold text-[10px] tracking-[0.16em]">
               <tr>
-                <th className="py-3.5 px-4">Piece</th>
-                <th className="py-3.5 px-4">Category</th>
-                <th className="py-3.5 px-4">Per Piece Cost &amp; Landed</th>
-                <th className="py-3.5 px-4">Selling / Revised Price &amp; Profit</th>
-                <th className="py-3.5 px-4">Quick Stock &amp; Sold Controls</th>
-                <th className="py-3.5 px-4">Status</th>
-                <th className="py-3.5 px-4 text-right">Actions</th>
+                <th className="py-3.5 px-4">{t.admin.productsTab.colPiece}</th>
+                <th className="py-3.5 px-4">{t.admin.productsTab.colCategory}</th>
+                <th className="py-3.5 px-4">{t.admin.productsTab.colCost}</th>
+                <th className="py-3.5 px-4">{t.admin.productsTab.colPrice}</th>
+                <th className="py-3.5 px-4">{t.admin.productsTab.colControls}</th>
+                <th className="py-3.5 px-4">{t.admin.productsTab.colStatus}</th>
+                <th className="py-3.5 px-4 text-right">{t.admin.productsTab.colActions}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-[#F3EDE4]">
               {filteredProducts.length === 0 ? (
                 <tr>
                   <td colSpan={7} className="py-12 text-center text-xs text-[#78716C]">
-                    No products match your selected category or filter.
+                    {t.admin.productsTab.noMatch}
                   </td>
                 </tr>
               ) : (
@@ -274,7 +273,7 @@ export function AdminProductsTab({
                           ¥{p.costPriceCNY ?? 0}
                         </div>
                         <div className="text-[10px] text-[#78716C] mt-0.5">
-                          Landed: <strong className="text-[#1C1917]">৳{unitLanded}</strong> · Min: ৳{unitMinSell}
+                          {t.admin.productsTab.landed} <strong className="text-[#1C1917]">৳{unitLanded}</strong> · {t.admin.productsTab.min} ৳{unitMinSell}
                         </div>
                       </td>
                       <td className="py-3 px-4">
@@ -293,7 +292,7 @@ export function AdminProductsTab({
                             unitProfit >= 0 ? 'text-emerald-700' : 'text-red-700'
                           }`}
                         >
-                          Net Profit:{' '}
+                          {t.admin.productsTab.netProfit}{' '}
                           {unitProfit >= 0 ? `+৳${unitProfit}` : `-৳${Math.abs(unitProfit)}`} / pc
                         </div>
                       </td>
@@ -331,7 +330,7 @@ export function AdminProductsTab({
                                 className="rounded-lg border border-amber-300 bg-amber-50 hover:bg-amber-100 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wider text-amber-900 transition cursor-pointer shadow-2xs"
                                 title="Deduct 1 unit sold via WhatsApp/Messenger/Offline"
                               >
-                                Sold 1 (-1)
+                                {t.admin.productsTab.soldOne}
                               </button>
                               <button
                                 type="button"
@@ -339,7 +338,7 @@ export function AdminProductsTab({
                                 className="rounded-lg border border-red-300 bg-red-50 hover:bg-red-100 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wider text-red-800 transition cursor-pointer shadow-2xs"
                                 title="Set stock to 0 (Out of Stock on storefront)"
                               >
-                                Sold Out (0)
+                                {t.admin.productsTab.soldOutBtn}
                               </button>
                             </>
                           ) : (
@@ -349,7 +348,7 @@ export function AdminProductsTab({
                               className="rounded-lg border border-emerald-300 bg-emerald-50 hover:bg-emerald-100 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wider text-emerald-800 transition cursor-pointer shadow-2xs"
                               title="Quickly restock +3 units"
                             >
-                              + Restock 3
+                              {t.admin.productsTab.restock3}
                             </button>
                           )}
                         </div>
@@ -357,15 +356,15 @@ export function AdminProductsTab({
                       <td className="py-3 px-4">
                         {p.stock > 2 ? (
                           <span className="inline-flex items-center rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-emerald-800">
-                            In Stock ({p.stock})
+                            {t.admin.productsTab.inStock} ({p.stock})
                           </span>
                         ) : p.stock > 0 ? (
                           <span className="inline-flex items-center rounded-full border border-amber-300 bg-amber-50 px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-amber-900">
-                            Low Stock ({p.stock})
+                            {t.admin.productsTab.lowStock} ({p.stock})
                           </span>
                         ) : (
                           <span className="inline-flex items-center rounded-full border border-red-200 bg-red-50 px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-red-800">
-                            Sold Out (0)
+                            {t.admin.productsTab.soldOutBtn}
                           </span>
                         )}
                       </td>
@@ -377,7 +376,7 @@ export function AdminProductsTab({
                             className="inline-flex items-center gap-1.5 rounded-lg border border-[#D6CFC5] bg-white hover:bg-stone-50 hover:border-[#9A7B3E] px-3 py-1.5 text-xs font-semibold text-[#1C1917] transition shadow-2xs cursor-pointer"
                           >
                             <Edit3 className="w-3.5 h-3.5 text-[#9A7B3E]" />
-                            <span>Edit</span>
+                            <span>{t.admin.productsTab.edit}</span>
                           </button>
                           <button
                             type="button"

@@ -4,6 +4,7 @@ import React from 'react';
 import { Product } from '@/core/models/product.model';
 import { Order } from '@/core/models/order.model';
 import { Smartphone, Package, Layers, ShoppingBag, CheckCircle } from 'lucide-react';
+import { useI18n } from '@/core/i18n/i18n.context';
 
 interface AdminMetricsProps {
   bkashNumber: string;
@@ -28,6 +29,7 @@ export function AdminMetrics({
   lowStockCount,
   isSupabaseConnected,
 }: AdminMetricsProps) {
+  const { t } = useI18n();
   return (
     <>
       {/* Store bKash Number Configuration Bar */}
@@ -41,11 +43,10 @@ export function AdminMetrics({
           </div>
           <div>
             <div className="text-xs font-semibold text-[#1C1917]">
-              Manual bKash Collection Number (Shown at Checkout)
+              {t.admin.metrics.bkashTitle}
             </div>
             <div className="text-[11px] text-[#78716C]">
-              Customers send bKash payments to this number and submit their TrxID for your manual
-              check below.
+              {t.admin.metrics.bkashSubtitle}
             </div>
           </div>
         </div>
@@ -62,7 +63,7 @@ export function AdminMetrics({
             type="submit"
             className="bg-pink-700 text-white px-4 py-2 text-[11px] font-semibold uppercase tracking-wider hover:bg-pink-800 transition cursor-pointer rounded-lg shadow-2xs"
           >
-            Update Number
+            {t.admin.metrics.updateNumber}
           </button>
         </div>
       </form>
@@ -72,7 +73,7 @@ export function AdminMetrics({
         <div className="border border-[#E7E0D6] bg-white p-5 rounded-xl shadow-xs">
           <div className="flex items-center justify-between mb-2">
             <span className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#78716C]">
-              Total Products
+              {t.admin.metrics.totalProducts}
             </span>
             <Package className="w-4 h-4 text-[#9A7B3E]" />
           </div>
@@ -89,22 +90,22 @@ export function AdminMetrics({
         <div className="border border-[#E7E0D6] bg-white p-5 rounded-xl shadow-xs">
           <div className="flex items-center justify-between mb-2">
             <span className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#78716C]">
-              Total Inventory
+              {t.admin.metrics.totalInventory}
             </span>
             <Layers className="w-4 h-4 text-[#9A7B3E]" />
           </div>
           <div className="font-serif-display text-3xl font-semibold text-[#1C1917]">
-            {totalStock} Units
+            {totalStock} {t.admin.metrics.units}
           </div>
           <div className="text-[11px] text-[#78716C] mt-1">
-            {soldOutCount} sold out · {lowStockCount} low stock (≤2)
+            {soldOutCount} {t.admin.metrics.soldOut} · {lowStockCount} {t.admin.metrics.lowStock}
           </div>
         </div>
 
         <div className="border border-[#E7E0D6] bg-white p-5 rounded-xl shadow-xs">
           <div className="flex items-center justify-between mb-2">
             <span className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#78716C]">
-              Pending bKash Checks
+              {t.admin.metrics.pendingBkash}
             </span>
             <ShoppingBag className="w-4 h-4 text-pink-600" />
           </div>
@@ -115,26 +116,26 @@ export function AdminMetrics({
             }
           </div>
           <div className="text-[11px] text-[#78716C] mt-1">
-            {orders.length} total customer orders
+            {orders.length} {t.admin.metrics.totalCustomerOrders}
           </div>
         </div>
 
         <div className="border border-[#E7E0D6] bg-white p-5 rounded-xl shadow-xs">
           <div className="flex items-center justify-between mb-2">
             <span className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#78716C]">
-              Database Connection
+              {t.admin.metrics.dbConnection}
             </span>
             <CheckCircle
               className={`w-4 h-4 ${isSupabaseConnected ? 'text-emerald-600' : 'text-[#C5A059]'}`}
             />
           </div>
           <div className="font-serif-display text-xl font-semibold text-[#1C1917]">
-            {isSupabaseConnected ? 'Supabase Cloud Live' : 'Local + Supabase Ready'}
+            {isSupabaseConnected ? t.admin.metrics.cloudLive : t.admin.metrics.localReady}
           </div>
           <div className="text-[11px] text-[#78716C] mt-1">
             {isSupabaseConnected
-              ? 'Connected to PostgreSQL'
-              : 'Add keys in .env.local for cloud sync'}
+              ? t.admin.metrics.connectedPg
+              : t.admin.metrics.addKeysEnv}
           </div>
         </div>
       </div>

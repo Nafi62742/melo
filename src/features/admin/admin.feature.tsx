@@ -23,6 +23,7 @@ import {
 import { StoreLink, StoreLinkCategory } from '@/core/models/store-link.model';
 import { slugify } from '@/core/utils/slug.util';
 import { exportProductsToCsv, mergeProductsFromCsv } from '@/core/utils/csv-products.util';
+import { useI18n } from '@/core/i18n/i18n.context';
 
 // Organized Admin Sub-Modules
 import { AdminLogin } from './components/admin-login';
@@ -70,6 +71,7 @@ const INITIAL_FORM: ProductFormState = {
 };
 
 export function AdminFeature() {
+  const { t } = useI18n();
   // Authentication State (delegated to AdminService -> AdminRepository)
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() =>
     adminService.isAuthenticated()
@@ -471,7 +473,10 @@ export function AdminFeature() {
 
   const openAddModal = () => {
     setEditingId(null);
-    setForm(INITIAL_FORM);
+    setForm({
+      ...INITIAL_FORM,
+      category: productTypes[0]?.slug || 'earrings',
+    });
     setIsModalOpen(true);
   };
 
@@ -758,11 +763,11 @@ export function AdminFeature() {
       <div className="flex flex-col lg:flex-row lg:items-end justify-between pb-6 border-b border-[#E7E0D6] gap-4 mb-6">
         <div>
           <h1 className="font-serif-display text-3xl sm:text-4xl font-medium text-[#1C1917]">
-            MELO Business &amp; Store Administration
+            {t.admin.header.title}
           </h1>
           <div className="flex flex-wrap items-center gap-2 text-xs text-[#78716C] mt-1">
             <span>
-              Signed in as <strong className="text-[#1C1917]">{adminEmail}</strong>
+              {t.admin.header.signedInAs} <strong className="text-[#1C1917]">{adminEmail}</strong>
             </span>
             <span>•</span>
             {isSupabaseConnected ? (
@@ -780,13 +785,13 @@ export function AdminFeature() {
                 />
                 <span>
                   {dbReachable
-                    ? 'Supabase DB Connected ✓'
-                    : 'Supabase Key Set (Run schema.sql if tables missing)'}
+                    ? t.admin.header.dbConnected
+                    : t.admin.header.dbKeySet}
                 </span>
               </span>
             ) : (
               <span className="inline-flex items-center gap-1.5 border border-stone-200 bg-stone-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-stone-700">
-                <span>Local Mode (Restart npm run dev to load .env.local)</span>
+                <span>{t.admin.header.localMode}</span>
               </span>
             )}
           </div>
@@ -802,16 +807,16 @@ export function AdminFeature() {
             title="Open live storefront in new tab"
           >
             <ExternalLink className="w-3.5 h-3.5 text-[#9A7B3E]" />
-            <span>Storefront ↗</span>
+            <span>{t.admin.header.storefront}</span>
           </Link>
 
           <button
             onClick={handleLogout}
             className="inline-flex items-center gap-1.5 border border-[#E7E0D6] bg-white px-3.5 py-2.5 text-[11px] font-semibold uppercase tracking-wider text-[#78716C] hover:border-red-400 hover:text-red-700 transition cursor-pointer rounded-lg shadow-2xs"
-            title="Sign Out"
+            title={t.admin.header.signOut}
           >
             <LogOut className="w-3.5 h-3.5" />
-            <span>Sign Out</span>
+            <span>{t.admin.header.signOut}</span>
           </button>
         </div>
       </div>
@@ -828,7 +833,7 @@ export function AdminFeature() {
           }`}
         >
           <Store className="w-4 h-4 text-[#C5A059]" />
-          <span>Store Management</span>
+          <span>{t.admin.header.storeManagement}</span>
           <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-stone-700 text-stone-200">
             {orders.length}
           </span>
@@ -844,7 +849,7 @@ export function AdminFeature() {
           }`}
         >
           <Briefcase className="w-4 h-4 text-[#C5A059]" />
-          <span>Business Operations (Non-Store)</span>
+          <span>{t.admin.header.businessOperations}</span>
         </button>
       </div>
 
@@ -870,7 +875,7 @@ export function AdminFeature() {
                 className="inline-flex items-center gap-2 boutique-btn-primary px-3.5 py-2 cursor-pointer text-xs rounded-lg shadow-2xs"
               >
                 <Plus className="w-3.5 h-3.5" />
-                <span>Add New Piece</span>
+                <span>{t.admin.header.addNewPiece}</span>
               </button>
 
               <button
@@ -880,7 +885,7 @@ export function AdminFeature() {
                 title="Create an order from WhatsApp or Facebook Messenger and automatically deduct stock"
               >
                 <Plus className="w-3.5 h-3.5" />
-                <span>Manual Order (WA/FB)</span>
+                <span>{t.admin.header.manualOrder}</span>
               </button>
 
               <button
@@ -890,7 +895,7 @@ export function AdminFeature() {
                 title="Import CSV — only changed rows update, everything else stays untouched"
               >
                 <Upload className="w-3.5 h-3.5 text-[#9A7B3E]" />
-                <span>Import CSV</span>
+                <span>{t.admin.header.importCsv}</span>
               </button>
 
               <button
@@ -900,7 +905,7 @@ export function AdminFeature() {
                 title="Export full product catalogue to CSV"
               >
                 <Download className="w-3.5 h-3.5 text-[#9A7B3E]" />
-                <span>Export CSV</span>
+                <span>{t.admin.header.exportCsv}</span>
               </button>
 
               <button
@@ -909,7 +914,7 @@ export function AdminFeature() {
                 title="Push local catalogue to Supabase PostgreSQL"
               >
                 <Database className="w-3.5 h-3.5 text-[#9A7B3E]" />
-                <span>Sync to DB</span>
+                <span>{t.admin.header.syncToDb}</span>
               </button>
             </div>
 
@@ -923,7 +928,7 @@ export function AdminFeature() {
                     : 'text-[#78716C] hover:text-[#1C1917]'
                 }`}
               >
-                Products ({products.length})
+                {t.admin.subTabs.products} ({products.length})
               </button>
               <button
                 onClick={() => setActiveTab('types')}
@@ -933,7 +938,7 @@ export function AdminFeature() {
                     : 'text-[#78716C] hover:text-[#1C1917]'
                 }`}
               >
-                Product Types ({productTypes.length})
+                {t.admin.subTabs.productTypes} ({productTypes.length})
               </button>
               <button
                 onClick={() => setActiveTab('orders')}
@@ -943,7 +948,7 @@ export function AdminFeature() {
                     : 'text-[#78716C] hover:text-[#1C1917]'
                 }`}
               >
-                Orders &amp; bKash ({orders.length})
+                {t.admin.subTabs.orders} ({orders.length})
               </button>
               <button
                 onClick={() => {
@@ -957,7 +962,7 @@ export function AdminFeature() {
                 }`}
               >
                 <TrendingUp className="w-3.5 h-3.5 text-[#C5A059]" />
-                <span>Profit &amp; Analytics</span>
+                <span>{t.admin.subTabs.analytics}</span>
               </button>
               <button
                 onClick={() => setActiveTab('links')}
@@ -967,7 +972,7 @@ export function AdminFeature() {
                     : 'text-[#78716C] hover:text-[#1C1917]'
                 }`}
               >
-                Chat &amp; URLs ({storeLinks.length})
+                {t.admin.subTabs.links} ({storeLinks.length})
               </button>
               <button
                 onClick={() => setActiveTab('homepage')}
@@ -978,7 +983,7 @@ export function AdminFeature() {
                 }`}
               >
                 <Sparkles className="w-3.5 h-3.5 text-[#C5A059]" />
-                <span>Homepage &amp; Hero</span>
+                <span>{t.admin.subTabs.homepage}</span>
               </button>
             </div>
           </div>

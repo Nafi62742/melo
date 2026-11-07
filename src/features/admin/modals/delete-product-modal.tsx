@@ -3,6 +3,7 @@
 import React from 'react';
 import { Product } from '@/core/models/product.model';
 import { Trash2 } from 'lucide-react';
+import { useI18n } from '@/core/i18n/i18n.context';
 
 interface AdminDeleteProductModalProps {
   product: Product | null;
@@ -15,6 +16,7 @@ export function AdminDeleteProductModal({
   onCancel,
   onConfirmDelete,
 }: AdminDeleteProductModalProps) {
+  const { t } = useI18n();
   if (!product) return null;
 
   return (
@@ -34,10 +36,10 @@ export function AdminDeleteProductModal({
           </div>
           <div className="flex-1 min-w-0">
             <h3 className="font-serif-display text-xl font-semibold text-[#1C1917]">
-              Delete Jewellery Piece?
+              {t.admin.modals.deleteTitle}
             </h3>
             <p className="text-xs text-[#78716C] mt-1 leading-relaxed">
-              Are you sure you want to delete this piece? It will be permanently removed from your catalog and inventory.
+              {t.admin.modals.deleteDesc}
             </p>
           </div>
         </div>
@@ -70,7 +72,7 @@ export function AdminDeleteProductModal({
             onClick={onCancel}
             className="rounded-lg border border-[#D6CFC5] bg-white hover:bg-stone-50 px-4 py-2 text-xs font-semibold text-[#78716C] hover:text-[#1C1917] transition cursor-pointer"
           >
-            Cancel
+            {t.admin.modals.cancel}
           </button>
           <button
             type="button"
@@ -78,7 +80,7 @@ export function AdminDeleteProductModal({
             className="rounded-lg bg-red-600 hover:bg-red-700 text-white px-5 py-2 text-xs font-semibold shadow-sm transition flex items-center gap-1.5 cursor-pointer"
           >
             <Trash2 className="w-3.5 h-3.5" />
-            <span>Yes, Delete Piece</span>
+            <span>{t.admin.modals.confirmDelete}</span>
           </button>
         </div>
       </div>

@@ -12,6 +12,7 @@ import {
   Save,
   CheckCircle,
 } from 'lucide-react';
+import { useI18n } from '@/core/i18n/i18n.context';
 
 export interface SourcingItem {
   id: string;
@@ -155,6 +156,7 @@ const DEFAULT_NOTES = `MELO BUSINESS STRATEGY & OPERATIONS NOTES
    - Local Packaging Vendor: 01711-XXXXXX (Old Dhaka)`;
 
 export function AdminOperationsTab() {
+  const { t } = useI18n();
   const [subTab, setSubTab] = useState<'sourcing' | 'expenses' | 'tasks' | 'notes'>('sourcing');
 
   // Sourcing State
@@ -345,12 +347,11 @@ export function AdminOperationsTab() {
             <div className="flex items-center gap-2">
               <Briefcase className="w-4 h-4 text-[#9A7B3E]" />
               <h2 className="font-serif-display text-xl font-medium text-[#1C1917]">
-                Internal Business &amp; Operations Hub
+                {t.admin.operationsTab.title}
               </h2>
             </div>
             <p className="mt-1 text-xs text-[#78716C] max-w-xl">
-              Manage product sourcing for toys &amp; gadgets, operating overhead, supplier contacts,
-              and internal execution — completely separate from customer storefront orders.
+              {t.admin.operationsTab.subtitle}
             </p>
           </div>
 
@@ -358,7 +359,7 @@ export function AdminOperationsTab() {
           <div className="flex items-center gap-3">
             <div className="bg-white border border-[#E7E0D6] px-3.5 py-2 text-center rounded-lg shadow-2xs">
               <span className="text-[10px] uppercase font-semibold text-[#78716C] block">
-                Sourced Items
+                {t.admin.operationsTab.sourcedItems}
               </span>
               <span className="font-serif-display text-lg font-bold text-[#1C1917]">
                 {sourcingItems.length}
@@ -366,7 +367,7 @@ export function AdminOperationsTab() {
             </div>
             <div className="bg-white border border-[#E7E0D6] px-3.5 py-2 text-center rounded-lg shadow-2xs">
               <span className="text-[10px] uppercase font-semibold text-[#78716C] block">
-                Logged Overhead
+                {t.admin.operationsTab.loggedOverhead}
               </span>
               <span className="font-serif-display text-lg font-bold text-[#9A7B3E]">
                 ৳{totalExpenseBDT.toLocaleString()}
@@ -387,7 +388,7 @@ export function AdminOperationsTab() {
             }`}
           >
             <Package className="w-3.5 h-3.5 text-[#C5A059]" />
-            <span>Sourcing &amp; Suppliers ({sourcingItems.length})</span>
+            <span>{t.admin.operationsTab.tabSourcing} ({sourcingItems.length})</span>
           </button>
 
           <button
@@ -400,7 +401,7 @@ export function AdminOperationsTab() {
             }`}
           >
             <DollarSign className="w-3.5 h-3.5 text-[#C5A059]" />
-            <span>Overhead &amp; Expenses (৳{totalExpenseBDT.toLocaleString()})</span>
+            <span>{t.admin.operationsTab.tabExpenses} (৳{totalExpenseBDT.toLocaleString()})</span>
           </button>
 
           <button
@@ -414,7 +415,7 @@ export function AdminOperationsTab() {
           >
             <CheckSquare className="w-3.5 h-3.5 text-[#C5A059]" />
             <span>
-              Internal Tasks ({tasks.filter((t) => !t.completed).length}/{tasks.length})
+              {t.admin.operationsTab.tabTasks} ({tasks.filter((tItem) => !tItem.completed).length}/{tasks.length})
             </span>
           </button>
 
@@ -428,7 +429,7 @@ export function AdminOperationsTab() {
             }`}
           >
             <FileText className="w-3.5 h-3.5 text-[#C5A059]" />
-            <span>Strategy &amp; Notes</span>
+            <span>{t.admin.operationsTab.tabNotes}</span>
           </button>
         </div>
       </div>
@@ -440,7 +441,7 @@ export function AdminOperationsTab() {
         <div className="space-y-4">
           <div className="flex items-center justify-between">
             <h3 className="font-serif-display text-lg font-medium text-[#1C1917]">
-              Product Sourcing Pipeline (Toys, Gadgets &amp; Jewellery)
+              {t.admin.operationsTab.sourcingTitle}
             </h3>
             <button
               type="button"
@@ -448,7 +449,7 @@ export function AdminOperationsTab() {
               className="inline-flex items-center gap-1.5 boutique-btn-primary px-3.5 py-2 text-xs cursor-pointer rounded-lg shadow-2xs"
             >
               <Plus className="w-3.5 h-3.5" />
-              <span>{isAddingSourcing ? 'Close Form' : 'Log Sourced Item'}</span>
+              <span>{isAddingSourcing ? t.admin.operationsTab.closeForm : t.admin.operationsTab.logSourcedItem}</span>
             </button>
           </div>
 
@@ -571,13 +572,13 @@ export function AdminOperationsTab() {
                   onClick={() => setIsAddingSourcing(false)}
                   className="boutique-btn-outline px-4 py-1.5 text-xs rounded-lg shadow-2xs cursor-pointer"
                 >
-                  Cancel
+                  {t.admin.modals.cancel}
                 </button>
                 <button
                   type="submit"
                   className="boutique-btn-primary px-4 py-1.5 text-xs rounded-lg shadow-2xs cursor-pointer"
                 >
-                  Save Sourcing Item
+                  {t.admin.operationsTab.saveSourcingItem}
                 </button>
               </div>
             </form>
@@ -666,10 +667,10 @@ export function AdminOperationsTab() {
           <div className="flex items-center justify-between">
             <div>
               <h3 className="font-serif-display text-lg font-medium text-[#1C1917]">
-                Operating Expenses &amp; Overhead Log
+                {t.admin.operationsTab.expensesTitle}
               </h3>
               <p className="text-xs text-[#78716C]">
-                Track courier deposits, advertising spend, packaging boxes, and non-inventory business costs.
+                {t.admin.operationsTab.expensesSub}
               </p>
             </div>
             <button
@@ -678,7 +679,7 @@ export function AdminOperationsTab() {
               className="inline-flex items-center gap-1.5 boutique-btn-primary px-3.5 py-2 text-xs cursor-pointer rounded-lg shadow-2xs"
             >
               <Plus className="w-3.5 h-3.5" />
-              <span>{isAddingExpense ? 'Close Form' : 'Log Expense'}</span>
+              <span>{isAddingExpense ? t.admin.operationsTab.closeForm : t.admin.operationsTab.logExpense}</span>
             </button>
           </div>
 
@@ -753,13 +754,13 @@ export function AdminOperationsTab() {
                   onClick={() => setIsAddingExpense(false)}
                   className="boutique-btn-outline px-4 py-1.5 text-xs rounded-lg shadow-2xs cursor-pointer"
                 >
-                  Cancel
+                  {t.admin.modals.cancel}
                 </button>
                 <button
                   type="submit"
                   className="boutique-btn-primary px-4 py-1.5 text-xs rounded-lg shadow-2xs cursor-pointer"
                 >
-                  Save Expense
+                  {t.admin.operationsTab.saveExpense}
                 </button>
               </div>
             </form>
@@ -817,7 +818,7 @@ export function AdminOperationsTab() {
         <div className="space-y-4">
           <div className="flex items-center justify-between">
             <h3 className="font-serif-display text-lg font-medium text-[#1C1917]">
-              Internal Business Execution &amp; Reminders
+              {t.admin.operationsTab.tasksTitle}
             </h3>
           </div>
 
@@ -826,7 +827,7 @@ export function AdminOperationsTab() {
             <input
               type="text"
               required
-              placeholder="Add an internal task or operational reminder..."
+              placeholder={t.admin.operationsTab.addTaskPlaceholder}
               value={newTaskTitle}
               onChange={(e) => setNewTaskTitle(e.target.value)}
               className="flex-1 border border-[#D6CFC5] bg-white px-3.5 py-2 text-xs rounded-lg"
@@ -844,7 +845,7 @@ export function AdminOperationsTab() {
               type="submit"
               className="boutique-btn-primary px-4 py-2 text-xs uppercase tracking-wider cursor-pointer rounded-lg shadow-2xs"
             >
-              Add Task
+              {t.admin.operationsTab.addTaskBtn}
             </button>
           </form>
 
@@ -904,10 +905,10 @@ export function AdminOperationsTab() {
           <div className="flex items-center justify-between">
             <div>
               <h3 className="font-serif-display text-lg font-medium text-[#1C1917]">
-                Business Strategy, Suppliers &amp; Knowledge Base
+                {t.admin.operationsTab.notesTitle}
               </h3>
               <p className="text-xs text-[#78716C]">
-                Internal notes, supplier WhatsApp numbers, China forwarder addresses, and packaging specs.
+                {t.admin.operationsTab.notesSub}
               </p>
             </div>
             <button
@@ -916,7 +917,7 @@ export function AdminOperationsTab() {
               className="inline-flex items-center gap-1.5 boutique-btn-primary px-4 py-2 text-xs cursor-pointer rounded-lg shadow-2xs"
             >
               {notesSaved ? <CheckCircle className="w-3.5 h-3.5 text-emerald-300" /> : <Save className="w-3.5 h-3.5" />}
-              <span>{notesSaved ? 'Notes Saved!' : 'Save Notes'}</span>
+              <span>{notesSaved ? t.admin.operationsTab.notesSaved : t.admin.operationsTab.saveNotes}</span>
             </button>
           </div>
 

@@ -4,6 +4,7 @@ import React from 'react';
 import { Product } from '@/core/models/product.model';
 import { ProductType } from '@/core/models/product-type.model';
 import { X } from 'lucide-react';
+import { useI18n } from '@/core/i18n/i18n.context';
 
 interface AdminProductTypesTabProps {
   products: Product[];
@@ -26,20 +27,20 @@ export function AdminProductTypesTab({
   onAddProductType,
   onDeleteProductType,
 }: AdminProductTypesTabProps) {
+  const { t } = useI18n();
   return (
     <div className="space-y-6">
       <div className="border border-[#C5A059] bg-white p-6 rounded-xl shadow-xs">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-4 border-b border-[#E7E0D6]">
           <div>
             <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[#9A7B3E] block">
-              Product Types Directory (public.product_types)
+              {t.admin.typesTab.badge}
             </span>
             <h2 className="font-serif-display text-2xl font-medium text-[#1C1917]">
-              Manage Product Types
+              {t.admin.typesTab.title}
             </h2>
             <p className="text-xs text-[#78716C] mt-0.5">
-              Before adding products of a new category (e.g. Necklaces, Anklets, Hair Clips),
-              add the product type here first so it is registered in{' '}
+              {t.admin.typesTab.subtitle}{' '}
               <code className="bg-[#FAF7F2] px-1.5 py-0.5 text-[#1C1917] rounded">
                 public.product_types
               </code>
@@ -47,7 +48,7 @@ export function AdminProductTypesTab({
             </p>
           </div>
           <span className="text-xs font-semibold text-[#1C1917] bg-[#FAF7F2] border border-[#E7E0D6] px-3 py-1 rounded-full">
-            {productTypes.length} Active Types
+            {productTypes.length} {t.admin.typesTab.activeTypes}
           </span>
         </div>
 
@@ -91,7 +92,7 @@ export function AdminProductTypesTab({
               required
               value={newTypeName}
               onChange={(e) => onChangeNewTypeName(e.target.value)}
-              placeholder="New Product Type Name (e.g. Necklaces)"
+              placeholder={t.admin.typesTab.namePlaceholder}
               className="w-full border border-[#D6CFC5] bg-[#FAF7F2]/50 px-3.5 py-2.5 text-[#1C1917] focus:bg-white focus:outline-none focus:border-[#C5A059] rounded-lg shadow-2xs"
             />
           </div>
@@ -100,7 +101,7 @@ export function AdminProductTypesTab({
               type="text"
               value={newTypeDesc}
               onChange={(e) => onChangeNewTypeDesc(e.target.value)}
-              placeholder="Optional description (e.g. Light luxury chains and pendants)"
+              placeholder={t.admin.typesTab.descPlaceholder}
               className="w-full border border-[#D6CFC5] bg-[#FAF7F2]/50 px-3.5 py-2.5 text-[#1C1917] focus:bg-white focus:outline-none focus:border-[#C5A059] rounded-lg shadow-2xs"
             />
           </div>
@@ -109,7 +110,7 @@ export function AdminProductTypesTab({
               type="submit"
               className="w-full boutique-btn-primary py-2.5 px-4 text-xs font-semibold cursor-pointer rounded-lg shadow-2xs"
             >
-              + Add Product Type
+              {t.admin.typesTab.addBtn}
             </button>
           </div>
         </form>

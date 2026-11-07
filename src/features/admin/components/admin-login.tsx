@@ -3,6 +3,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { Lock, ArrowLeft } from 'lucide-react';
+import { useI18n } from '@/core/i18n/i18n.context';
 
 interface AdminLoginProps {
   loginId: string;
@@ -23,6 +24,7 @@ export function AdminLogin({
   isCheckingAuth,
   onSubmitLogin,
 }: AdminLoginProps) {
+  const { t } = useI18n();
   return (
     <div className="mx-auto max-w-md px-4 py-16 md:py-24">
       <div className="border border-[#C5A059] bg-white p-8 shadow-xl rounded-2xl">
@@ -31,14 +33,13 @@ export function AdminLogin({
         </div>
 
         <span className="text-[10px] font-semibold uppercase tracking-[0.22em] text-[#9A7B3E] block">
-          Protected Area
+          {t.admin.login.protectedArea}
         </span>
         <h1 className="mt-1 font-serif-display text-3xl font-medium text-[#1C1917]">
-          MELO Admin Sign In
+          {t.admin.login.title}
         </h1>
         <p className="mt-1.5 text-xs text-[#78716C] leading-relaxed">
-          Sign in with your administrator credentials to verify bKash TrxIDs, manage orders, and
-          update jewellery inventory.
+          {t.admin.login.subtitle}
         </p>
 
         {loginError && (
@@ -50,12 +51,12 @@ export function AdminLogin({
         <form onSubmit={onSubmitLogin} className="mt-6 space-y-4 text-xs">
           <div>
             <label className="block text-[11px] font-semibold uppercase tracking-wider text-[#1C1917] mb-1.5">
-              Admin Email / ID
+              {t.admin.login.emailLabel}
             </label>
             <input
               type="email"
               required
-              placeholder="Enter admin email"
+              placeholder={t.admin.login.emailPlaceholder}
               value={loginId}
               onChange={(e) => onChangeLoginId(e.target.value)}
               className="w-full border border-[#D6CFC5] bg-[#FAF7F2]/50 px-3.5 py-2.5 text-xs text-[#1C1917] focus:bg-white focus:outline-none focus:border-[#C5A059] rounded-lg"
@@ -64,7 +65,7 @@ export function AdminLogin({
 
           <div>
             <label className="block text-[11px] font-semibold uppercase tracking-wider text-[#1C1917] mb-1.5">
-              Password
+              {t.admin.login.passwordLabel}
             </label>
             <input
               type="password"
@@ -81,7 +82,7 @@ export function AdminLogin({
             disabled={isCheckingAuth}
             className="w-full boutique-btn-primary py-3.5 mt-2 cursor-pointer disabled:opacity-50 rounded-lg shadow-sm"
           >
-            {isCheckingAuth ? 'Verifying Credentials...' : 'Sign In to Admin Panel'}
+            {isCheckingAuth ? t.admin.login.verifying : t.admin.login.signInBtn}
           </button>
         </form>
 
@@ -91,7 +92,7 @@ export function AdminLogin({
             className="inline-flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-[0.16em] text-[#78716C] hover:text-[#1C1917] rounded-lg px-3 py-1.5 transition"
           >
             <ArrowLeft className="w-3.5 h-3.5" />
-            <span>Return to Storefront</span>
+            <span>{t.admin.login.returnStorefront}</span>
           </Link>
         </div>
       </div>
