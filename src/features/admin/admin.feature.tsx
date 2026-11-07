@@ -28,6 +28,11 @@ import { AdminOrdersTab } from './components/admin-orders-tab.component';
 import { AdminAnalyticsTab } from './components/admin-analytics-tab.component';
 import { AdminLinksTab } from './components/admin-links-tab.component';
 import { AdminHomepageTab } from './components/admin-homepage-tab.component';
+import { AdminOperationsTab } from './components/admin-operations-tab.component';
+import {
+  AdminImageZoomModal,
+  AdminZoomImage,
+} from './components/admin-image-zoom-modal.component';
 import { AdminProductModal, ProductFormState } from './components/admin-product-modal.component';
 import { AdminManualOrderModal } from './components/admin-manual-order-modal.component';
 import {
@@ -50,6 +55,10 @@ import {
   TrendingUp,
   Star,
   Sparkles,
+  Store,
+  Briefcase,
+  ExternalLink,
+  ZoomIn,
 } from 'lucide-react';
 
 const INITIAL_FORM: ProductFormState = {
@@ -78,6 +87,8 @@ export function AdminFeature() {
   const [dbReachable, setDbReachable] = useState<boolean | null>(null);
 
   // Dashboard State
+  const [adminSystem, setAdminSystem] = useState<'store' | 'operations'>('store');
+  const [zoomedImage, setZoomedImage] = useState<AdminZoomImage | null>(null);
   const [activeTab, setActiveTab] = useState<
     'products' | 'orders' | 'analytics' | 'links' | 'homepage'
   >('orders');
@@ -840,18 +851,11 @@ export function AdminFeature() {
 
   return (
     <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8 md:py-14">
-      {/* Top Bar */}
-      <div className="flex flex-col lg:flex-row lg:items-end justify-between pb-6 border-b border-[#E7E0D6] gap-4">
+      {/* Top Header */}
+      <div className="flex flex-col lg:flex-row lg:items-end justify-between pb-6 border-b border-[#E7E0D6] gap-4 mb-6">
         <div>
-          <Link
-            href="/"
-            className="inline-flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-[#78716C] hover:text-[#1C1917] mb-2"
-          >
-            <ArrowLeft className="w-3.5 h-3.5" />
-            <span>Back to Storefront</span>
-          </Link>
           <h1 className="font-serif-display text-3xl sm:text-4xl font-medium text-[#1C1917]">
-            MELO Store Admin Dashboard
+            MELO Business &amp; Store Administration
           </h1>
           <div className="flex flex-wrap items-center gap-2 text-xs text-[#78716C] mt-1">
             <span>
@@ -885,120 +889,18 @@ export function AdminFeature() {
           </div>
         </div>
 
-        {/* Action Controls & Tab Switch */}
-        <div className="flex flex-wrap items-center gap-3">
-          <input
-            ref={csvFileInputRef}
-            type="file"
-            accept=".csv,text/csv"
-            onChange={handleImportCsvFile}
-            className="hidden"
-          />
-
-          <button
-            onClick={openAddModal}
-            className="inline-flex items-center gap-2 boutique-btn-primary px-4 py-2.5 cursor-pointer"
+        {/* Global Quick Actions */}
+        <div className="flex items-center gap-2">
+          <Link
+            href="/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1.5 border border-[#E7E0D6] bg-white px-3.5 py-2.5 text-[11px] font-semibold uppercase tracking-wider text-[#78716C] hover:border-[#1C1917] hover:text-[#1C1917] transition cursor-pointer"
+            title="Open live storefront in new tab"
           >
-            <Plus className="w-4 h-4" />
-            <span>Add New Piece</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={openManualOrderModal}
-            className="inline-flex items-center gap-2 border border-emerald-600 bg-emerald-700 text-white px-4 py-2.5 text-xs font-semibold uppercase tracking-wider hover:bg-emerald-800 transition cursor-pointer"
-            title="Create an order from WhatsApp or Facebook Messenger and automatically deduct stock"
-          >
-            <Plus className="w-3.5 h-3.5" />
-            <span>Manual Order (WA/FB)</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => csvFileInputRef.current?.click()}
-            className="inline-flex items-center gap-2 boutique-btn-outline px-4 py-2.5 cursor-pointer"
-            title="Import CSV — only changed rows update, everything else stays untouched"
-          >
-            <Upload className="w-3.5 h-3.5 text-[#9A7B3E]" />
-            <span>Import CSV</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => handleExportCsv(false)}
-            className="inline-flex items-center gap-2 boutique-btn-outline px-4 py-2.5 cursor-pointer"
-            title="Export full product catalogue to CSV"
-          >
-            <Download className="w-3.5 h-3.5 text-[#9A7B3E]" />
-            <span>Export CSV</span>
-          </button>
-
-          <button
-            onClick={handlePushToDatabase}
-            className="inline-flex items-center gap-2 boutique-btn-outline px-4 py-2.5 cursor-pointer"
-            title="Push local catalogue to Supabase PostgreSQL"
-          >
-            <Database className="w-3.5 h-3.5 text-[#9A7B3E]" />
-            <span>Sync to DB</span>
-          </button>
-
-          <div className="flex flex-wrap border border-[#E7E0D6] bg-white p-1 text-xs font-semibold">
-            <button
-              onClick={() => setActiveTab('orders')}
-              className={`px-3.5 py-2 text-[11px] uppercase tracking-[0.14em] transition cursor-pointer ${
-                activeTab === 'orders'
-                  ? 'bg-[#1C1917] text-[#FAF7F2]'
-                  : 'text-[#78716C] hover:text-[#1C1917]'
-              }`}
-            >
-              Orders &amp; bKash ({orders.length})
-            </button>
-            <button
-              onClick={() => setActiveTab('products')}
-              className={`px-3.5 py-2 text-[11px] uppercase tracking-[0.14em] transition cursor-pointer ${
-                activeTab === 'products'
-                  ? 'bg-[#1C1917] text-[#FAF7F2]'
-                  : 'text-[#78716C] hover:text-[#1C1917]'
-              }`}
-            >
-              Catalogue ({products.length})
-            </button>
-            <button
-              onClick={() => {
-                setNowMs(Date.now());
-                setActiveTab('analytics');
-              }}
-              className={`inline-flex items-center gap-1.5 px-3.5 py-2 text-[11px] uppercase tracking-[0.14em] transition cursor-pointer ${
-                activeTab === 'analytics'
-                  ? 'bg-[#1C1917] text-[#FAF7F2]'
-                  : 'text-[#78716C] hover:text-[#1C1917]'
-              }`}
-            >
-              <TrendingUp className="w-3.5 h-3.5 text-[#C5A059]" />
-              <span>Profit &amp; Analytics</span>
-            </button>
-            <button
-              onClick={() => setActiveTab('links')}
-              className={`px-3.5 py-2 text-[11px] uppercase tracking-[0.14em] transition cursor-pointer ${
-                activeTab === 'links'
-                  ? 'bg-[#1C1917] text-[#FAF7F2]'
-                  : 'text-[#78716C] hover:text-[#1C1917]'
-              }`}
-            >
-              Chat &amp; URLs ({storeLinks.length})
-            </button>
-            <button
-              onClick={() => setActiveTab('homepage')}
-              className={`inline-flex items-center gap-1.5 px-3.5 py-2 text-[11px] uppercase tracking-[0.14em] transition cursor-pointer ${
-                activeTab === 'homepage'
-                  ? 'bg-[#1C1917] text-[#FAF7F2]'
-                  : 'text-[#78716C] hover:text-[#1C1917]'
-              }`}
-            >
-              <Sparkles className="w-3.5 h-3.5 text-[#C5A059]" />
-              <span>Homepage &amp; Hero</span>
-            </button>
-          </div>
+            <ExternalLink className="w-3.5 h-3.5 text-[#9A7B3E]" />
+            <span>Storefront ↗</span>
+          </Link>
 
           <button
             onClick={handleLogout}
@@ -1010,6 +912,163 @@ export function AdminFeature() {
           </button>
         </div>
       </div>
+
+      {/* Primary System Switcher (Store Management vs Business Operations) */}
+      <div className="flex items-center gap-2 border-b border-[#E7E0D6] mb-8 pb-3 overflow-x-auto scrollbar-none">
+        <button
+          type="button"
+          onClick={() => setAdminSystem('store')}
+          className={`inline-flex items-center gap-2 px-5 py-2.5 text-xs font-semibold uppercase tracking-[0.14em] transition cursor-pointer ${
+            adminSystem === 'store'
+              ? 'bg-[#1C1917] text-[#FAF7F2] shadow-xs'
+              : 'bg-white border border-[#E7E0D6] text-[#78716C] hover:border-[#1C1917] hover:text-[#1C1917]'
+          }`}
+        >
+          <Store className="w-4 h-4 text-[#C5A059]" />
+          <span>Store Management</span>
+          <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-stone-700 text-stone-200">
+            {orders.length}
+          </span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setAdminSystem('operations')}
+          className={`inline-flex items-center gap-2 px-5 py-2.5 text-xs font-semibold uppercase tracking-[0.14em] transition cursor-pointer ${
+            adminSystem === 'operations'
+              ? 'bg-[#1C1917] text-[#FAF7F2] shadow-xs'
+              : 'bg-white border border-[#E7E0D6] text-[#78716C] hover:border-[#1C1917] hover:text-[#1C1917]'
+          }`}
+        >
+          <Briefcase className="w-4 h-4 text-[#C5A059]" />
+          <span>Business Operations (Non-Store)</span>
+        </button>
+      </div>
+
+      {/* Non-Store System */}
+      {adminSystem === 'operations' && <AdminOperationsTab />}
+
+      {/* Store System */}
+      {adminSystem === 'store' && (
+        <>
+          {/* Action Controls & Store Sub-Tab Switch */}
+          <div className="flex flex-wrap items-center justify-between gap-3 mb-6 bg-white border border-[#E7E0D6] p-3 sm:p-4">
+            <div className="flex flex-wrap items-center gap-2">
+              <input
+                ref={csvFileInputRef}
+                type="file"
+                accept=".csv,text/csv"
+                onChange={handleImportCsvFile}
+                className="hidden"
+              />
+
+              <button
+                onClick={openAddModal}
+                className="inline-flex items-center gap-2 boutique-btn-primary px-3.5 py-2 cursor-pointer text-xs"
+              >
+                <Plus className="w-3.5 h-3.5" />
+                <span>Add New Piece</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={openManualOrderModal}
+                className="inline-flex items-center gap-2 border border-emerald-600 bg-emerald-700 text-white px-3.5 py-2 text-xs font-semibold uppercase tracking-wider hover:bg-emerald-800 transition cursor-pointer"
+                title="Create an order from WhatsApp or Facebook Messenger and automatically deduct stock"
+              >
+                <Plus className="w-3.5 h-3.5" />
+                <span>Manual Order (WA/FB)</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => csvFileInputRef.current?.click()}
+                className="inline-flex items-center gap-1.5 boutique-btn-outline px-3.5 py-2 cursor-pointer text-xs"
+                title="Import CSV — only changed rows update, everything else stays untouched"
+              >
+                <Upload className="w-3.5 h-3.5 text-[#9A7B3E]" />
+                <span>Import CSV</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => handleExportCsv(false)}
+                className="inline-flex items-center gap-1.5 boutique-btn-outline px-3.5 py-2 cursor-pointer text-xs"
+                title="Export full product catalogue to CSV"
+              >
+                <Download className="w-3.5 h-3.5 text-[#9A7B3E]" />
+                <span>Export CSV</span>
+              </button>
+
+              <button
+                onClick={handlePushToDatabase}
+                className="inline-flex items-center gap-1.5 boutique-btn-outline px-3.5 py-2 cursor-pointer text-xs"
+                title="Push local catalogue to Supabase PostgreSQL"
+              >
+                <Database className="w-3.5 h-3.5 text-[#9A7B3E]" />
+                <span>Sync to DB</span>
+              </button>
+            </div>
+
+            {/* Store Sub-Tabs */}
+            <div className="flex flex-wrap border border-[#E7E0D6] bg-stone-50 p-1 text-xs font-semibold">
+              <button
+                onClick={() => setActiveTab('orders')}
+                className={`px-3.5 py-1.5 text-[11px] uppercase tracking-[0.12em] transition cursor-pointer ${
+                  activeTab === 'orders'
+                    ? 'bg-[#1C1917] text-[#FAF7F2]'
+                    : 'text-[#78716C] hover:text-[#1C1917]'
+                }`}
+              >
+                Orders &amp; bKash ({orders.length})
+              </button>
+              <button
+                onClick={() => setActiveTab('products')}
+                className={`px-3.5 py-1.5 text-[11px] uppercase tracking-[0.12em] transition cursor-pointer ${
+                  activeTab === 'products'
+                    ? 'bg-[#1C1917] text-[#FAF7F2]'
+                    : 'text-[#78716C] hover:text-[#1C1917]'
+                }`}
+              >
+                Catalogue ({products.length})
+              </button>
+              <button
+                onClick={() => {
+                  setNowMs(Date.now());
+                  setActiveTab('analytics');
+                }}
+                className={`inline-flex items-center gap-1.5 px-3.5 py-1.5 text-[11px] uppercase tracking-[0.12em] transition cursor-pointer ${
+                  activeTab === 'analytics'
+                    ? 'bg-[#1C1917] text-[#FAF7F2]'
+                    : 'text-[#78716C] hover:text-[#1C1917]'
+                }`}
+              >
+                <TrendingUp className="w-3.5 h-3.5 text-[#C5A059]" />
+                <span>Profit &amp; Analytics</span>
+              </button>
+              <button
+                onClick={() => setActiveTab('links')}
+                className={`px-3.5 py-1.5 text-[11px] uppercase tracking-[0.12em] transition cursor-pointer ${
+                  activeTab === 'links'
+                    ? 'bg-[#1C1917] text-[#FAF7F2]'
+                    : 'text-[#78716C] hover:text-[#1C1917]'
+                }`}
+              >
+                Chat &amp; URLs ({storeLinks.length})
+              </button>
+              <button
+                onClick={() => setActiveTab('homepage')}
+                className={`inline-flex items-center gap-1.5 px-3.5 py-1.5 text-[11px] uppercase tracking-[0.12em] transition cursor-pointer ${
+                  activeTab === 'homepage'
+                    ? 'bg-[#1C1917] text-[#FAF7F2]'
+                    : 'text-[#78716C] hover:text-[#1C1917]'
+                }`}
+              >
+                <Sparkles className="w-3.5 h-3.5 text-[#C5A059]" />
+                <span>Homepage &amp; Hero</span>
+              </button>
+            </div>
+          </div>
 
       {/* Status / Sync Toast */}
       {syncMessage && (
@@ -1149,6 +1208,7 @@ export function AdminFeature() {
           onPaymentStatusChange={handlePaymentStatusChange}
           onOrderStatusChange={handleStatusChange}
           onUpdateOrderTracking={handleUpdateOrderTracking}
+          onZoomImage={setZoomedImage}
         />
       )}
 
@@ -1428,14 +1488,28 @@ export function AdminFeature() {
                         <tr key={p.id} className="hover:bg-[#FAF7F2]/60">
                           <td className="py-3 px-4">
                             <div className="flex items-center gap-3">
-                              <div className="relative h-11 w-9 flex-shrink-0 overflow-hidden bg-[#F3EDE4] border border-[#E7E0D6]">
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  setZoomedImage({
+                                    src: p.imageUrl,
+                                    title: p.name,
+                                    subtitle: `${p.categoryName} • ৳${p.priceBDT}`,
+                                  })
+                                }
+                                className="relative h-12 w-10 flex-shrink-0 overflow-hidden bg-[#F3EDE4] border border-[#E7E0D6] group cursor-zoom-in hover:border-[#9A7B3E] transition shadow-2xs"
+                                title="Click to view full zoomed image"
+                              >
                                 <Image
                                   src={p.imageUrl}
                                   alt={p.name}
                                   fill
-                                  className="object-cover"
+                                  className="object-cover group-hover:scale-110 transition duration-300"
                                 />
-                              </div>
+                                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 flex items-center justify-center opacity-0 group-hover:opacity-100 transition">
+                                  <ZoomIn className="w-3.5 h-3.5 text-white drop-shadow" />
+                                </div>
+                              </button>
                               <div>
                                 <div className="flex items-center gap-1.5">
                                   <button
@@ -1646,6 +1720,8 @@ export function AdminFeature() {
       {activeTab === 'homepage' && (
         <AdminHomepageTab products={products} onNotify={setSyncMessage} />
       )}
+    </>
+  )}
 
       {/* Add / Edit Product Modal */}
       <AdminProductModal
@@ -1656,6 +1732,7 @@ export function AdminFeature() {
         onClose={() => setIsModalOpen(false)}
         onChangeForm={setForm}
         onSaveProduct={handleSaveProduct}
+        onZoomImage={setZoomedImage}
       />
 
       {/* Create Manual Order Modal (WhatsApp / Facebook Messenger) */}
@@ -1687,6 +1764,13 @@ export function AdminFeature() {
         onAddManualItem={handleAddManualItem}
         onRemoveManualItem={handleRemoveManualItem}
         onSubmitManualOrder={handleSubmitManualOrder}
+      />
+
+      {/* Full Image Zoom Modal */}
+      <AdminImageZoomModal
+        isOpen={Boolean(zoomedImage)}
+        image={zoomedImage}
+        onClose={() => setZoomedImage(null)}
       />
     </div>
   );

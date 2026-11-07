@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import Image from 'next/image';
 import { ProductType } from '@/core/models/product-type.model';
 import { X } from 'lucide-react';
 
@@ -26,6 +27,7 @@ interface AdminProductModalProps {
   onClose: () => void;
   onChangeForm: (form: ProductFormState) => void;
   onSaveProduct: (e: React.FormEvent) => void;
+  onZoomImage?: (image: { src: string; title: string; subtitle?: string }) => void;
 }
 
 export function AdminProductModal({
@@ -36,6 +38,7 @@ export function AdminProductModal({
   onClose,
   onChangeForm,
   onSaveProduct,
+  onZoomImage,
 }: AdminProductModalProps) {
   if (!isOpen) return null;
 
@@ -152,14 +155,37 @@ export function AdminProductModal({
             <label className="block text-[11px] font-semibold uppercase tracking-wider text-[#1C1917] mb-1">
               Image Path / URL *
             </label>
-            <input
-              type="text"
-              required
-              value={form.imageUrl}
-              onChange={(e) => onChangeForm({ ...form, imageUrl: e.target.value })}
-              placeholder="/products/earrings/Wreath%20Flowers.webp"
-              className="w-full border border-[#D6CFC5] px-3 py-2 text-[#1C1917] focus:outline-none focus:border-[#C5A059]"
-            />
+            <div className="flex gap-2.5">
+              <input
+                type="text"
+                required
+                value={form.imageUrl}
+                onChange={(e) => onChangeForm({ ...form, imageUrl: e.target.value })}
+                placeholder="/products/earrings/Wreath%20Flowers.webp"
+                className="flex-1 border border-[#D6CFC5] px-3 py-2 text-[#1C1917] focus:outline-none focus:border-[#C5A059]"
+              />
+              {form.imageUrl && (
+                <button
+                  type="button"
+                  onClick={() =>
+                    onZoomImage?.({
+                      src: form.imageUrl,
+                      title: form.name || 'Product Image Preview',
+                      subtitle: `${form.category} • ৳${form.priceBDT}`,
+                    })
+                  }
+                  className="relative h-10 w-9 flex-shrink-0 border border-[#E7E0D6] bg-stone-50 overflow-hidden cursor-zoom-in hover:border-[#9A7B3E] transition rounded-xs"
+                  title="Click to zoom image preview"
+                >
+                  <Image
+                    src={form.imageUrl}
+                    alt={form.name || 'Preview'}
+                    fill
+                    className="object-cover"
+                  />
+                </button>
+              )}
+            </div>
           </div>
 
           <div>

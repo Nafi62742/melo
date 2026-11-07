@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useMemo } from 'react';
+import Image from 'next/image';
 import { Order, OrderStatus, PaymentStatus } from '@/core/models/order.model';
 import { CustomerProfile } from '@/core/models/customer.model';
 import { formatBDT } from '@/core/utils/currency.util';
@@ -35,6 +36,7 @@ interface AdminOrdersTabProps {
       status?: OrderStatus;
     }
   ) => void;
+  onZoomImage?: (image: { src: string; title: string; subtitle?: string }) => void;
 }
 
 export function AdminOrdersTab({
@@ -45,6 +47,7 @@ export function AdminOrdersTab({
   onPaymentStatusChange,
   onOrderStatusChange,
   onUpdateOrderTracking,
+  onZoomImage,
 }: AdminOrdersTabProps) {
   const [viewMode, setViewMode] = useState<'orders' | 'customers'>('orders');
   const [statusFilter, setStatusFilter] = useState<string>('all');
@@ -369,11 +372,34 @@ export function AdminOrdersTab({
 
                         {/* 3. Items */}
                         <td className="py-3.5 px-4">
-                          <div className="text-[11px] text-[#1C1917] font-medium space-y-1 max-w-xs">
+                          <div className="text-[11px] text-[#1C1917] font-medium space-y-1.5 max-w-xs">
                             {o.items.map((item, idx) => (
-                              <div key={idx} className="truncate">
-                                <span className="font-bold text-[#9A7B3E]">{item.quantity}×</span>{' '}
-                                {item.product.name}
+                              <div key={idx} className="flex items-center gap-2 truncate">
+                                {item.product.imageUrl && (
+                                  <button
+                                    type="button"
+                                    onClick={() =>
+                                      onZoomImage?.({
+                                        src: item.product.imageUrl,
+                                        title: item.product.name,
+                                        subtitle: `${item.product.categoryName} • ৳${item.product.priceBDT}`,
+                                      })
+                                    }
+                                    className="relative h-7 w-6 rounded-xs overflow-hidden border border-[#E7E0D6] flex-shrink-0 cursor-zoom-in hover:border-[#9A7B3E] transition"
+                                    title="Click to zoom image"
+                                  >
+                                    <Image
+                                      src={item.product.imageUrl}
+                                      alt={item.product.name}
+                                      fill
+                                      className="object-cover"
+                                    />
+                                  </button>
+                                )}
+                                <span className="truncate">
+                                  <span className="font-bold text-[#9A7B3E]">{item.quantity}×</span>{' '}
+                                  {item.product.name}
+                                </span>
                               </div>
                             ))}
                           </div>
