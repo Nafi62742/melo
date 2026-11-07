@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
 import { adminService } from '@/core/services/admin.service';
 import { productService } from '@/core/services/product.service';
 import { productTypeService } from '@/core/services/product-type.service';
@@ -24,41 +23,35 @@ import {
 import { StoreLink, StoreLinkCategory } from '@/core/models/store-link.model';
 import { slugify } from '@/core/utils/slug.util';
 import { exportProductsToCsv, mergeProductsFromCsv } from '@/core/utils/csv-products.util';
-import { AdminOrdersTab } from './components/admin-orders-tab.component';
-import { AdminAnalyticsTab } from './components/admin-analytics-tab.component';
-import { AdminLinksTab } from './components/admin-links-tab.component';
-import { AdminHomepageTab } from './components/admin-homepage-tab.component';
-import { AdminOperationsTab } from './components/admin-operations-tab.component';
+
+// Organized Admin Sub-Modules
+import { AdminLogin } from './components/admin-login';
+import { AdminMetrics } from './components/admin-metrics';
+import { AdminProductsTab, StockFilterType } from './tabs/products-tab';
+import { AdminProductTypesTab } from './tabs/product-types-tab';
+import { AdminOrdersTab } from './tabs/orders-tab';
+import { AdminAnalyticsTab } from './tabs/analytics-tab';
+import { AdminLinksTab } from './tabs/links-tab';
+import { AdminHomepageTab } from './tabs/homepage-tab';
+import { AdminOperationsTab } from './tabs/operations-tab';
+import { AdminProductModal, ProductFormState } from './modals/product-modal';
+import { AdminManualOrderModal } from './modals/manual-order-modal';
+import { AdminImageZoomModal, AdminZoomImage } from './modals/image-zoom-modal';
+import { AdminDeleteProductModal } from './modals/delete-product-modal';
+
 import {
-  AdminImageZoomModal,
-  AdminZoomImage,
-} from './components/admin-image-zoom-modal.component';
-import { AdminProductModal, ProductFormState } from './components/admin-product-modal.component';
-import { AdminManualOrderModal } from './components/admin-manual-order-modal.component';
-import {
-  Package,
-  ShoppingBag,
-  Layers,
-  ArrowLeft,
   CheckCircle,
   Plus,
-  Minus,
-  Edit3,
-  Trash2,
   Database,
   X,
-  Lock,
   LogOut,
-  Smartphone,
   Upload,
   Download,
   TrendingUp,
-  Star,
   Sparkles,
   Store,
   Briefcase,
   ExternalLink,
-  ZoomIn,
 } from 'lucide-react';
 
 const INITIAL_FORM: ProductFormState = {
@@ -143,9 +136,7 @@ export function AdminFeature() {
 
   // Catalogue Filter State
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
-  const [stockFilter, setStockFilter] = useState<
-    'all' | 'in_stock' | 'low_stock' | 'sold_out' | 'featured'
-  >('all');
+  const [stockFilter, setStockFilter] = useState<StockFilterType>('all');
   const [searchQuery, setSearchQuery] = useState('');
 
   const totalStock = products.reduce((acc, p) => acc + p.stock, 0);
@@ -511,6 +502,14 @@ export function AdminFeature() {
     setProductToDelete(product);
   };
 
+  const handleConfirmDeleteProduct = (product: Product) => {
+    productService.deleteProduct(product.id);
+    refreshProducts();
+    setSyncMessage(`Deleted "${product.name}" from catalogue.`);
+    setTimeout(() => setSyncMessage(null), 3000);
+    setProductToDelete(null);
+  };
+
   const handleToggleFeatured = (product: Product) => {
     productService.toggleProductFeatured(product.id);
     refreshProducts();
@@ -564,7 +563,11 @@ export function AdminFeature() {
     }
 
     const finalImages = Array.from(
-      new Set([form.imageUrl, ...(form.images || [])].filter((url): url is string => Boolean(url && url.trim())))
+      new Set(
+        [form.imageUrl, ...(form.images || [])].filter((url): url is string =>
+          Boolean(url && url.trim())
+        )
+      )
     );
 
     if (editingId) {
@@ -664,7 +667,7 @@ export function AdminFeature() {
         diff.skippedTypes.length > 0
           ? ` (Skipped unknown product type(s): ${diff.skippedTypes.join(
               ', '
-            )} — add them in Step 1 Product Types first!)`
+            )} — add them in Product Types tab first!)`
           : '';
 
       setSyncMessage(
@@ -737,78 +740,15 @@ export function AdminFeature() {
   // Protected Login Gate when not authenticated
   if (!isAuthenticated) {
     return (
-      <div className="mx-auto max-w-md px-4 py-16 md:py-24">
-        <div className="border border-[#C5A059] bg-white p-8 shadow-xl rounded-2xl">
-          <div className="flex h-12 w-12 items-center justify-center border border-[#E6D5B8] bg-[#FAF7F2] text-[#9A7B3E] mb-5 rounded-xl">
-            <Lock className="w-5 h-5" />
-          </div>
-
-          <span className="text-[10px] font-semibold uppercase tracking-[0.22em] text-[#9A7B3E] block">
-            Protected Area
-          </span>
-          <h1 className="mt-1 font-serif-display text-3xl font-medium text-[#1C1917]">
-            MELO Admin Sign In
-          </h1>
-          <p className="mt-1.5 text-xs text-[#78716C] leading-relaxed">
-            Sign in with your administrator credentials to verify bKash TrxIDs, manage orders, and
-            update jewellery inventory.
-          </p>
-
-          {loginError && (
-            <div className="mt-4 border border-red-300 bg-red-50 px-3.5 py-2.5 text-xs font-medium text-red-800 rounded-lg">
-              {loginError}
-            </div>
-          )}
-
-          <form onSubmit={handleLogin} className="mt-6 space-y-4 text-xs">
-            <div>
-              <label className="block text-[11px] font-semibold uppercase tracking-wider text-[#1C1917] mb-1.5">
-                Admin Email / ID
-              </label>
-              <input
-                type="email"
-                required
-                placeholder="Enter admin email"
-                value={loginId}
-                onChange={(e) => setLoginId(e.target.value)}
-                className="w-full border border-[#D6CFC5] bg-[#FAF7F2]/50 px-3.5 py-2.5 text-xs text-[#1C1917] focus:bg-white focus:outline-none focus:border-[#C5A059] rounded-lg"
-              />
-            </div>
-
-            <div>
-              <label className="block text-[11px] font-semibold uppercase tracking-wider text-[#1C1917] mb-1.5">
-                Password
-              </label>
-              <input
-                type="password"
-                required
-                placeholder="••••••••••••"
-                value={loginPass}
-                onChange={(e) => setLoginPass(e.target.value)}
-                className="w-full border border-[#D6CFC5] bg-[#FAF7F2]/50 px-3.5 py-2.5 text-xs text-[#1C1917] focus:bg-white focus:outline-none focus:border-[#C5A059] rounded-lg"
-              />
-            </div>
-
-            <button
-              type="submit"
-              disabled={isCheckingAuth}
-              className="w-full boutique-btn-primary py-3.5 mt-2 cursor-pointer disabled:opacity-50 rounded-lg shadow-sm"
-            >
-              {isCheckingAuth ? 'Verifying Credentials...' : 'Sign In to Admin Panel'}
-            </button>
-          </form>
-
-          <div className="mt-6 pt-5 border-t border-[#E7E0D6] text-center">
-            <Link
-              href="/"
-              className="inline-flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-[0.16em] text-[#78716C] hover:text-[#1C1917] rounded-lg px-3 py-1.5 transition"
-            >
-              <ArrowLeft className="w-3.5 h-3.5" />
-              <span>Return to Storefront</span>
-            </Link>
-          </div>
-        </div>
-      </div>
+      <AdminLogin
+        loginId={loginId}
+        onChangeLoginId={setLoginId}
+        loginPass={loginPass}
+        onChangeLoginPass={setLoginPass}
+        loginError={loginError}
+        isCheckingAuth={isCheckingAuth}
+        onSubmitLogin={handleLogin}
+      />
     );
   }
 
@@ -1043,628 +983,144 @@ export function AdminFeature() {
             </div>
           </div>
 
-      {/* Status / Sync Toast */}
-      {syncMessage && (
-        <div className="mt-4 flex items-center justify-between border border-[#C5A059] bg-white px-4 py-3 text-xs font-medium text-[#1C1917] rounded-xl shadow-xs">
-          <div className="flex items-center gap-2">
-            <CheckCircle className="w-4 h-4 text-[#9A7B3E]" />
-            <span>{syncMessage}</span>
-          </div>
-          <button
-            onClick={() => setSyncMessage(null)}
-            className="text-[#78716C] hover:text-[#1C1917] p-1 rounded-full hover:bg-stone-100 transition cursor-pointer"
-          >
-            <X className="w-4 h-4" />
-          </button>
-        </div>
-      )}
-
-      {/* Store bKash Number Configuration Bar */}
-      <form
-        onSubmit={handleSaveBkashNumber}
-        className="mt-6 border border-[#E7E0D6] bg-white p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 rounded-xl shadow-xs"
-      >
-        <div className="flex items-center gap-3">
-          <div className="flex h-9 w-9 items-center justify-center bg-pink-50 border border-pink-200 text-pink-700 rounded-lg">
-            <Smartphone className="w-4 h-4" />
-          </div>
-          <div>
-            <div className="text-xs font-semibold text-[#1C1917]">
-              Manual bKash Collection Number (Shown at Checkout)
+          {/* Status / Sync Toast */}
+          {syncMessage && (
+            <div className="mt-4 flex items-center justify-between border border-[#C5A059] bg-white px-4 py-3 text-xs font-medium text-[#1C1917] rounded-xl shadow-xs">
+              <div className="flex items-center gap-2">
+                <CheckCircle className="w-4 h-4 text-[#9A7B3E]" />
+                <span>{syncMessage}</span>
+              </div>
+              <button
+                onClick={() => setSyncMessage(null)}
+                className="text-[#78716C] hover:text-[#1C1917] p-1 rounded-full hover:bg-stone-100 transition cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
             </div>
-            <div className="text-[11px] text-[#78716C]">
-              Customers send bKash payments to this number and submit their TrxID for your manual
-              check below.
-            </div>
-          </div>
-        </div>
+          )}
 
-        <div className="flex items-center gap-2">
-          <input
-            type="text"
-            value={bkashNumber}
-            onChange={(e) => setBkashNumber(e.target.value)}
-            placeholder="01700-000000"
-            className="border border-[#D6CFC5] bg-[#FAF7F2]/50 px-3 py-2 text-xs font-mono font-semibold text-[#1C1917] focus:bg-white focus:outline-none focus:border-pink-600 w-44 rounded-lg"
+          {/* Store bKash Number Configuration Bar & Metrics Row */}
+          <AdminMetrics
+            bkashNumber={bkashNumber}
+            onChangeBkashNumber={setBkashNumber}
+            onSaveBkashNumber={handleSaveBkashNumber}
+            products={products}
+            orders={orders}
+            totalStock={totalStock}
+            soldOutCount={soldOutCount}
+            lowStockCount={lowStockCount}
+            isSupabaseConnected={isSupabaseConnected}
           />
-          <button
-            type="submit"
-            className="bg-pink-700 text-white px-4 py-2 text-[11px] font-semibold uppercase tracking-wider hover:bg-pink-800 transition cursor-pointer rounded-lg shadow-2xs"
-          >
-            Update Number
-          </button>
-        </div>
-      </form>
 
-      {/* Metrics Row */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 my-6">
-        <div className="border border-[#E7E0D6] bg-white p-5 rounded-xl shadow-xs">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#78716C]">
-              Total Products
-            </span>
-            <Package className="w-4 h-4 text-[#9A7B3E]" />
-          </div>
-          <div className="font-serif-display text-3xl font-semibold text-[#1C1917]">
-            {products.length}
-          </div>
-          <div className="text-[11px] text-[#78716C] mt-1">
-            {products.filter((p) => p.category === 'earrings').length} earrings,{' '}
-            {products.filter((p) => p.category === 'rings').length} rings,{' '}
-            {products.filter((p) => p.category === 'bracelets').length} bracelets
-          </div>
-        </div>
-
-        <div className="border border-[#E7E0D6] bg-white p-5 rounded-xl shadow-xs">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#78716C]">
-              Total Inventory
-            </span>
-            <Layers className="w-4 h-4 text-[#9A7B3E]" />
-          </div>
-          <div className="font-serif-display text-3xl font-semibold text-[#1C1917]">
-            {totalStock} Units
-          </div>
-          <div className="text-[11px] text-[#78716C] mt-1">
-            {soldOutCount} sold out · {lowStockCount} low stock (≤2)
-          </div>
-        </div>
-
-        <div className="border border-[#E7E0D6] bg-white p-5 rounded-xl shadow-xs">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#78716C]">
-              Pending bKash Checks
-            </span>
-            <ShoppingBag className="w-4 h-4 text-pink-600" />
-          </div>
-          <div className="font-serif-display text-3xl font-semibold text-[#1C1917]">
-            {
-              orders.filter((o) => o.paymentMethod === 'bkash' && o.paymentStatus === 'pending')
-                .length
-            }
-          </div>
-          <div className="text-[11px] text-[#78716C] mt-1">
-            {orders.length} total customer orders
-          </div>
-        </div>
-
-        <div className="border border-[#E7E0D6] bg-white p-5 rounded-xl shadow-xs">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#78716C]">
-              Database Connection
-            </span>
-            <CheckCircle
-              className={`w-4 h-4 ${isSupabaseConnected ? 'text-emerald-600' : 'text-[#C5A059]'}`}
+          {/* Tab: Products Catalogue & Live Inventory Editor */}
+          {activeTab === 'products' && (
+            <AdminProductsTab
+              products={products}
+              filteredProducts={filteredProducts}
+              productTypes={productTypes}
+              selectedCategory={selectedCategory}
+              onChangeSelectedCategory={setSelectedCategory}
+              stockFilter={stockFilter}
+              onChangeStockFilter={setStockFilter}
+              searchQuery={searchQuery}
+              onChangeSearchQuery={setSearchQuery}
+              lowStockCount={lowStockCount}
+              soldOutCount={soldOutCount}
+              onTriggerCsvImport={() => csvFileInputRef.current?.click()}
+              onExportCsv={handleExportCsv}
+              getUnitLandedCost={getUnitLandedCost}
+              getUnitMinSellPrice={getUnitMinSellPrice}
+              getUnitNetProfit={getUnitNetProfit}
+              onZoomImage={setZoomedImage}
+              onToggleFeatured={handleToggleFeatured}
+              onStockDelta={handleStockDelta}
+              onMarkOneSold={handleMarkOneSold}
+              onMarkSoldOut={handleMarkSoldOut}
+              onQuickRestock={handleQuickRestock}
+              onOpenEditModal={openEditModal}
+              onDeleteProduct={handleDeleteProduct}
             />
-          </div>
-          <div className="font-serif-display text-xl font-semibold text-[#1C1917]">
-            {isSupabaseConnected ? 'Supabase Cloud Live' : 'Local + Supabase Ready'}
-          </div>
-          <div className="text-[11px] text-[#78716C] mt-1">
-            {isSupabaseConnected
-              ? 'Connected to PostgreSQL'
-              : 'Add keys in .env.local for cloud sync'}
-          </div>
-        </div>
-      </div>
+          )}
 
-      {/* Tab 1: Orders & Manual bKash TrxID Verification */}
-      {activeTab === 'orders' && (
-        <AdminOrdersTab
-          orders={orders}
-          customers={customers}
-          onOpenManualOrderModal={openManualOrderModal}
-          onRefreshOrders={() => {
-            void orderService.syncFromDatabase().then((o) => setOrders([...o]));
-            void customerService.getAllCustomers().then((c) => setCustomers(c));
-          }}
-          onPaymentStatusChange={handlePaymentStatusChange}
-          onOrderStatusChange={handleStatusChange}
-          onUpdateOrderTracking={handleUpdateOrderTracking}
-          onZoomImage={setZoomedImage}
-        />
+          {/* Tab: Manage Product Types */}
+          {activeTab === 'types' && (
+            <AdminProductTypesTab
+              products={products}
+              productTypes={productTypes}
+              newTypeName={newTypeName}
+              onChangeNewTypeName={setNewTypeName}
+              newTypeDesc={newTypeDesc}
+              onChangeNewTypeDesc={setNewTypeDesc}
+              onAddProductType={handleAddProductType}
+              onDeleteProductType={handleDeleteProductType}
+            />
+          )}
+
+          {/* Tab: Orders & Manual bKash TrxID Verification */}
+          {activeTab === 'orders' && (
+            <AdminOrdersTab
+              orders={orders}
+              customers={customers}
+              onOpenManualOrderModal={openManualOrderModal}
+              onRefreshOrders={() => {
+                void orderService.syncFromDatabase().then((o) => setOrders([...o]));
+                void customerService.getAllCustomers().then((c) => setCustomers(c));
+              }}
+              onPaymentStatusChange={handlePaymentStatusChange}
+              onOrderStatusChange={handleStatusChange}
+              onUpdateOrderTracking={handleUpdateOrderTracking}
+              onZoomImage={setZoomedImage}
+            />
+          )}
+
+          {/* Tab: Profit, Cost & Revenue Analytics */}
+          {activeTab === 'analytics' && (
+            <AdminAnalyticsTab
+              products={products}
+              productTypes={productTypes}
+              shippingCostPerPiece={shippingCostPerPiece}
+              onChangeShippingCost={setShippingCostPerPiece}
+              analyticsTimeframe={analyticsTimeframe}
+              onChangeTimeframe={handleChangeTimeframe}
+              analyticsOrderScope={analyticsOrderScope}
+              onChangeOrderScope={setAnalyticsOrderScope}
+              totalStock={totalStock}
+              totalInventoryBaseCost={totalInventoryBaseCost}
+              totalInventoryLandedCost={totalInventoryLandedCost}
+              totalExpectedRevenue={totalExpectedRevenue}
+              totalExpectedNetProfit={totalExpectedNetProfit}
+              expectedMarginPercent={expectedMarginPercent}
+              analyticsFilteredOrders={analyticsFilteredOrders}
+              realizedOrderStats={realizedOrderStats}
+              getUnitLandedCost={getUnitLandedCost}
+            />
+          )}
+
+          {/* Tab: Storefront Chat & Social Links */}
+          {activeTab === 'links' && (
+            <AdminLinksTab
+              storeLinks={storeLinks}
+              onChangeStoreLinks={setStoreLinks}
+              onUpdateStoreLink={handleUpdateStoreLink}
+              onDeleteStoreLink={handleDeleteStoreLink}
+              newLinkKey={newLinkKey}
+              onChangeNewLinkKey={setNewLinkKey}
+              newLinkLabel={newLinkLabel}
+              onChangeNewLinkLabel={setNewLinkLabel}
+              newLinkUrl={newLinkUrl}
+              onChangeNewLinkUrl={setNewLinkUrl}
+              newLinkCategory={newLinkCategory}
+              onChangeNewLinkCategory={setNewLinkCategory}
+              onAddNewStoreLink={handleAddNewStoreLink}
+            />
+          )}
+
+          {/* Tab: Homepage & Hero Customizer */}
+          {activeTab === 'homepage' && (
+            <AdminHomepageTab products={products} onNotify={setSyncMessage} />
+          )}
+        </>
       )}
-
-      {/* Tab 2: Profit, Cost & Revenue Analytics */}
-      {activeTab === 'analytics' && (
-        <AdminAnalyticsTab
-          products={products}
-          productTypes={productTypes}
-          shippingCostPerPiece={shippingCostPerPiece}
-          onChangeShippingCost={setShippingCostPerPiece}
-          analyticsTimeframe={analyticsTimeframe}
-          onChangeTimeframe={handleChangeTimeframe}
-          analyticsOrderScope={analyticsOrderScope}
-          onChangeOrderScope={setAnalyticsOrderScope}
-          totalStock={totalStock}
-          totalInventoryBaseCost={totalInventoryBaseCost}
-          totalInventoryLandedCost={totalInventoryLandedCost}
-          totalExpectedRevenue={totalExpectedRevenue}
-          totalExpectedNetProfit={totalExpectedNetProfit}
-          expectedMarginPercent={expectedMarginPercent}
-          analyticsFilteredOrders={analyticsFilteredOrders}
-          realizedOrderStats={realizedOrderStats}
-          getUnitLandedCost={getUnitLandedCost}
-        />
-      )}
-
-      {/* Tab: Manage Product Types */}
-      {activeTab === 'types' && (
-        <div className="space-y-6">
-          <div className="border border-[#C5A059] bg-white p-6 rounded-xl shadow-xs">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-4 border-b border-[#E7E0D6]">
-              <div>
-                <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[#9A7B3E] block">
-                  Product Types Directory (public.product_types)
-                </span>
-                <h2 className="font-serif-display text-2xl font-medium text-[#1C1917]">
-                  Manage Product Types
-                </h2>
-                <p className="text-xs text-[#78716C] mt-0.5">
-                  Before adding products of a new category (e.g. Necklaces, Anklets, Hair Clips),
-                  add the product type here first so it is registered in{' '}
-                  <code className="bg-[#FAF7F2] px-1.5 py-0.5 text-[#1C1917] rounded">
-                    public.product_types
-                  </code>
-                  .
-                </p>
-              </div>
-              <span className="text-xs font-semibold text-[#1C1917] bg-[#FAF7F2] border border-[#E7E0D6] px-3 py-1 rounded-full">
-                {productTypes.length} Active Types
-              </span>
-            </div>
-
-            {/* Existing Product Types List */}
-            <div className="flex flex-wrap items-center gap-2.5 my-5">
-              {productTypes.map((pt) => {
-                const count = products.filter((p) => p.category === pt.slug).length;
-                return (
-                  <div
-                    key={pt.slug}
-                    className="inline-flex items-center gap-2 border border-[#E7E0D6] bg-[#FAF7F2] px-3.5 py-2 text-xs rounded-lg shadow-2xs"
-                  >
-                    <span className="font-semibold text-[#1C1917]">{pt.name}</span>
-                    <span className="font-mono text-[10px] text-[#78716C]">({pt.slug})</span>
-                    <span className="bg-white border border-[#E6D5B8] px-2 py-0.5 text-[10px] font-semibold text-[#9A7B3E] rounded-md">
-                      {count} pcs
-                    </span>
-                    {count === 0 && (
-                      <button
-                        type="button"
-                        onClick={() => handleDeleteProductType(pt)}
-                        className="text-[#A8A29E] hover:text-red-600 ml-1 p-0.5 rounded-full hover:bg-red-50 cursor-pointer transition"
-                        title={`Remove unused type ${pt.name}`}
-                      >
-                        <X className="w-3.5 h-3.5" />
-                      </button>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-
-            {/* Add New Product Type Form */}
-            <form
-              onSubmit={handleAddProductType}
-              className="grid grid-cols-1 sm:grid-cols-12 gap-3 pt-4 border-t border-[#F3EDE4] text-xs"
-            >
-              <div className="sm:col-span-4">
-                <input
-                  type="text"
-                  required
-                  value={newTypeName}
-                  onChange={(e) => setNewTypeName(e.target.value)}
-                  placeholder="New Product Type Name (e.g. Necklaces)"
-                  className="w-full border border-[#D6CFC5] bg-[#FAF7F2]/50 px-3.5 py-2.5 text-[#1C1917] focus:bg-white focus:outline-none focus:border-[#C5A059] rounded-lg shadow-2xs"
-                />
-              </div>
-              <div className="sm:col-span-5">
-                <input
-                  type="text"
-                  value={newTypeDesc}
-                  onChange={(e) => setNewTypeDesc(e.target.value)}
-                  placeholder="Optional description (e.g. Light luxury chains and pendants)"
-                  className="w-full border border-[#D6CFC5] bg-[#FAF7F2]/50 px-3.5 py-2.5 text-[#1C1917] focus:bg-white focus:outline-none focus:border-[#C5A059] rounded-lg shadow-2xs"
-                />
-              </div>
-              <div className="sm:col-span-3">
-                <button
-                  type="submit"
-                  className="w-full boutique-btn-primary py-2.5 px-4 text-xs font-semibold cursor-pointer rounded-lg shadow-2xs"
-                >
-                  + Add Product Type
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* Tab: Products Catalogue & Live Inventory Editor */}
-      {activeTab === 'products' && (
-        <div className="space-y-6">
-          <div className="border border-[#E7E0D6] bg-white overflow-hidden rounded-xl shadow-xs">
-            <div className="px-6 py-4 border-b border-[#E7E0D6] flex flex-col gap-4">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                <div>
-                  <h2 className="text-xs font-semibold uppercase tracking-[0.2em] text-[#1C1917]">
-                    Product Catalogue &amp; Live Inventory Editor
-                  </h2>
-                  <p className="text-[11px] text-[#78716C] mt-0.5">
-                    Filter by category or stock state, use <strong>Import CSV</strong> (only changed
-                    rows update, the rest remain untouched), or click <strong>Sold 1 (-1)</strong> /{' '}
-                    <strong>Sold Out (0)</strong>.
-                  </p>
-                </div>
-                <div className="flex flex-wrap items-center gap-2">
-                  <button
-                    type="button"
-                    onClick={() => csvFileInputRef.current?.click()}
-                    className="inline-flex items-center gap-1.5 border border-[#C5A059] bg-[#FAF7F2] px-3 py-1.5 text-[11px] font-semibold uppercase tracking-wider text-[#1C1917] hover:bg-[#F3EDE4] transition cursor-pointer rounded-lg shadow-2xs"
-                    title="Import a CSV file — only modified or new items will update"
-                  >
-                    <Upload className="w-3.5 h-3.5 text-[#9A7B3E]" />
-                    <span>Import CSV (Diff Only)</span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleExportCsv(true)}
-                    className="inline-flex items-center gap-1.5 border border-[#E7E0D6] bg-white px-3 py-1.5 text-[11px] font-semibold uppercase tracking-wider text-[#1C1917] hover:border-[#C5A059] transition cursor-pointer rounded-lg shadow-2xs"
-                    title="Export currently shown products to CSV"
-                  >
-                    <Download className="w-3.5 h-3.5 text-[#9A7B3E]" />
-                    <span>
-                      Export {selectedCategory === 'all' ? 'All' : selectedCategory} CSV (
-                      {filteredProducts.length})
-                    </span>
-                  </button>
-                </div>
-              </div>
-
-              {/* Category, Stock Filter & Search Bar */}
-              <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 pt-2 border-t border-[#F3EDE4]">
-                <div className="flex flex-wrap items-center gap-1.5">
-                  <span className="text-[10px] font-semibold uppercase tracking-wider text-[#78716C] mr-1">
-                    Product Type:
-                  </span>
-                  <button
-                    type="button"
-                    onClick={() => setSelectedCategory('all')}
-                    className={`px-3 py-1.5 text-[11px] font-semibold uppercase tracking-wider border transition cursor-pointer rounded-lg ${
-                      selectedCategory === 'all'
-                        ? 'border-[#1C1917] bg-[#1C1917] text-[#FAF7F2] shadow-2xs'
-                        : 'border-[#E7E0D6] bg-[#FAF7F2]/60 text-[#78716C] hover:border-[#C5A059] hover:text-[#1C1917]'
-                    }`}
-                  >
-                    All ({products.length})
-                  </button>
-                  {productTypes.map((pt) => (
-                    <button
-                      key={pt.slug}
-                      type="button"
-                      onClick={() => setSelectedCategory(pt.slug)}
-                      className={`px-3 py-1.5 text-[11px] font-semibold uppercase tracking-wider border transition cursor-pointer rounded-lg ${
-                        selectedCategory === pt.slug
-                          ? 'border-[#1C1917] bg-[#1C1917] text-[#FAF7F2] shadow-2xs'
-                          : 'border-[#E7E0D6] bg-[#FAF7F2]/60 text-[#78716C] hover:border-[#C5A059] hover:text-[#1C1917]'
-                      }`}
-                    >
-                      {pt.name} ({products.filter((p) => p.category === pt.slug).length})
-                    </button>
-                  ))}
-                </div>
-
-                {/* Stock Status Filter & Search */}
-                <div className="flex flex-wrap items-center gap-2">
-                  <div className="flex flex-wrap items-center gap-1">
-                    {(
-                      [
-                        { key: 'all', label: 'All Stock' },
-                        {
-                          key: 'featured',
-                          label: `★ Featured (${products.filter((p) => p.isFeatured).length})`,
-                        },
-                        {
-                          key: 'in_stock',
-                          label: `In Stock (${products.filter((p) => p.stock > 0).length})`,
-                        },
-                        {
-                          key: 'low_stock',
-                          label: `Low ≤2 (${lowStockCount})`,
-                        },
-                        {
-                          key: 'sold_out',
-                          label: `Sold Out (${soldOutCount})`,
-                        },
-                      ] as const
-                    ).map((st) => (
-                      <button
-                        key={st.key}
-                        type="button"
-                        onClick={() => setStockFilter(st.key)}
-                        className={`px-2.5 py-1.5 text-[10px] font-semibold uppercase tracking-wider border transition cursor-pointer rounded-lg ${
-                          stockFilter === st.key
-                            ? 'border-[#C5A059] bg-[#FAF7F2] text-[#1C1917] shadow-2xs'
-                            : 'border-[#E7E0D6] bg-white text-[#78716C] hover:text-[#1C1917]'
-                        }`}
-                      >
-                        {st.label}
-                      </button>
-                    ))}
-                  </div>
-
-                  <input
-                    type="text"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    placeholder="Search piece name..."
-                    className="border border-[#D6CFC5] bg-[#FAF7F2]/50 px-3 py-1.5 text-xs text-[#1C1917] focus:bg-white focus:outline-none focus:border-[#C5A059] w-44 rounded-lg"
-                  />
-                </div>
-              </div>
-            </div>
-
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs text-[#78716C]">
-                <thead className="bg-[#FAF7F2] border-b border-[#E7E0D6] text-[#1C1917] uppercase font-semibold text-[10px] tracking-[0.16em]">
-                  <tr>
-                    <th className="py-3.5 px-4">Piece</th>
-                    <th className="py-3.5 px-4">Category</th>
-                    <th className="py-3.5 px-4">Per Piece Cost &amp; Landed</th>
-                    <th className="py-3.5 px-4">Selling / Revised Price &amp; Profit</th>
-                    <th className="py-3.5 px-4">Quick Stock &amp; Sold Controls</th>
-                    <th className="py-3.5 px-4">Status</th>
-                    <th className="py-3.5 px-4 text-right">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-[#F3EDE4]">
-                  {filteredProducts.length === 0 ? (
-                    <tr>
-                      <td colSpan={7} className="py-12 text-center text-xs text-[#78716C]">
-                        No products match your selected category or filter.
-                      </td>
-                    </tr>
-                  ) : (
-                    filteredProducts.map((p) => {
-                      const unitLanded = getUnitLandedCost(p);
-                      const unitMinSell = getUnitMinSellPrice(p);
-                      const unitProfit = getUnitNetProfit(p);
-
-                      return (
-                        <tr key={p.id} className="hover:bg-[#FAF7F2]/60">
-                          <td className="py-3 px-4">
-                            <div className="flex items-center gap-3">
-                              <button
-                                type="button"
-                                onClick={() =>
-                                  setZoomedImage({
-                                    src: p.imageUrl,
-                                    title: p.name,
-                                    subtitle: `${p.categoryName} • ৳${p.priceBDT}`,
-                                  })
-                                }
-                                className="relative h-12 w-10 flex-shrink-0 overflow-hidden bg-[#F3EDE4] border border-[#E7E0D6] rounded-lg group cursor-zoom-in hover:border-[#9A7B3E] transition shadow-2xs"
-                                title="Click to view full zoomed image"
-                              >
-                                <Image
-                                  src={p.imageUrl}
-                                  alt={p.name}
-                                  fill
-                                  unoptimized
-                                  className="object-cover group-hover:scale-110 transition duration-300"
-                                />
-                                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 flex items-center justify-center opacity-0 group-hover:opacity-100 transition">
-                                  <ZoomIn className="w-3.5 h-3.5 text-white drop-shadow" />
-                                </div>
-                              </button>
-                              <div>
-                                <div className="flex items-center gap-1.5">
-                                  <button
-                                    type="button"
-                                    onClick={() => handleToggleFeatured(p)}
-                                    title={
-                                      p.isFeatured
-                                        ? 'Featured on Storefront (Click to unfeature)'
-                                        : 'Click to feature on Storefront'
-                                    }
-                                    className="p-1 rounded-full hover:scale-125 hover:bg-amber-50 transition cursor-pointer"
-                                  >
-                                    <Star
-                                      className={`w-3.5 h-3.5 ${
-                                        p.isFeatured
-                                          ? 'fill-amber-400 text-amber-500'
-                                          : 'text-stone-300 hover:text-amber-400'
-                                      }`}
-                                    />
-                                  </button>
-                                  <span className="font-serif-display text-base font-medium text-[#1C1917]">
-                                    {p.name}
-                                  </span>
-                                </div>
-                                <div className="text-[10px] text-[#A8A29E] pl-5">{p.slug}</div>
-                              </div>
-                            </div>
-                          </td>
-                          <td className="py-3 px-4 capitalize font-medium text-[#1C1917]">
-                            {p.category}
-                          </td>
-                          <td className="py-3 px-4">
-                            <div className="font-mono font-bold text-sm text-[#1C1917]">
-                              ¥{p.costPriceCNY ?? 0}
-                            </div>
-                            <div className="text-[10px] text-[#78716C] mt-0.5">
-                              Landed: <strong className="text-[#1C1917]">৳{unitLanded}</strong> · Min: ৳{unitMinSell}
-                            </div>
-                          </td>
-                          <td className="py-3 px-4">
-                            <div className="flex items-baseline gap-1.5">
-                              <span className="font-mono font-bold text-sm text-[#1C1917]">
-                                ৳{p.priceBDT}
-                              </span>
-                              {p.originalPriceBDT && p.originalPriceBDT > p.priceBDT && (
-                                <span className="text-[10px] text-[#A8A29E] line-through font-mono">
-                                  ৳{p.originalPriceBDT}
-                                </span>
-                              )}
-                            </div>
-                            <div
-                              className={`text-[10px] font-semibold mt-0.5 ${
-                                unitProfit >= 0 ? 'text-emerald-700' : 'text-red-700'
-                              }`}
-                            >
-                              Net Profit:{' '}
-                              {unitProfit >= 0 ? `+৳${unitProfit}` : `-৳${Math.abs(unitProfit)}`} / pc
-                            </div>
-                          </td>
-                          <td className="py-3 px-4">
-                            <div className="flex flex-wrap items-center gap-2">
-                              {/* Stock Stepper */}
-                              <div className="inline-flex items-center border border-[#D6CFC5] bg-white rounded-lg shadow-2xs overflow-hidden">
-                                <button
-                                  type="button"
-                                  onClick={() => handleStockDelta(p.id, -1)}
-                                  disabled={p.stock <= 0}
-                                  className="px-2 py-1 text-[#78716C] hover:text-[#1C1917] hover:bg-stone-50 disabled:opacity-30 cursor-pointer transition"
-                                  aria-label="Decrease stock"
-                                >
-                                  <Minus className="w-3 h-3" />
-                                </button>
-                                <span className="w-8 text-center font-mono font-bold text-xs text-[#1C1917]">
-                                  {p.stock}
-                                </span>
-                                <button
-                                  type="button"
-                                  onClick={() => handleStockDelta(p.id, 1)}
-                                  className="px-2 py-1 text-[#78716C] hover:text-[#1C1917] hover:bg-stone-50 cursor-pointer transition"
-                                  aria-label="Increase stock"
-                                >
-                                  <Plus className="w-3 h-3" />
-                                </button>
-                              </div>
-
-                              {p.stock > 0 ? (
-                                <>
-                                  <button
-                                    type="button"
-                                    onClick={() => handleMarkOneSold(p)}
-                                    className="rounded-lg border border-amber-300 bg-amber-50 hover:bg-amber-100 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wider text-amber-900 transition cursor-pointer shadow-2xs"
-                                    title="Deduct 1 unit sold via WhatsApp/Messenger/Offline"
-                                  >
-                                    Sold 1 (-1)
-                                  </button>
-                                  <button
-                                    type="button"
-                                    onClick={() => handleMarkSoldOut(p)}
-                                    className="rounded-lg border border-red-300 bg-red-50 hover:bg-red-100 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wider text-red-800 transition cursor-pointer shadow-2xs"
-                                    title="Set stock to 0 (Out of Stock on storefront)"
-                                  >
-                                    Sold Out (0)
-                                  </button>
-                                </>
-                              ) : (
-                                <button
-                                  type="button"
-                                  onClick={() => handleQuickRestock(p, 3)}
-                                  className="rounded-lg border border-emerald-300 bg-emerald-50 hover:bg-emerald-100 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wider text-emerald-800 transition cursor-pointer shadow-2xs"
-                                  title="Quickly restock +3 units"
-                                >
-                                  + Restock 3
-                                </button>
-                              )}
-                            </div>
-                          </td>
-                          <td className="py-3 px-4">
-                            {p.stock > 2 ? (
-                              <span className="inline-flex items-center rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-emerald-800">
-                                In Stock ({p.stock})
-                              </span>
-                            ) : p.stock > 0 ? (
-                              <span className="inline-flex items-center rounded-full border border-amber-300 bg-amber-50 px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-amber-900">
-                                Low Stock ({p.stock})
-                              </span>
-                            ) : (
-                              <span className="inline-flex items-center rounded-full border border-red-200 bg-red-50 px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-red-800">
-                                Sold Out (0)
-                              </span>
-                            )}
-                          </td>
-                          <td className="py-3 px-4 text-right">
-                            <div className="inline-flex items-center gap-1.5">
-                              <button
-                                type="button"
-                                onClick={() => openEditModal(p)}
-                                className="inline-flex items-center gap-1.5 rounded-lg border border-[#D6CFC5] bg-white hover:bg-stone-50 hover:border-[#9A7B3E] px-3 py-1.5 text-xs font-semibold text-[#1C1917] transition shadow-2xs cursor-pointer"
-                              >
-                                <Edit3 className="w-3.5 h-3.5 text-[#9A7B3E]" />
-                                <span>Edit</span>
-                              </button>
-                              <button
-                                type="button"
-                                onClick={() => handleDeleteProduct(p)}
-                                className="p-1.5 rounded-lg text-stone-400 hover:text-red-600 hover:bg-red-50 transition cursor-pointer"
-                                aria-label={`Delete ${p.name}`}
-                                title={`Delete ${p.name}`}
-                              >
-                                <Trash2 className="w-4 h-4" />
-                              </button>
-                            </div>
-                          </td>
-                        </tr>
-                      );
-                    })
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Tab 4: Storefront Chat & Social Links */}
-      {activeTab === 'links' && (
-        <AdminLinksTab
-          storeLinks={storeLinks}
-          onChangeStoreLinks={setStoreLinks}
-          onUpdateStoreLink={handleUpdateStoreLink}
-          onDeleteStoreLink={handleDeleteStoreLink}
-          newLinkKey={newLinkKey}
-          onChangeNewLinkKey={setNewLinkKey}
-          newLinkLabel={newLinkLabel}
-          onChangeNewLinkLabel={setNewLinkLabel}
-          newLinkUrl={newLinkUrl}
-          onChangeNewLinkUrl={setNewLinkUrl}
-          newLinkCategory={newLinkCategory}
-          onChangeNewLinkCategory={setNewLinkCategory}
-          onAddNewStoreLink={handleAddNewStoreLink}
-        />
-      )}
-
-      {/* Tab 5: Homepage & Hero Customizer */}
-      {activeTab === 'homepage' && (
-        <AdminHomepageTab products={products} onNotify={setSyncMessage} />
-      )}
-    </>
-  )}
 
       {/* Add / Edit Product Modal */}
       <AdminProductModal
@@ -1717,79 +1173,11 @@ export function AdminFeature() {
       />
 
       {/* Custom Delete Confirmation Modal */}
-      {productToDelete && (
-        <div
-          role="dialog"
-          aria-modal="true"
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-150"
-          onClick={() => setProductToDelete(null)}
-        >
-          <div
-            className="w-full max-w-md bg-white border border-[#E7E0D6] rounded-2xl shadow-2xl overflow-hidden p-6 text-left"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="flex items-start gap-3.5">
-              <div className="w-10 h-10 rounded-full bg-red-50 border border-red-200 flex items-center justify-center flex-shrink-0 text-red-600">
-                <Trash2 className="w-5 h-5" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <h3 className="font-serif-display text-xl font-semibold text-[#1C1917]">
-                  Delete Jewellery Piece?
-                </h3>
-                <p className="text-xs text-[#78716C] mt-1 leading-relaxed">
-                  Are you sure you want to delete this piece? It will be permanently removed from your catalog and inventory.
-                </p>
-              </div>
-            </div>
-
-            {/* Product Card Preview */}
-            <div className="my-4 p-3 rounded-xl bg-[#FAF7F2] border border-[#E7E0D6] flex items-center gap-3">
-              <div className="relative h-14 w-12 rounded-lg overflow-hidden border border-[#D6CFC5] bg-white flex-shrink-0">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={productToDelete.imageUrl}
-                  alt={productToDelete.name}
-                  className="h-full w-full object-cover"
-                />
-              </div>
-              <div className="truncate flex-1 min-w-0">
-                <div className="font-medium text-xs text-[#1C1917] truncate">
-                  {productToDelete.name}
-                </div>
-                <div className="text-[11px] text-[#78716C] mt-0.5">
-                  {productToDelete.categoryName} ·{' '}
-                  <span className="font-mono font-semibold text-[#1C1917]">৳{productToDelete.priceBDT}</span> · Stock:{' '}
-                  {productToDelete.stock}
-                </div>
-              </div>
-            </div>
-
-            <div className="flex items-center justify-end gap-2.5 pt-1">
-              <button
-                type="button"
-                onClick={() => setProductToDelete(null)}
-                className="rounded-lg border border-[#D6CFC5] bg-white hover:bg-stone-50 px-4 py-2 text-xs font-semibold text-[#78716C] hover:text-[#1C1917] transition cursor-pointer"
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  productService.deleteProduct(productToDelete.id);
-                  refreshProducts();
-                  setSyncMessage(`Deleted "${productToDelete.name}" from catalogue.`);
-                  setTimeout(() => setSyncMessage(null), 3000);
-                  setProductToDelete(null);
-                }}
-                className="rounded-lg bg-red-600 hover:bg-red-700 text-white px-5 py-2 text-xs font-semibold shadow-sm transition flex items-center gap-1.5 cursor-pointer"
-              >
-                <Trash2 className="w-3.5 h-3.5" />
-                <span>Yes, Delete Piece</span>
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <AdminDeleteProductModal
+        product={productToDelete}
+        onCancel={() => setProductToDelete(null)}
+        onConfirmDelete={handleConfirmDeleteProduct}
+      />
     </div>
   );
 }
