@@ -11,6 +11,7 @@ import { orderService } from '@/core/services/order.service';
 import { formatBDT } from '@/core/utils/currency.util';
 import { useCart } from '@/core/services/cart.context';
 import { useWishlist } from '@/core/services/wishlist.context';
+import { useI18n } from '@/core/i18n/i18n.context';
 import { ProductCard } from '@/shared/product-card/product-card.component';
 import { ProductLightbox } from './components/product-lightbox.component';
 import {
@@ -37,6 +38,7 @@ interface ProductDetailFeatureProps {
 
 export function ProductDetailFeature({ product: initialProduct }: ProductDetailFeatureProps) {
   const router = useRouter();
+  const { t } = useI18n();
   const { addItem, getItemQuantity } = useCart();
   const { isInWishlist, toggleWishlist } = useWishlist();
   const [product, setProduct] = useState<Product>(
@@ -202,12 +204,12 @@ Please confirm availability and Cash on Delivery details. Thank you!`;
           className="inline-flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-[#78716C] hover:text-[#1C1917] transition"
         >
           <ArrowLeft className="w-3.5 h-3.5" />
-          <span>Back to Collection</span>
+          <span>{t.productDetail.backToCollection}</span>
         </Link>
 
         <div className="hidden sm:flex items-center gap-2 text-[11px] uppercase tracking-[0.16em] text-[#A8A29E]">
           <Link href="/" className="hover:text-[#1C1917]">
-            Home
+            {t.nav.home}
           </Link>
           <span>/</span>
           <Link href={`/shop?category=${product.category}`} className="hover:text-[#1C1917]">
@@ -252,18 +254,18 @@ Please confirm availability and Cash on Delivery details. Thank you!`;
             <div className="absolute top-4 left-4 flex flex-col gap-2 pointer-events-none">
               {isOutOfStock ? (
                 <span className="bg-red-900/95 border border-red-300/40 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-white">
-                  Out of Stock
+                  {t.common.outOfStock}
                 </span>
               ) : (
                 <>
                   {product.isNew && (
                     <span className="bg-[#FAF7F2]/95 border border-[#E6D5B8] px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-[#1C1917]">
-                      New Arrival
+                      {t.common.newBadge}
                     </span>
                   )}
                   {product.category === 'earrings' && (
                     <span className="bg-[#181512]/90 px-3 py-1 text-[10px] font-medium uppercase tracking-[0.18em] text-[#E6D5B8]">
-                      French Silicone Ear Clip
+                      {t.productDetail.earClipBadge}
                     </span>
                   )}
                 </>
@@ -273,8 +275,8 @@ Please confirm availability and Cash on Delivery details. Thank you!`;
             {/* Click to Zoom Hover Badge */}
             <div className="absolute bottom-4 right-4 z-10 flex items-center gap-1.5 bg-[#181512]/85 backdrop-blur-xs text-[#FAF7F2] px-3 py-1.5 text-[10px] uppercase tracking-wider opacity-90 group-hover:opacity-100 transition shadow-sm pointer-events-none">
               <Maximize2 className="w-3.5 h-3.5 text-[#C5A059]" />
-              <span className="hidden sm:inline">Click to Inspect &amp; Zoom</span>
-              <span className="sm:hidden">Tap to Zoom</span>
+              <span className="hidden sm:inline">{t.productDetail.clickToZoom}</span>
+              <span className="sm:hidden">{t.productDetail.tapToZoom}</span>
             </div>
           </div>
 
@@ -310,13 +312,13 @@ Please confirm availability and Cash on Delivery details. Thank you!`;
               {isOutOfStock ? (
                 <span className="flex items-center gap-1.5 text-xs text-red-700 font-semibold">
                   <AlertCircle className="w-3.5 h-3.5" />
-                  <span>Out of Stock</span>
+                  <span>{t.common.outOfStock}</span>
                 </span>
               ) : (
                 <span className="flex items-center gap-1.5 text-xs text-emerald-700 font-medium">
                   <CheckCircle className="w-3.5 h-3.5" />
                   <span>
-                    In Stock
+                    {t.common.inStock}
                     {inBagQty > 0 ? ` • ${inBagQty} in your bag` : ''}
                   </span>
                 </span>
@@ -338,7 +340,7 @@ Please confirm availability and Cash on Delivery details. Thank you!`;
                 </span>
               )}
               <span className="border border-[#C5A059]/40 bg-[#C5A059]/10 px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-[#8C6D32]">
-                Cash on Delivery Available
+                {t.checkout.codTitle}
               </span>
             </div>
 
@@ -363,7 +365,7 @@ Please confirm availability and Cash on Delivery details. Thank you!`;
             {/* Quantity Selector with Stock Lock */}
             <div className="mt-7 flex flex-wrap items-center gap-4">
               <span className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#1C1917]">
-                Quantity
+                {t.productDetail.qty}
               </span>
               <div className="flex items-center border border-[#1C1917] bg-white">
                 <button
@@ -386,7 +388,7 @@ Please confirm availability and Cash on Delivery details. Thank you!`;
                   type="button"
                   disabled={isPlusLocked}
                   onClick={handleIncrease}
-                  title={isPlusLocked ? 'Maximum limit reached' : 'Increase quantity'}
+                  title={isPlusLocked ? t.common.maxLimit : 'Increase quantity'}
                   className={`p-2.5 transition ${
                     isPlusLocked
                       ? 'text-[#A8A29E] bg-[#F3EDE4] cursor-not-allowed opacity-50'
@@ -401,7 +403,7 @@ Please confirm availability and Cash on Delivery details. Thank you!`;
               {!isOutOfStock && isPlusLocked && (
                 <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-amber-800 bg-amber-50 border border-amber-200 px-2.5 py-1">
                   <Lock className="w-3 h-3" />
-                  <span>Max limit reached</span>
+                  <span>{t.common.maxLimit}</span>
                 </span>
               )}
             </div>
@@ -414,7 +416,7 @@ Please confirm availability and Cash on Delivery details. Thank you!`;
                   disabled
                   className="flex flex-1 items-center justify-center gap-2.5 bg-stone-300 text-stone-600 py-3.5 px-6 text-xs font-semibold uppercase tracking-[0.16em] cursor-not-allowed"
                 >
-                  <span>Out of Stock</span>
+                  <span>{t.common.outOfStock}</span>
                 </button>
               ) : isBagAtMax ? (
                 <button
@@ -423,7 +425,7 @@ Please confirm availability and Cash on Delivery details. Thank you!`;
                   className="flex flex-1 items-center justify-center gap-2.5 bg-stone-800 text-[#E6D5B8] py-3.5 px-6 text-xs font-semibold uppercase tracking-[0.16em] cursor-not-allowed"
                 >
                   <Lock className="w-4 h-4" />
-                  <span>Max Limit in Bag</span>
+                  <span>{t.common.maxLimit}</span>
                 </button>
               ) : (
                 <button
@@ -432,7 +434,7 @@ Please confirm availability and Cash on Delivery details. Thank you!`;
                   className="flex flex-1 items-center justify-center gap-2.5 boutique-btn-primary py-3.5 px-6 cursor-pointer"
                 >
                   <ShoppingBag className="w-4 h-4" />
-                  <span>Add to Bag</span>
+                  <span>{t.common.addToBag}</span>
                 </button>
               )}
 
@@ -446,7 +448,7 @@ Please confirm availability and Cash on Delivery details. Thank you!`;
                     : 'boutique-btn-outline cursor-pointer'
                 }`}
               >
-                <span>{isOutOfStock ? 'Unavailable' : 'Buy It Now (COD)'}</span>
+                <span>{isOutOfStock ? t.common.outOfStock : t.productDetail.buyNow}</span>
               </button>
 
               {/* Wishlist Button */}
@@ -477,7 +479,7 @@ Please confirm availability and Cash on Delivery details. Thank you!`;
                   type="button"
                   onClick={handleWhatsAppOrder}
                   className="w-full flex items-center justify-center gap-2.5 bg-[#0F5A47] hover:bg-[#0A4133] text-[#FAF7F2] py-3.5 px-6 text-xs font-semibold uppercase tracking-[0.16em] transition shadow-xs cursor-pointer border border-[#0F5A47]"
-                  title="Directly chat and place your order on WhatsApp"
+                  title={t.productDetail.orderViaWhatsApp}
                 >
                   {/* WhatsApp SVG Icon */}
                   <svg
@@ -487,7 +489,7 @@ Please confirm availability and Cash on Delivery details. Thank you!`;
                   >
                     <path d="M12.031 6.172c-3.181 0-5.767 2.586-5.768 5.766-.001 1.298.38 2.27 1.019 3.287l-.711 2.598 2.669-.699c.969.54 1.771.82 2.791.82 3.182 0 5.768-2.587 5.768-5.766.001-3.181-2.585-5.766-5.768-5.766zm9.969 5.766c0 5.505-4.495 10-10 10-1.745 0-3.376-.454-4.799-1.246l-5.201 1.362 1.39-5.078c-.902-1.488-1.39-3.208-1.39-5.038 0-5.505 4.495-10 10-10s10 4.495 10 10z" />
                   </svg>
-                  <span>Order via WhatsApp (Instant Confirmation)</span>
+                  <span>{t.productDetail.orderViaWhatsApp}</span>
                 </button>
               </div>
             )}
@@ -495,14 +497,14 @@ Please confirm availability and Cash on Delivery details. Thank you!`;
             {addedNotice && (
               <div className="mt-3 flex items-center gap-2 border border-[#C5A059] bg-white px-4 py-2.5 text-xs font-medium text-[#1C1917]">
                 <CheckCircle className="w-4 h-4 text-[#9A7B3E]" />
-                <span>Added to your shopping bag.</span>
+                <span>{t.productDetail.addedToBagNotice}</span>
               </div>
             )}
 
             {/* Social Share Toolbar (WhatsApp / Facebook / Copy Link) */}
             <div className="mt-6 pt-5 border-t border-[#F3EDE4] flex flex-wrap items-center justify-between gap-3">
               <span className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[#78716C]">
-                Share this piece:
+                {t.productDetail.share}:
               </span>
 
               <div className="flex items-center gap-2">
@@ -520,7 +522,7 @@ Please confirm availability and Cash on Delivery details. Thank you!`;
                   >
                     <path d="M12.031 6.172c-3.181 0-5.767 2.586-5.768 5.766-.001 1.298.38 2.27 1.019 3.287l-.711 2.598 2.669-.699c.969.54 1.771.82 2.791.82 3.182 0 5.768-2.587 5.768-5.766.001-3.181-2.585-5.766-5.768-5.766zm9.969 5.766c0 5.505-4.495 10-10 10-1.745 0-3.376-.454-4.799-1.246l-5.201 1.362 1.39-5.078c-.902-1.488-1.39-3.208-1.39-5.038 0-5.505 4.495-10 10-10s10 4.495 10 10z" />
                   </svg>
-                  <span>WhatsApp</span>
+                  <span>{t.productDetail.shareWhatsApp}</span>
                 </button>
 
                 {/* Share on Facebook */}
@@ -537,7 +539,7 @@ Please confirm availability and Cash on Delivery details. Thank you!`;
                   >
                     <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
                   </svg>
-                  <span>Facebook</span>
+                  <span>{t.productDetail.shareFacebook}</span>
                 </button>
 
                 {/* Copy Link Button */}
@@ -549,17 +551,17 @@ Please confirm availability and Cash on Delivery details. Thank you!`;
                       ? 'border-[#9A7B3E] bg-[#FAF7F2] text-[#9A7B3E]'
                       : 'border-[#E7E0D6] bg-white text-[#1C1917] hover:border-[#1C1917]'
                   }`}
-                  title="Copy link to clipboard"
+                  title={t.productDetail.copyLink}
                 >
                   {copiedLink ? (
                     <>
                       <Check className="w-3.5 h-3.5 text-emerald-600" />
-                      <span>Copied!</span>
+                      <span>{t.productDetail.linkCopied}</span>
                     </>
                   ) : (
                     <>
                       <Copy className="w-3.5 h-3.5 text-[#78716C]" />
-                      <span>Copy Link</span>
+                      <span>{t.productDetail.copyLink}</span>
                     </>
                   )}
                 </button>
@@ -620,10 +622,10 @@ Please confirm availability and Cash on Delivery details. Thank you!`;
           <div className="flex items-end justify-between mb-8">
             <div>
               <span className="text-[10px] font-semibold uppercase tracking-[0.22em] text-[#9A7B3E] block mb-1.5">
-                Complete the Look
+                {t.productDetail.relatedSubtitle}
               </span>
               <h2 className="font-serif-display text-3xl sm:text-4xl font-medium text-[#1C1917]">
-                You May Also Like
+                {t.productDetail.relatedTitle}
               </h2>
             </div>
             <Link

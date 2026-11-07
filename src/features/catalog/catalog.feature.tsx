@@ -11,6 +11,7 @@ import {
 } from '@/core/services/product-type.service';
 import { ProductCard } from '@/shared/product-card/product-card.component';
 import { QuickViewModal } from '@/shared/quick-view-modal/quick-view-modal.component';
+import { useI18n } from '@/core/i18n/i18n.context';
 import {
   Search,
   Sparkles,
@@ -27,6 +28,7 @@ type PricePreset = 'all' | 'tier1' | 'tier2' | 'tier3';
 
 export function CatalogFeature() {
   const router = useRouter();
+  const { t } = useI18n();
   const searchParams = useSearchParams();
   const selectedCategory = searchParams.get('category') || 'all';
   const urlSearch = searchParams.get('search') || '';
@@ -111,14 +113,14 @@ export function CatalogFeature() {
   // Build categories list with live counts
   const categories = useMemo(() => {
     return [
-      { id: 'all', name: 'All Pieces', count: allProducts.length },
+      { id: 'all', name: t.catalog.allPieces, count: allProducts.length },
       ...productTypes.map((pt) => ({
         id: pt.slug,
         name: pt.name,
         count: allProducts.filter((p) => p.category === pt.slug).length,
       })),
     ];
-  }, [allProducts, productTypes]);
+  }, [allProducts, productTypes, t.catalog.allPieces]);
 
   // Determine if ANY filter is modified from default
   const isAnyFilterActive =
@@ -220,16 +222,16 @@ export function CatalogFeature() {
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 text-center">
           <div className="text-[10px] font-semibold uppercase tracking-[0.22em] text-[#9A7B3E] mb-2">
             <Link href="/" className="hover:underline">
-              Home
+              {t.nav.home}
             </Link>
             <span className="mx-2">/</span>
-            <span>Catalogue</span>
+            <span>{t.catalog.breadcrumb}</span>
           </div>
           <h1 className="font-serif-display text-3xl sm:text-5xl font-medium text-[#1C1917]">
-            The Curated Collection
+            {t.catalog.title}
           </h1>
           <p className="mt-2 text-xs sm:text-sm text-[#78716C] max-w-lg mx-auto">
-            Everyday elegance, aesthetic gadgets &amp; playful wonders with nationwide Cash on Delivery.
+            {t.catalog.subtitle}
           </p>
         </div>
       </div>
@@ -266,7 +268,7 @@ export function CatalogFeature() {
               <div className="relative w-full sm:w-64">
                 <input
                   type="text"
-                  placeholder="Search collection, gadgets & gifts..."
+                  placeholder={t.catalog.searchPlaceholder}
                   value={searchQuery}
                   onChange={(e) => setCustomSearchQuery(e.target.value)}
                   className="w-full border border-[#D6CFC5] bg-white pl-9 pr-7 py-2 text-xs text-[#1C1917] placeholder-[#A8A29E] focus:outline-none focus:border-[#C5A059] transition"
@@ -292,13 +294,13 @@ export function CatalogFeature() {
                   className="w-full appearance-none border border-[#D6CFC5] bg-white px-3 py-2 pr-8 text-xs font-medium text-[#1C1917] focus:outline-none focus:border-[#C5A059] transition cursor-pointer"
                 >
                   <option value="all">
-                    Price: All (৳{catalogMinPrice} – ৳{catalogMaxPrice})
+                    {t.catalog.priceAll} (৳{catalogMinPrice} – ৳{catalogMaxPrice})
                   </option>
-                  <option value="tier1">Price: Under ৳{priceBrackets.tier1}</option>
+                  <option value="tier1">{t.catalog.priceUnder} ৳{priceBrackets.tier1}</option>
                   <option value="tier2">
-                    Price: ৳{priceBrackets.tier1} – ৳{priceBrackets.tier2}
+                    {t.catalog.priceBetween} ৳{priceBrackets.tier1} – ৳{priceBrackets.tier2}
                   </option>
-                  <option value="tier3">Price: Over ৳{priceBrackets.tier2}</option>
+                  <option value="tier3">{t.catalog.priceAbove} ৳{priceBrackets.tier2}</option>
                 </select>
                 <ChevronDown className="pointer-events-none absolute right-2.5 top-2.5 w-3.5 h-3.5 text-[#9A7B3E]" />
               </div>
@@ -318,7 +320,7 @@ export function CatalogFeature() {
                     inStockOnly ? 'bg-emerald-400' : 'bg-stone-300'
                   }`}
                 />
-                <span className="whitespace-nowrap">In Stock Only</span>
+                <span className="whitespace-nowrap">{t.catalog.inStockOnly}</span>
               </button>
             </div>
 
@@ -331,10 +333,10 @@ export function CatalogFeature() {
                   onChange={(e) => setSortBy(e.target.value as SortOption)}
                   className="w-full appearance-none border border-[#D6CFC5] bg-white pl-8 pr-8 py-2 text-xs font-medium text-[#1C1917] focus:outline-none focus:border-[#C5A059] transition cursor-pointer"
                 >
-                  <option value="featured">Sort: Featured</option>
-                  <option value="price-asc">Price: Low to High</option>
-                  <option value="price-desc">Price: High to Low</option>
-                  <option value="name">Name: A–Z</option>
+                  <option value="featured">{t.catalog.sortBy}: {t.catalog.sortFeatured}</option>
+                  <option value="price-asc">{t.catalog.sortPriceAsc}</option>
+                  <option value="price-desc">{t.catalog.sortPriceDesc}</option>
+                  <option value="name">{t.catalog.sortName}</option>
                 </select>
                 <ArrowUpDown className="pointer-events-none absolute left-2.5 top-2.5 w-3.5 h-3.5 text-[#9A7B3E]" />
                 <ChevronDown className="pointer-events-none absolute right-2.5 top-2.5 w-3.5 h-3.5 text-[#9A7B3E]" />
@@ -349,7 +351,7 @@ export function CatalogFeature() {
                   title="Reset all filters"
                 >
                   <RotateCcw className="w-3.5 h-3.5" />
-                  <span>Reset ({activeFilterCount})</span>
+                  <span>{t.catalog.resetFilters} ({activeFilterCount})</span>
                 </button>
               )}
             </div>
@@ -358,14 +360,14 @@ export function CatalogFeature() {
           {/* Clean Results Count */}
           <div className="mt-3 pt-2.5 border-t border-[#F3EDE4] flex items-center justify-between text-[11px] text-[#78716C]">
             <div>
-              Showing <span className="font-semibold text-[#1C1917]">{filteredProducts.length}</span> curated pieces
+              {t.catalog.showing} <span className="font-semibold text-[#1C1917]">{filteredProducts.length}</span> {t.catalog.pieces}
               {selectedCategory !== 'all' && (
-                <span> in <span className="text-[#9A7B3E] font-medium">{categories.find((c) => c.id === selectedCategory)?.name}</span></span>
+                <span> &bull; <span className="text-[#9A7B3E] font-medium">{categories.find((c) => c.id === selectedCategory)?.name}</span></span>
               )}
             </div>
             {isAnyFilterActive && (
               <span className="text-[10px] uppercase tracking-wider text-[#9A7B3E] font-medium">
-                Active filters applied
+                {t.catalog.activeFilters}
               </span>
             )}
           </div>
@@ -378,11 +380,10 @@ export function CatalogFeature() {
           <div className="border border-dashed border-[#D6CFC5] bg-white p-10 sm:p-14 text-center my-8">
             <Sparkles className="mx-auto h-7 w-7 text-[#C5A059] mb-3" />
             <h3 className="font-serif-display text-2xl font-medium text-[#1C1917]">
-              No matching pieces found
+              {t.catalog.noResultsTitle}
             </h3>
             <p className="mt-1.5 text-xs text-[#78716C] max-w-md mx-auto leading-relaxed">
-              We couldn&apos;t find any items matching your active filters. Try broadening your
-              selection or clearing the filters.
+              {t.catalog.noResultsDesc}
             </p>
             <button
               type="button"
@@ -390,7 +391,7 @@ export function CatalogFeature() {
               className="mt-5 boutique-btn-primary px-6 py-2.5 text-xs cursor-pointer inline-flex items-center gap-2"
             >
               <RotateCcw className="w-3.5 h-3.5" />
-              <span>Reset Filters</span>
+              <span>{t.catalog.resetFilters}</span>
             </button>
           </div>
         ) : (
@@ -409,7 +410,7 @@ export function CatalogFeature() {
             {hasMore ? (
               <div className="mt-12 text-center flex flex-col items-center">
                 <div className="text-xs text-[#78716C] mb-2 font-medium">
-                  Showing {displayedProducts.length} of {filteredProducts.length} curated pieces
+                  {t.catalog.showing} {displayedProducts.length} {t.catalog.of} {filteredProducts.length} {t.catalog.pieces}
                 </div>
                 <div className="w-48 h-1 bg-[#E7E0D6] rounded-full overflow-hidden mb-5">
                   <div
@@ -424,12 +425,12 @@ export function CatalogFeature() {
                   onClick={handleLoadMore}
                   className="boutique-btn-primary px-8 py-3.5 text-xs font-semibold uppercase tracking-[0.18em] cursor-pointer hover:shadow-lg transition-all"
                 >
-                  Load More Pieces
+                  {t.catalog.loadMore}
                 </button>
               </div>
             ) : filteredProducts.length > PAGE_SIZE ? (
               <div className="mt-12 text-center text-xs text-[#78716C] font-serif-display italic border-t border-[#F3EDE4] pt-6">
-                You have viewed all {filteredProducts.length} curated pieces
+                {t.catalog.allLoaded}
               </div>
             ) : null}
           </>

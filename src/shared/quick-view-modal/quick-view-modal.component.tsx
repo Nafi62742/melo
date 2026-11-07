@@ -9,6 +9,7 @@ import { Product } from '@/core/models/product.model';
 import { formatBDT } from '@/core/utils/currency.util';
 import { useCart } from '@/core/services/cart.context';
 import { useWishlist } from '@/core/services/wishlist.context';
+import { useI18n } from '@/core/i18n/i18n.context';
 import {
   X,
   ShoppingBag,
@@ -82,6 +83,7 @@ interface QuickViewModalContentProps {
 
 function QuickViewModalContent({ product, onClose }: QuickViewModalContentProps) {
   const router = useRouter();
+  const { t } = useI18n();
   const { addItem, getItemQuantity, setIsCartDrawerOpen } = useCart();
   const { isInWishlist, toggleWishlist } = useWishlist();
   const [selectedImage, setSelectedImage] = useState<string>(product.imageUrl);
@@ -316,7 +318,7 @@ function QuickViewModalContent({ product, onClose }: QuickViewModalContentProps)
               disabled
               className="w-full bg-stone-300 text-stone-600 py-3 text-xs font-semibold uppercase tracking-[0.16em] cursor-not-allowed"
             >
-              Out of Stock
+              {t.common.outOfStock}
             </button>
           ) : isBagAtMax ? (
             <button
@@ -325,7 +327,7 @@ function QuickViewModalContent({ product, onClose }: QuickViewModalContentProps)
               className="w-full flex items-center justify-center gap-2 bg-stone-800 text-[#E6D5B8] py-3 text-xs font-semibold uppercase tracking-[0.16em] cursor-not-allowed"
             >
               <Lock className="w-3.5 h-3.5" />
-              <span>Max Limit in Bag</span>
+              <span>{t.common.maxLimit}</span>
             </button>
           ) : (
             <div className="flex flex-col gap-2">
@@ -335,7 +337,7 @@ function QuickViewModalContent({ product, onClose }: QuickViewModalContentProps)
                 className="w-full flex items-center justify-center gap-2 boutique-btn-primary py-3 text-xs uppercase tracking-[0.16em] cursor-pointer"
               >
                 <ShoppingBag className="w-3.5 h-3.5" />
-                <span>{addedMessage ? 'Added to Bag!' : 'Add to Bag'}</span>
+                <span>{addedMessage ? t.productDetail.addedToBagNotice : t.common.addToBag}</span>
               </button>
               <button
                 type="button"
@@ -343,7 +345,7 @@ function QuickViewModalContent({ product, onClose }: QuickViewModalContentProps)
                 className="w-full flex items-center justify-center gap-2 bg-[#9A7B3E] hover:bg-[#856832] text-white py-3 text-xs font-semibold uppercase tracking-[0.16em] transition cursor-pointer"
               >
                 <Zap className="w-3.5 h-3.5" />
-                <span>Buy It Now (COD)</span>
+                <span>{t.productDetail.buyNow}</span>
               </button>
             </div>
           )}
@@ -355,7 +357,7 @@ function QuickViewModalContent({ product, onClose }: QuickViewModalContentProps)
               onClick={onClose}
               className="inline-flex items-center gap-1.5 text-xs font-medium text-[#1C1917] hover:text-[#9A7B3E] transition"
             >
-              <span>View Full Product Details &amp; Sizing</span>
+              <span>{t.quickView.viewFullDetails}</span>
               <ArrowRight className="w-3 h-3" />
             </Link>
           </div>

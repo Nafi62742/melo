@@ -2,12 +2,14 @@
 
 import React, { useState, useEffect } from 'react';
 import { usePathname } from 'next/navigation';
+import { useI18n } from '@/core/i18n/i18n.context';
 import { MessageCircle, Send, X, Sparkles, PhoneCall, ExternalLink } from 'lucide-react';
 import { storeLinkService, STORE_LINKS_UPDATED_EVENT } from '@/core/services/store-link.service';
 import { StoreLink, DEFAULT_STORE_LINKS } from '@/core/models/store-link.model';
 
 export function ChatWidget() {
   const pathname = usePathname();
+  const { t } = useI18n();
   const [isOpen, setIsOpen] = useState(false);
   const [links, setLinks] = useState<StoreLink[]>(DEFAULT_STORE_LINKS);
 
@@ -73,10 +75,10 @@ export function ChatWidget() {
             </span>
             <div>
               <div className="font-serif-display text-base font-medium tracking-wide text-[#FAF7F2] leading-none">
-                MELO Concierge
+                {t.chatWidget.title}
               </div>
               <div className="text-[10px] uppercase tracking-[0.16em] text-[#C5A059] mt-1">
-                Instant Chat Support
+                {t.chatWidget.subtitle}
               </div>
             </div>
           </div>
@@ -113,7 +115,7 @@ export function ChatWidget() {
                 </div>
                 <div>
                   <div className="text-xs font-semibold text-[#1C1917] group-hover:text-emerald-800">
-                    {whatsappLink?.label || 'WhatsApp Chat'}
+                    {whatsappLink?.label || t.chatWidget.chatWhatsApp}
                   </div>
                   <div className="text-[10px] text-[#78716C]">Replies within minutes</div>
                 </div>
@@ -136,7 +138,7 @@ export function ChatWidget() {
                 </div>
                 <div>
                   <div className="text-xs font-semibold text-[#1C1917] group-hover:text-blue-800">
-                    {messengerLink?.label || 'Facebook Messenger'}
+                    {messengerLink?.label || t.chatWidget.chatMessenger}
                   </div>
                   <div className="text-[10px] text-[#78716C]">Message our official page</div>
                 </div>

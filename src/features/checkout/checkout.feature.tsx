@@ -9,9 +9,9 @@ import { productService } from '@/core/services/product.service';
 import { customerService } from '@/core/services/customer.service';
 import { Order, PaymentMethod } from '@/core/models/order.model';
 import { formatBDT } from '@/core/utils/currency.util';
+import { useI18n } from '@/core/i18n/i18n.context';
 import {
   CheckCircle2,
-  ShieldCheck,
   Truck,
   ShoppingBag,
   ArrowLeft,
@@ -41,6 +41,7 @@ export function CheckoutFeature() {
 }
 
 function CheckoutContent() {
+  const { t } = useI18n();
   const { items, subtotal, deliveryZone, setDeliveryZone, deliveryFee, total, clearCart } = useCart();
   const initialCustomer = customerService.getCurrentCustomer();
 
@@ -50,7 +51,6 @@ function CheckoutContent() {
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('bkash');
   const [trxId, setTrxId] = useState('');
   const [bkashSenderNumber, setBkashSenderNumber] = useState('');
-  const [cardLast4, setCardLast4] = useState('');
   const [notes, setNotes] = useState('');
   const [copiedBkash, setCopiedBkash] = useState(false);
 
@@ -69,11 +69,11 @@ function CheckoutContent() {
   const paymentMethodLabel = (method: PaymentMethod): string => {
     switch (method) {
       case 'card':
-        return 'Credit / Debit Card';
+        return t.checkout.cardTitle;
       case 'bkash':
-        return 'bKash Manual Verification';
+        return t.checkout.bkashTitle;
       case 'cod':
-        return 'Cash on Delivery (COD)';
+        return t.checkout.codTitle;
     }
   };
 
@@ -130,7 +130,6 @@ function CheckoutContent() {
         paymentMethod === 'bkash' && bkashSenderNumber.trim()
           ? bkashSenderNumber.trim()
           : undefined,
-      cardLast4: paymentMethod === 'card' && cardLast4.trim() ? cardLast4.trim() : undefined,
     };
 
     orderService.saveOrder(newOrder);
@@ -153,60 +152,42 @@ function CheckoutContent() {
           <CheckCircle2 className="w-8 h-8" />
         </div>
         <span className="border border-[#E6D5B8] bg-[#F3EDE4] text-[#9A7B3E] px-3.5 py-1 text-[10px] font-semibold uppercase tracking-[0.2em]">
-          Order Received
+          {t.checkout.orderNumber}: {completedOrder.orderNumber}
         </span>
         <h1 className="mt-4 font-serif-display text-3xl sm:text-4xl font-medium text-[#1C1917]">
-          Thank You for Choosing MELO
+          {t.checkout.orderConfirmed}
         </h1>
         <p className="mt-2.5 text-xs sm:text-sm text-[#78716C] leading-relaxed">
-          Your order reference is{' '}
-          <strong className="text-[#1C1917] font-semibold">{completedOrder.orderNumber}</strong>.
-          {completedOrder.paymentMethod === 'bkash' ? (
-            <>
-              {' '}
-              We have recorded your bKash TrxID{' '}
-              <strong className="text-pink-700 font-semibold">{completedOrder.trxId}</strong> and
-              will verify it manually in our admin panel shortly.
-            </>
-          ) : (
-            <>
-              {' '}
-              We will contact you at{' '}
-              <strong className="text-[#1C1917] font-semibold">
-                {completedOrder.customer.phone}
-              </strong>{' '}
-              before dispatching your jewellery.
-            </>
-          )}
+          {t.checkout.confirmationNotice}
         </p>
 
         <div className="mt-8 border border-[#E7E0D6] bg-white p-6 text-left text-xs space-y-3">
           <div className="flex justify-between">
-            <span className="text-[#78716C]">Delivery Address</span>
+            <span className="text-[#78716C]">{t.checkout.deliveryAddress}</span>
             <span className="font-medium text-[#1C1917] text-right max-w-xs">
               {completedOrder.customer.address}
             </span>
           </div>
           <div className="flex justify-between">
-            <span className="text-[#78716C]">Estimated Delivery</span>
+            <span className="text-[#78716C]">{t.checkout.estimatedDelivery}</span>
             <span className="font-semibold text-[#1C1917]">
               {completedOrder.estimatedDelivery || (completedOrder.customer.deliveryZone === 'inside_dhaka' ? '24–48 hours' : '3–4 days')}
             </span>
           </div>
           <div className="flex justify-between">
-            <span className="text-[#78716C]">Payment Method</span>
+            <span className="text-[#78716C]">{t.checkout.paymentMethod}</span>
             <span className="font-semibold text-[#1C1917]">
               {paymentMethodLabel(completedOrder.paymentMethod)}
             </span>
           </div>
           {completedOrder.trxId && (
             <div className="flex justify-between">
-              <span className="text-[#78716C]">Submitted bKash TrxID</span>
+              <span className="text-[#78716C]">bKash TrxID</span>
               <span className="font-mono font-bold text-pink-700">{completedOrder.trxId}</span>
             </div>
           )}
           <div className="flex justify-between font-semibold text-[#1C1917] pt-3 border-t border-[#E7E0D6]">
-            <span className="uppercase tracking-wider">Total Amount</span>
+            <span className="uppercase tracking-wider">{t.checkout.totalAmount}</span>
             <span className="font-serif-display text-xl font-bold text-[#1C1917]">
               {formatBDT(completedOrder.total)}
             </span>
@@ -218,10 +199,10 @@ function CheckoutContent() {
             href={`/account?orderNumber=${completedOrder.orderNumber}`}
             className="boutique-btn-primary px-7 py-3.5"
           >
-            Track My Order Live
+            {t.checkout.trackOrderLive}
           </Link>
           <Link href="/shop" className="boutique-btn-outline px-6 py-3.5">
-            Continue Shopping
+            {t.checkout.continueShopping}
           </Link>
         </div>
       </div>
@@ -234,13 +215,13 @@ function CheckoutContent() {
       <div className="mx-auto max-w-md px-4 py-20 text-center">
         <ShoppingBag className="w-10 h-10 text-[#C5A059] mx-auto mb-3 stroke-[1.25]" />
         <h2 className="font-serif-display text-3xl font-medium text-[#1C1917]">
-          Your Shopping Bag is Empty
+          {t.checkout.emptyBagTitle}
         </h2>
         <p className="mt-1.5 text-xs text-[#78716C]">
-          Explore our curated French ear clips, minimalist rings, and bracelets before checking out.
+          {t.checkout.emptyBagDesc}
         </p>
         <Link href="/shop" className="mt-6 inline-flex boutique-btn-primary px-7 py-3.5">
-          Explore Collection
+          {t.hero.shopNow}
         </Link>
       </div>
     );
@@ -254,10 +235,10 @@ function CheckoutContent() {
           className="inline-flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-[#78716C] hover:text-[#1C1917]"
         >
           <ArrowLeft className="w-3.5 h-3.5" />
-          <span>Continue Shopping</span>
+          <span>{t.checkout.continueShopping}</span>
         </Link>
         <h1 className="mt-3 font-serif-display text-3xl sm:text-5xl font-medium text-[#1C1917]">
-          Complete Your Order
+          {t.checkout.title}
         </h1>
       </div>
 
@@ -267,18 +248,18 @@ function CheckoutContent() {
           {/* Customer Info Card */}
           <div className="border border-[#E7E0D6] bg-white p-6 sm:p-8">
             <h2 className="text-xs font-semibold uppercase tracking-[0.2em] text-[#9A7B3E] mb-6">
-              1. Customer &amp; Delivery Information
+              1. {t.checkout.customerInfo}
             </h2>
 
             <div className="space-y-5 text-xs">
               <div>
                 <label className="block text-[11px] font-semibold uppercase tracking-wider text-[#1C1917] mb-1.5">
-                  Full Name <span className="text-red-500">*</span>
+                  {t.checkout.fullName}
                 </label>
                 <input
                   type="text"
                   required
-                  placeholder="e.g. Ayesha Rahman"
+                  placeholder={t.checkout.fullNamePlaceholder}
                   value={fullName}
                   onChange={(e) => setFullName(e.target.value)}
                   className="w-full border border-[#D6CFC5] bg-[#FAF7F2]/50 px-3.5 py-2.5 text-xs text-[#1C1917] focus:bg-white focus:outline-none focus:border-[#C5A059]"
@@ -287,29 +268,26 @@ function CheckoutContent() {
 
               <div>
                 <label className="block text-[11px] font-semibold uppercase tracking-wider text-[#1C1917] mb-1.5">
-                  Phone Number <span className="text-red-500">*</span>
+                  {t.checkout.phone}
                 </label>
                 <input
                   type="tel"
                   required
-                  placeholder="e.g. 01712345678"
+                  placeholder={t.checkout.phonePlaceholder}
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
                   className="w-full border border-[#D6CFC5] bg-[#FAF7F2]/50 px-3.5 py-2.5 text-xs text-[#1C1917] focus:bg-white focus:outline-none focus:border-[#C5A059]"
                 />
-                <span className="mt-1 block text-[11px] text-[#78716C]">
-                  We will call or message you on WhatsApp to confirm dispatch.
-                </span>
               </div>
 
               <div>
                 <label className="block text-[11px] font-semibold uppercase tracking-wider text-[#1C1917] mb-1.5">
-                  Full Delivery Address <span className="text-red-500">*</span>
+                  {t.checkout.address}
                 </label>
                 <textarea
                   required
                   rows={3}
-                  placeholder="House / Flat #, Road #, Sector / Area, Thana & District"
+                  placeholder={t.checkout.addressPlaceholder}
                   value={address}
                   onChange={(e) => setAddress(e.target.value)}
                   className="w-full border border-[#D6CFC5] bg-[#FAF7F2]/50 px-3.5 py-2.5 text-xs text-[#1C1917] focus:bg-white focus:outline-none focus:border-[#C5A059]"
@@ -319,7 +297,7 @@ function CheckoutContent() {
               {/* Delivery Zone Selector */}
               <div>
                 <label className="block text-[11px] font-semibold uppercase tracking-wider text-[#1C1917] mb-2">
-                  Delivery Region
+                  {t.checkout.deliveryZone}
                 </label>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div
@@ -331,8 +309,7 @@ function CheckoutContent() {
                     }`}
                   >
                     <div>
-                      <div className="font-semibold text-[#1C1917]">Inside Dhaka</div>
-                      <div className="text-[11px] text-[#78716C]">24–48 hours delivery</div>
+                      <div className="font-semibold text-[#1C1917]">{t.checkout.insideDhaka}</div>
                     </div>
                     <span className="font-serif-display text-lg font-bold text-[#1C1917]">৳60</span>
                   </div>
@@ -346,8 +323,7 @@ function CheckoutContent() {
                     }`}
                   >
                     <div>
-                      <div className="font-semibold text-[#1C1917]">Outside Dhaka</div>
-                      <div className="text-[11px] text-[#78716C]">3–4 days delivery</div>
+                      <div className="font-semibold text-[#1C1917]">{t.checkout.outsideDhaka}</div>
                     </div>
                     <span className="font-serif-display text-lg font-bold text-[#1C1917]">৳120</span>
                   </div>
@@ -356,11 +332,11 @@ function CheckoutContent() {
 
               <div>
                 <label className="block text-[11px] font-semibold uppercase tracking-wider text-[#1C1917] mb-1.5">
-                  Delivery Instructions / Notes (Optional)
+                  {t.checkout.notes}
                 </label>
                 <input
                   type="text"
-                  placeholder="e.g. Call before arrival, gift note request"
+                  placeholder={t.checkout.notesPlaceholder}
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
                   className="w-full border border-[#D6CFC5] bg-[#FAF7F2]/50 px-3.5 py-2.5 text-xs text-[#1C1917] focus:bg-white focus:outline-none focus:border-[#C5A059]"
@@ -373,11 +349,8 @@ function CheckoutContent() {
           <div className="border border-[#E7E0D6] bg-white p-6 sm:p-8">
             <div className="flex flex-wrap items-center justify-between gap-2 mb-5">
               <h2 className="text-xs font-semibold uppercase tracking-[0.2em] text-[#9A7B3E]">
-                2. Payment Method
+                2. {t.checkout.selectPayment}
               </h2>
-              <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[#8C6D32] bg-[#C5A059]/12 border border-[#C5A059]/35 px-2.5 py-0.5">
-                bKash &amp; Card Preferred
-              </span>
             </div>
 
             <div className="space-y-3.5 text-xs">
@@ -398,13 +371,10 @@ function CheckoutContent() {
                     />
                     <div>
                       <div className="flex items-center gap-2">
-                        <span className="font-semibold text-pink-700">bKash (Send Money / Payment)</span>
-                        <span className="bg-pink-700 text-white px-2 py-0.5 text-[9px] font-semibold uppercase tracking-wider">
-                          Preferred
-                        </span>
+                        <span className="font-semibold text-pink-700">{t.checkout.bkashTitle}</span>
                       </div>
                       <div className="text-[#78716C] text-[11px] mt-0.5">
-                        Send {formatBDT(total)} to our bKash number and enter your TrxID below.
+                        {t.checkout.bkashDesc}
                       </div>
                     </div>
                   </div>
@@ -417,14 +387,14 @@ function CheckoutContent() {
                     <div className="border border-pink-200 bg-pink-50/50 p-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                       <div>
                         <div className="text-[10px] font-semibold uppercase tracking-wider text-pink-800">
-                          MELO Official bKash Number (Send Money)
+                          {t.checkout.bkashNumber}
                         </div>
                         <div className="mt-1 flex items-baseline gap-2">
                           <span className="font-mono text-lg font-bold text-pink-700">
                             {storeBkashNumber}
                           </span>
                           <span className="text-[11px] text-[#78716C]">
-                            • Amount: <strong className="text-[#1C1917]">{formatBDT(total)}</strong>
+                            • {t.checkout.total}: <strong className="text-[#1C1917]">{formatBDT(total)}</strong>
                           </span>
                         </div>
                       </div>
@@ -437,12 +407,12 @@ function CheckoutContent() {
                         {copiedBkash ? (
                           <>
                             <Check className="w-3.5 h-3.5 text-emerald-600" />
-                            <span>Copied!</span>
+                            <span>{t.checkout.copied}</span>
                           </>
                         ) : (
                           <>
                             <Copy className="w-3.5 h-3.5" />
-                            <span>Copy Number</span>
+                            <span>{t.checkout.copy}</span>
                           </>
                         )}
                       </button>
@@ -451,12 +421,12 @@ function CheckoutContent() {
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       <div>
                         <label className="block text-[10px] font-semibold uppercase tracking-wider text-[#1C1917] mb-1">
-                          bKash Transaction ID (TrxID) <span className="text-red-500">*</span>
+                          {t.checkout.trxId}
                         </label>
                         <input
                           type="text"
                           required={paymentMethod === 'bkash'}
-                          placeholder="e.g. BIK98371X"
+                          placeholder={t.checkout.trxIdPlaceholder}
                           value={trxId}
                           onChange={(e) => setTrxId(e.target.value)}
                           className="w-full border border-pink-300 px-3.5 py-2 text-xs font-mono uppercase focus:outline-none focus:border-pink-600"
@@ -465,22 +435,17 @@ function CheckoutContent() {
 
                       <div>
                         <label className="block text-[10px] font-semibold uppercase tracking-wider text-[#1C1917] mb-1">
-                          Your bKash Sender Number (Optional)
+                          {t.checkout.senderPhone}
                         </label>
                         <input
                           type="tel"
-                          placeholder="e.g. 017XXXXXXXX"
+                          placeholder={t.checkout.senderPhonePlaceholder}
                           value={bkashSenderNumber}
                           onChange={(e) => setBkashSenderNumber(e.target.value)}
                           className="w-full border border-[#D6CFC5] px-3.5 py-2 text-xs focus:outline-none focus:border-pink-600"
                         />
                       </div>
                     </div>
-
-                    <p className="text-[11px] text-[#78716C]">
-                      Once you submit your order, our team will manually verify your{' '}
-                      <strong className="text-[#1C1917]">TrxID</strong> in the admin panel and confirm dispatch.
-                    </p>
                   </div>
                 )}
               </div>
@@ -503,50 +468,16 @@ function CheckoutContent() {
                     <div>
                       <div className="flex items-center gap-2">
                         <span className="font-semibold text-[#1C1917]">
-                          Credit / Debit Card (Visa, Mastercard, Amex)
-                        </span>
-                        <span className="bg-[#181512] text-[#E6D5B8] px-2 py-0.5 text-[9px] font-semibold uppercase tracking-wider">
-                          Preferred
+                          {t.checkout.cardTitle}
                         </span>
                       </div>
                       <div className="text-[#78716C] text-[11px] mt-0.5">
-                        Fast priority dispatch with secure card payment.
+                        {t.checkout.cardDesc}
                       </div>
                     </div>
                   </div>
                   <CreditCard className="w-4 h-4 text-[#9A7B3E] flex-shrink-0" />
                 </label>
-
-                {paymentMethod === 'card' && (
-                  <div className="px-4 pb-4 pt-2 border-t border-[#E7E0D6]/80 space-y-3 bg-white">
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                      <div>
-                        <label className="block text-[10px] font-semibold uppercase tracking-wider text-[#1C1917] mb-1">
-                          Cardholder Name
-                        </label>
-                        <input
-                          type="text"
-                          placeholder="Name on Card"
-                          defaultValue={fullName}
-                          className="w-full border border-[#D6CFC5] px-3 py-2 text-xs text-[#1C1917] focus:outline-none focus:border-[#C5A059]"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-[10px] font-semibold uppercase tracking-wider text-[#1C1917] mb-1">
-                          Last 4 Digits / Payment Ref (Optional)
-                        </label>
-                        <input
-                          type="text"
-                          maxLength={16}
-                          placeholder="e.g. 4242 or Payment Ref"
-                          value={cardLast4}
-                          onChange={(e) => setCardLast4(e.target.value)}
-                          className="w-full border border-[#D6CFC5] px-3 py-2 text-xs text-[#1C1917] focus:outline-none focus:border-[#C5A059]"
-                        />
-                      </div>
-                    </div>
-                  </div>
-                )}
               </div>
 
               {/* 3. Cash on Delivery (COD) */}
@@ -564,9 +495,9 @@ function CheckoutContent() {
                     className="accent-[#1C1917]"
                   />
                   <div>
-                    <div className="font-semibold text-[#1C1917]">Cash on Delivery (COD)</div>
+                    <div className="font-semibold text-[#1C1917]">{t.checkout.codTitle}</div>
                     <div className="text-[#78716C] text-[11px]">
-                      Pay in cash when you receive and inspect your package at your doorstep.
+                      {t.checkout.codDesc}
                     </div>
                   </div>
                 </div>
@@ -580,7 +511,7 @@ function CheckoutContent() {
         <div className="lg:col-span-5">
           <div className="sticky top-28 border border-[#E7E0D6] bg-white p-6 sm:p-8">
             <h2 className="text-xs font-semibold uppercase tracking-[0.2em] text-[#9A7B3E] mb-5">
-              Order Summary ({items.length} Pieces)
+              {t.checkout.orderSummary} ({items.length})
             </h2>
 
             {/* Items scroll */}
@@ -594,7 +525,7 @@ function CheckoutContent() {
                     <div className="truncate font-serif-display text-base font-medium text-[#1C1917]">
                       {product.name}
                     </div>
-                    <div className="text-[11px] text-[#78716C]">Qty: {quantity}</div>
+                    <div className="text-[11px] text-[#78716C]">{t.productDetail.qty}: {quantity}</div>
                   </div>
                   <div className="text-xs font-semibold text-[#1C1917]">
                     {formatBDT(product.priceBDT * quantity)}
@@ -606,17 +537,17 @@ function CheckoutContent() {
             {/* Calculations */}
             <div className="mt-5 pt-5 border-t border-[#E7E0D6] space-y-2.5 text-xs text-[#78716C]">
               <div className="flex justify-between">
-                <span>Subtotal</span>
+                <span>{t.checkout.subtotal}</span>
                 <span className="font-semibold text-[#1C1917]">{formatBDT(subtotal)}</span>
               </div>
               <div className="flex justify-between items-center">
                 <span>
-                  Delivery ({deliveryZone === 'inside_dhaka' ? 'Inside Dhaka' : 'Outside Dhaka'})
+                  {t.checkout.delivery} ({deliveryZone === 'inside_dhaka' ? t.account.insideDhaka : t.account.outsideDhaka})
                 </span>
                 <span className="font-semibold text-[#1C1917]">
                   {subtotal >= 1500 ? (
                     <span className="text-emerald-700 font-bold uppercase tracking-wider text-[11px]">
-                      FREE (Over ৳1,500)
+                      {t.checkout.freeShippingBadge}
                     </span>
                   ) : (
                     formatBDT(deliveryFee)
@@ -624,13 +555,13 @@ function CheckoutContent() {
                 </span>
               </div>
               <div className="flex justify-between">
-                <span>Selected Payment</span>
+                <span>{t.checkout.selectedPayment}</span>
                 <span className="font-semibold text-[#9A7B3E]">
                   {paymentMethodLabel(paymentMethod)}
                 </span>
               </div>
               <div className="flex justify-between pt-3 border-t border-[#E7E0D6] text-sm font-semibold text-[#1C1917]">
-                <span className="uppercase tracking-wider text-xs">Total Payable</span>
+                <span className="uppercase tracking-wider text-xs">{t.checkout.total}</span>
                 <span className="font-serif-display text-2xl font-bold text-[#1C1917]">
                   {formatBDT(total)}
                 </span>
@@ -642,13 +573,8 @@ function CheckoutContent() {
               disabled={isSubmitting}
               className="mt-6 w-full boutique-btn-primary py-4 text-center cursor-pointer disabled:opacity-50"
             >
-              {isSubmitting ? 'Placing Order...' : 'Confirm Order'}
+              {isSubmitting ? t.checkout.processing : t.checkout.confirmOrder}
             </button>
-
-            <div className="mt-4 flex items-center justify-center gap-2 text-[11px] text-[#78716C]">
-              <ShieldCheck className="w-3.5 h-3.5 text-[#9A7B3E]" />
-              <span>Priority Dispatch on bKash &amp; Card Orders</span>
-            </div>
           </div>
         </div>
       </form>

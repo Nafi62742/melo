@@ -7,6 +7,7 @@ import { Product } from '@/core/models/product.model';
 import { formatBDT } from '@/core/utils/currency.util';
 import { useCart } from '@/core/services/cart.context';
 import { useWishlist } from '@/core/services/wishlist.context';
+import { useI18n } from '@/core/i18n/i18n.context';
 import { ShoppingBag, Eye, Plus, Minus, Lock, Heart } from 'lucide-react';
 
 interface ProductCardProps {
@@ -16,6 +17,7 @@ interface ProductCardProps {
 }
 
 export function ProductCard({ product, className = '', onQuickView }: ProductCardProps) {
+  const { t } = useI18n();
   const { addItem, updateQuantity, getItemQuantity } = useCart();
   const { isInWishlist, toggleWishlist } = useWishlist();
 
@@ -54,18 +56,18 @@ export function ProductCard({ product, className = '', onQuickView }: ProductCar
         <div className="absolute top-3 left-3 flex flex-col items-start gap-1.5 z-10 pointer-events-none">
           {isOutOfStock ? (
             <span className="bg-red-900/95 border border-red-300/40 px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-white shadow-xs">
-              Out of Stock
+              {t.common.outOfStock}
             </span>
           ) : (
             <>
               {product.isNew && (
                 <span className="bg-[#FAF7F2]/95 border border-[#E6D5B8] px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-[#1C1917] shadow-xs">
-                  New
+                  {t.common.newBadge}
                 </span>
               )}
               {product.category === 'earrings' && (
                 <span className="bg-[#181512]/85 backdrop-blur-xs px-2.5 py-0.5 text-[9px] font-medium uppercase tracking-[0.16em] text-[#E6D5B8]">
-                  Ear Clip
+                  {t.productDetail.earClipBadge}
                 </span>
               )}
             </>
@@ -133,7 +135,7 @@ export function ProductCard({ product, className = '', onQuickView }: ProductCar
               disabled
               className="flex w-full items-center justify-center gap-2 bg-stone-800/90 py-2.5 px-4 text-[11px] font-semibold uppercase tracking-[0.18em] text-stone-300 cursor-not-allowed"
             >
-              <span>Out of Stock</span>
+              <span>{t.common.outOfStock}</span>
             </button>
           ) : isMaxReached ? (
             <button
@@ -142,7 +144,7 @@ export function ProductCard({ product, className = '', onQuickView }: ProductCar
               className="flex w-full items-center justify-center gap-2 bg-stone-800/95 py-2.5 px-4 text-[10px] font-semibold uppercase tracking-[0.14em] text-[#E6D5B8] cursor-not-allowed"
             >
               <Lock className="w-3.5 h-3.5" />
-              <span>Max Limit in Bag</span>
+              <span>{t.common.maxLimit}</span>
             </button>
           ) : (
             <button
@@ -152,7 +154,7 @@ export function ProductCard({ product, className = '', onQuickView }: ProductCar
               className="flex w-full items-center justify-center gap-2 bg-[#181512]/95 backdrop-blur-xs py-2.5 px-4 text-[11px] font-semibold uppercase tracking-[0.18em] text-[#FAF7F2] hover:bg-[#9A7B3E] transition-colors cursor-pointer"
             >
               <ShoppingBag className="w-3.5 h-3.5" />
-              <span>{inBagQty > 0 ? `In Bag (${inBagQty})` : 'Add to Bag'}</span>
+              <span>{inBagQty > 0 ? `${t.common.inBag} (${inBagQty})` : t.common.addToBag}</span>
             </button>
           )}
         </div>
@@ -165,7 +167,7 @@ export function ProductCard({ product, className = '', onQuickView }: ProductCar
             <span className="text-[#9A7B3E]">{product.categoryName}</span>
             {isOutOfStock && (
               <span className="text-red-700 font-bold">
-                Out of Stock
+                {t.common.outOfStock}
               </span>
             )}
           </div>
@@ -194,7 +196,7 @@ export function ProductCard({ product, className = '', onQuickView }: ProductCar
 
           {isOutOfStock ? (
             <span className="border border-red-200 bg-red-50 px-2 py-1 text-[10px] font-semibold uppercase tracking-wider text-red-800">
-              Out of Stock
+              {t.common.outOfStock}
             </span>
           ) : inBagQty > 0 ? (
             <div className="flex items-center border border-[#1C1917] bg-[#FAF7F2]">
