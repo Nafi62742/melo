@@ -6,6 +6,12 @@
 
 **Discover. Adorn. Repeat.**
 
+[![Next.js 16](https://img.shields.io/badge/Next.js-16-141312?style=flat-square&logo=next.js&logoColor=D4AF37)](https://nextjs.org/)
+[![React 19](https://img.shields.io/badge/React-19-141312?style=flat-square&logo=react&logoColor=D4AF37)](https://react.dev/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5-141312?style=flat-square&logo=typescript&logoColor=D4AF37)](https://www.typescriptlang.org/)
+[![Tailwind CSS v4](https://img.shields.io/badge/Tailwind_CSS-v4-141312?style=flat-square&logo=tailwindcss&logoColor=D4AF37)](https://tailwindcss.com/)
+[![Supabase](https://img.shields.io/badge/Supabase-PostgreSQL-141312?style=flat-square&logo=supabase&logoColor=D4AF37)](https://supabase.com/)
+
 ---
 
 _An editorial digital maison crafted for modern, light-luxury jewellery and curated lifestyle treasures across Bangladesh._
@@ -46,6 +52,17 @@ Experience the entire boutique in either **English** or **বাংলা**, mak
 - **Tailored for Bangladesh** — Seamless checkout with **Cash on Delivery (COD)** and **bKash** across Dhaka and every district nationwide.
 - **Complimentary Delivery** — Enjoy complimentary shipping on curated orders over `৳1,500`.
 - **Personal Concierge** — Direct live chat and WhatsApp assistance for styling advice, custom gifting requests, and real-time order care.
+
+---
+
+## ✦ Crafted With
+
+- **Framework** — **Next.js 16** & **React 19**
+- **Language** — **TypeScript 5**
+- **Styling & Design System** — **Tailwind CSS v4** & **Lucide Icons**
+- **Database & Cloud Backend** — **Supabase (PostgreSQL)**
+- **Media Optimization** — **Sharp (WebP / AVIF Pipeline)**
+- **Testing** — **Jest**
 
 ---
 
