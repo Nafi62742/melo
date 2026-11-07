@@ -1,9 +1,8 @@
 'use client';
 
 import React from 'react';
-import Image from 'next/image';
 import { ProductType } from '@/core/models/product-type.model';
-import { X } from 'lucide-react';
+import { X, ZoomIn } from 'lucide-react';
 
 export interface ProductFormState {
   id?: string;
@@ -155,14 +154,14 @@ export function AdminProductModal({
             <label className="block text-[11px] font-semibold uppercase tracking-wider text-[#1C1917] mb-1">
               Image Path / URL *
             </label>
-            <div className="flex gap-2.5">
+            <div className="flex gap-2">
               <input
                 type="text"
                 required
                 value={form.imageUrl}
                 onChange={(e) => onChangeForm({ ...form, imageUrl: e.target.value })}
                 placeholder="/products/earrings/Wreath%20Flowers.webp"
-                className="flex-1 border border-[#D6CFC5] px-3 py-2 text-[#1C1917] focus:outline-none focus:border-[#C5A059]"
+                className="flex-1 border border-[#D6CFC5] px-3 py-2 text-xs text-[#1C1917] focus:outline-none focus:border-[#C5A059]"
               />
               {form.imageUrl && (
                 <button
@@ -174,18 +173,56 @@ export function AdminProductModal({
                       subtitle: `${form.category} • ৳${form.priceBDT}`,
                     })
                   }
-                  className="relative h-10 w-9 flex-shrink-0 border border-[#E7E0D6] bg-stone-50 overflow-hidden cursor-zoom-in hover:border-[#9A7B3E] transition rounded-xs"
-                  title="Click to zoom image preview"
+                  className="inline-flex items-center gap-1.5 px-3 py-2 border border-[#C5A059] bg-[#FAF7F2] text-xs font-semibold text-[#9A7B3E] hover:bg-[#1C1917] hover:text-white transition cursor-pointer shrink-0"
+                  title="Click to view full zoomed image"
                 >
-                  <Image
-                    src={form.imageUrl}
-                    alt={form.name || 'Preview'}
-                    fill
-                    className="object-cover"
-                  />
+                  <ZoomIn className="w-3.5 h-3.5" />
+                  <span>View Full Image</span>
                 </button>
               )}
             </div>
+
+            {/* Instant Thumbnail Preview Card */}
+            {form.imageUrl && (
+              <div className="mt-2.5 flex items-center gap-3 p-2.5 border border-[#E7E0D6] bg-stone-50 rounded-xs">
+                <button
+                  type="button"
+                  onClick={() =>
+                    onZoomImage?.({
+                      src: form.imageUrl,
+                      title: form.name || 'Product Image Preview',
+                      subtitle: `${form.category} • ৳${form.priceBDT}`,
+                    })
+                  }
+                  className="relative h-14 w-12 border border-[#D6CFC5] bg-white overflow-hidden cursor-zoom-in hover:border-[#9A7B3E] transition shadow-2xs flex-shrink-0 group"
+                  title="Click to zoom image"
+                >
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={form.imageUrl}
+                    alt={form.name || 'Preview'}
+                    className="h-full w-full object-cover group-hover:scale-110 transition duration-200"
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).style.opacity = '0.3';
+                    }}
+                  />
+                  <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 flex items-center justify-center opacity-0 group-hover:opacity-100 transition">
+                    <ZoomIn className="w-4 h-4 text-white drop-shadow" />
+                  </div>
+                </button>
+                <div className="text-xs text-[#78716C] min-w-0 flex-1">
+                  <div className="font-medium text-[#1C1917] flex items-center gap-1.5">
+                    <span>Live Image Preview</span>
+                    <span className="text-[10px] text-[#9A7B3E] font-normal">
+                      (Tap thumbnail or button to zoom)
+                    </span>
+                  </div>
+                  <div className="text-[10px] text-stone-500 truncate font-mono mt-0.5">
+                    {form.imageUrl}
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
 
           <div>

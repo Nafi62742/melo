@@ -7,6 +7,9 @@ interface ProductPageProps {
   params: Promise<{ slug: string }>;
 }
 
+/** Allow route to block on params before streaming shell (Next.js 16 PPR) */
+export const instant = false;
+
 /** Placeholder used when Supabase returns no slugs at build time (Cache Components needs ≥ 1 param). */
 const PLACEHOLDER_SLUG = '__placeholder__';
 

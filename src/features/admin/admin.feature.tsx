@@ -1504,6 +1504,7 @@ export function AdminFeature() {
                                   src={p.imageUrl}
                                   alt={p.name}
                                   fill
+                                  unoptimized
                                   className="object-cover group-hover:scale-110 transition duration-300"
                                 />
                                 <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 flex items-center justify-center opacity-0 group-hover:opacity-100 transition">

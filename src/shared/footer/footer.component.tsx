@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useSyncExternalStore } from 'react';
 import Link from 'next/link';
 import {
   Truck,
@@ -14,33 +14,32 @@ import {
 import { storeLinkService, STORE_LINKS_UPDATED_EVENT } from '@/core/services/store-link.service';
 import {
   productTypeService,
+  DEFAULT_PRODUCT_TYPES,
   PRODUCT_TYPES_UPDATED_EVENT,
 } from '@/core/services/product-type.service';
-import { StoreLink } from '@/core/models/store-link.model';
-import { ProductType } from '@/core/models/product-type.model';
+import { DEFAULT_STORE_LINKS } from '@/core/models/store-link.model';
+
+const subscribeLinks = (callback: () => void) => {
+  window.addEventListener(STORE_LINKS_UPDATED_EVENT, callback);
+  return () => window.removeEventListener(STORE_LINKS_UPDATED_EVENT, callback);
+};
+
+const subscribeTypes = (callback: () => void) => {
+  window.addEventListener(PRODUCT_TYPES_UPDATED_EVENT, callback);
+  return () => window.removeEventListener(PRODUCT_TYPES_UPDATED_EVENT, callback);
+};
 
 export function Footer() {
-  const [links, setLinks] = useState<StoreLink[]>(() => [
-    ...storeLinkService.getAllLinks(),
-  ]);
-  const [productTypes, setProductTypes] = useState<ProductType[]>(() =>
-    productTypeService.getAllProductTypes()
+  const links = useSyncExternalStore(
+    subscribeLinks,
+    () => storeLinkService.getAllLinks(),
+    () => DEFAULT_STORE_LINKS
   );
-
-  useEffect(() => {
-    const refreshLinks = () => {
-      setLinks([...storeLinkService.getAllLinks()]);
-    };
-    const refreshTypes = () => {
-      setProductTypes([...productTypeService.getAllProductTypes()]);
-    };
-    window.addEventListener(STORE_LINKS_UPDATED_EVENT, refreshLinks);
-    window.addEventListener(PRODUCT_TYPES_UPDATED_EVENT, refreshTypes);
-    return () => {
-      window.removeEventListener(STORE_LINKS_UPDATED_EVENT, refreshLinks);
-      window.removeEventListener(PRODUCT_TYPES_UPDATED_EVENT, refreshTypes);
-    };
-  }, []);
+  const productTypes = useSyncExternalStore(
+    subscribeTypes,
+    () => productTypeService.getAllProductTypes(),
+    () => DEFAULT_PRODUCT_TYPES
+  );
 
   const activeSocialAndCustomLinks = links.filter((l) => l.isActive && Boolean(l.url));
   return (
