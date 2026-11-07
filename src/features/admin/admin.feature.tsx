@@ -69,6 +69,7 @@ const INITIAL_FORM: ProductFormState = {
   costPriceCNY: 66,
   stock: 2,
   imageUrl: '/products/earrings/Wreath%20Flowers.webp',
+  images: [],
   description:
     'Exquisite French-style light luxury piece. Hypoallergenic and crafted for effortless everyday elegance.',
   isFeatured: true,
@@ -91,7 +92,7 @@ export function AdminFeature() {
   const [zoomedImage, setZoomedImage] = useState<AdminZoomImage | null>(null);
   const [activeTab, setActiveTab] = useState<
     'products' | 'orders' | 'analytics' | 'links' | 'homepage'
-  >('orders');
+  >('products');
   const [products, setProducts] = useState<Product[]>(() => [...productService.getAllProducts()]);
   const [productTypes, setProductTypes] = useState<ProductType[]>(() => [
     ...productTypeService.getAllProductTypes(),
@@ -117,14 +118,12 @@ export function AdminFeature() {
   const [analyticsOrderScope, setAnalyticsOrderScope] = useState<'delivered' | 'active'>(
     'delivered'
   );
-  const [inlineEdits, setInlineEdits] = useState<
-    Record<string, { priceBDT: string; costPriceCNY: string }>
-  >({});
 
   // Add / Edit Product Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState<ProductFormState>(INITIAL_FORM);
+  const [productToDelete, setProductToDelete] = useState<Product | null>(null);
   const [syncMessage, setSyncMessage] = useState<string | null>(null);
   const csvFileInputRef = useRef<HTMLInputElement | null>(null);
 
@@ -376,52 +375,6 @@ export function AdminFeature() {
     setTimeout(() => setSyncMessage(null), 3500);
   };
 
-  const handleInlinePriceChange = (
-    product: Product,
-    field: 'priceBDT' | 'costPriceCNY',
-    value: string
-  ) => {
-    setInlineEdits((prev) => {
-      const current = prev[product.id] || {
-        priceBDT: String(product.priceBDT),
-        costPriceCNY: String(product.costPriceCNY ?? 0),
-      };
-      return {
-        ...prev,
-        [product.id]: {
-          ...current,
-          [field]: value,
-        },
-      };
-    });
-  };
-
-  const handleSaveInlinePricing = (product: Product) => {
-    const edited = inlineEdits[product.id];
-    if (!edited) return;
-    const nextPrice = Math.round(Number(edited.priceBDT));
-    const nextCost = Number(edited.costPriceCNY);
-    if (Number.isNaN(nextPrice) || nextPrice <= 0) return;
-
-    productService.updateProductPricing(
-      product.id,
-      nextPrice,
-      Number.isNaN(nextCost) ? product.costPriceCNY : nextCost
-    );
-    refreshProducts();
-    setInlineEdits((prev) => {
-      const copy = { ...prev };
-      delete copy[product.id];
-      return copy;
-    });
-    setSyncMessage(
-      `Updated "${product.name}" — Selling Price: ৳${nextPrice}, Per Piece Cost: ৳${
-        Number.isNaN(nextCost) ? product.costPriceCNY ?? 0 : nextCost
-      }!`
-    );
-    setTimeout(() => setSyncMessage(null), 3000);
-  };
-
   const openManualOrderModal = () => {
     const firstAvailable = products.find((p) => p.stock > 0);
     setManualSource('whatsapp');
@@ -532,6 +485,10 @@ export function AdminFeature() {
 
   const openEditModal = (product: Product) => {
     setEditingId(product.id);
+    const existingImages =
+      Array.isArray(product.images) && product.images.length > 0
+        ? product.images
+        : [product.imageUrl];
     setForm({
       id: product.id,
       name: product.name,
@@ -541,6 +498,7 @@ export function AdminFeature() {
       costPriceCNY: product.costPriceCNY ?? 50,
       stock: product.stock,
       imageUrl: product.imageUrl,
+      images: existingImages,
       description: product.description,
       isFeatured: Boolean(product.isFeatured),
       isNew: Boolean(product.isNew),
@@ -549,9 +507,7 @@ export function AdminFeature() {
   };
 
   const handleDeleteProduct = (product: Product) => {
-    if (!confirm(`Delete "${product.name}" from the catalogue?`)) return;
-    productService.deleteProduct(product.id);
-    refreshProducts();
+    setProductToDelete(product);
   };
 
   const handleToggleFeatured = (product: Product) => {
@@ -606,6 +562,10 @@ export function AdminFeature() {
       return;
     }
 
+    const finalImages = Array.from(
+      new Set([form.imageUrl, ...(form.images || [])].filter((url): url is string => Boolean(url && url.trim())))
+    );
+
     if (editingId) {
       const existing = productService.getProductById(editingId);
       if (existing) {
@@ -619,6 +579,7 @@ export function AdminFeature() {
           costPriceCNY: Number(form.costPriceCNY),
           stock: Number(form.stock),
           imageUrl: form.imageUrl,
+          images: finalImages,
           description: form.description,
           isFeatured: form.isFeatured,
           isNew: form.isNew,
@@ -639,6 +600,7 @@ export function AdminFeature() {
         costPriceCNY: Number(form.costPriceCNY),
         stock: Number(form.stock),
         imageUrl: form.imageUrl,
+        images: finalImages,
         description: form.description,
         isFeatured: form.isFeatured,
         isNew: form.isNew,
@@ -1013,6 +975,16 @@ export function AdminFeature() {
             {/* Store Sub-Tabs */}
             <div className="flex flex-wrap border border-[#E7E0D6] bg-stone-50 p-1 text-xs font-semibold">
               <button
+                onClick={() => setActiveTab('products')}
+                className={`px-3.5 py-1.5 text-[11px] uppercase tracking-[0.12em] transition cursor-pointer ${
+                  activeTab === 'products'
+                    ? 'bg-[#1C1917] text-[#FAF7F2]'
+                    : 'text-[#78716C] hover:text-[#1C1917]'
+                }`}
+              >
+                Products ({products.length})
+              </button>
+              <button
                 onClick={() => setActiveTab('orders')}
                 className={`px-3.5 py-1.5 text-[11px] uppercase tracking-[0.12em] transition cursor-pointer ${
                   activeTab === 'orders'
@@ -1021,16 +993,6 @@ export function AdminFeature() {
                 }`}
               >
                 Orders &amp; bKash ({orders.length})
-              </button>
-              <button
-                onClick={() => setActiveTab('products')}
-                className={`px-3.5 py-1.5 text-[11px] uppercase tracking-[0.12em] transition cursor-pointer ${
-                  activeTab === 'products'
-                    ? 'bg-[#1C1917] text-[#FAF7F2]'
-                    : 'text-[#78716C] hover:text-[#1C1917]'
-                }`}
-              >
-                Catalogue ({products.length})
               </button>
               <button
                 onClick={() => {
@@ -1469,20 +1431,9 @@ export function AdminFeature() {
                     </tr>
                   ) : (
                     filteredProducts.map((p) => {
-                      const rowEdit = inlineEdits[p.id];
-                      const currentPriceStr =
-                        rowEdit !== undefined ? rowEdit.priceBDT : String(p.priceBDT);
-                      const currentCostStr =
-                        rowEdit !== undefined
-                          ? rowEdit.costPriceCNY
-                          : String(p.costPriceCNY ?? 0);
                       const unitLanded = getUnitLandedCost(p);
                       const unitMinSell = getUnitMinSellPrice(p);
                       const unitProfit = getUnitNetProfit(p);
-                      const hasUnsavedPricing =
-                        rowEdit !== undefined &&
-                        (Number(rowEdit.priceBDT) !== p.priceBDT ||
-                          Number(rowEdit.costPriceCNY) !== Number(p.costPriceCNY ?? 0));
 
                       return (
                         <tr key={p.id} className="hover:bg-[#FAF7F2]/60">
@@ -1543,80 +1494,53 @@ export function AdminFeature() {
                             {p.category}
                           </td>
                           <td className="py-3 px-4">
-                            <div className="flex items-center gap-1.5">
-                              <span className="text-[10px] text-[#78716C]">৳</span>
-                              <input
-                                type="number"
-                                min={0}
-                                value={currentCostStr}
-                                onChange={(e) =>
-                                  handleInlinePriceChange(p, 'costPriceCNY', e.target.value)
-                                }
-                                onKeyDown={(e) => {
-                                  if (e.key === 'Enter') handleSaveInlinePricing(p);
-                                }}
-                                className="w-16 border border-[#D6CFC5] bg-white px-2 py-1 text-xs font-mono font-semibold text-[#1C1917] focus:outline-none focus:border-[#C5A059]"
-                                title="Edit Per Piece Base Cost (BDT)"
-                              />
+                            <div className="font-mono font-bold text-sm text-[#1C1917]">
+                              ¥{p.costPriceCNY ?? 0}
                             </div>
-                            <div className="text-[10px] text-[#78716C] mt-1">
-                              Landed: <strong className="text-[#1C1917]">৳{unitLanded}</strong> ·
-                              Min: ৳{unitMinSell}
+                            <div className="text-[10px] text-[#78716C] mt-0.5">
+                              Landed: <strong className="text-[#1C1917]">৳{unitLanded}</strong> · Min: ৳{unitMinSell}
                             </div>
                           </td>
                           <td className="py-3 px-4">
-                            <div className="flex items-center gap-1.5">
-                              <span className="text-[10px] text-[#78716C]">৳</span>
-                              <input
-                                type="number"
-                                min={1}
-                                value={currentPriceStr}
-                                onChange={(e) =>
-                                  handleInlinePriceChange(p, 'priceBDT', e.target.value)
-                                }
-                                onKeyDown={(e) => {
-                                  if (e.key === 'Enter') handleSaveInlinePricing(p);
-                                }}
-                                className="w-20 border border-[#D6CFC5] bg-white px-2 py-1 text-xs font-mono font-bold text-[#1C1917] focus:outline-none focus:border-[#C5A059]"
-                                title="Edit Selling / Revised Sell Price (BDT)"
-                              />
-                              {hasUnsavedPricing && (
-                                <button
-                                  type="button"
-                                  onClick={() => handleSaveInlinePricing(p)}
-                                  className="bg-[#1C1917] text-[#FAF7F2] px-2 py-1 text-[10px] font-semibold uppercase tracking-wider hover:bg-[#9A7B3E] cursor-pointer"
-                                >
-                                  Save ৳
-                                </button>
+                            <div className="flex items-baseline gap-1.5">
+                              <span className="font-mono font-bold text-sm text-[#1C1917]">
+                                ৳{p.priceBDT}
+                              </span>
+                              {p.originalPriceBDT && p.originalPriceBDT > p.priceBDT && (
+                                <span className="text-[10px] text-[#A8A29E] line-through font-mono">
+                                  ৳{p.originalPriceBDT}
+                                </span>
                               )}
                             </div>
                             <div
-                              className={`text-[10px] font-semibold mt-1 ${
+                              className={`text-[10px] font-semibold mt-0.5 ${
                                 unitProfit >= 0 ? 'text-emerald-700' : 'text-red-700'
                               }`}
                             >
                               Net Profit:{' '}
-                              {unitProfit >= 0 ? `+৳${unitProfit}` : `-৳${Math.abs(unitProfit)}`} /
-                              pc
+                              {unitProfit >= 0 ? `+৳${unitProfit}` : `-৳${Math.abs(unitProfit)}`} / pc
                             </div>
                           </td>
                           <td className="py-3 px-4">
                             <div className="flex flex-wrap items-center gap-2">
-                              <div className="inline-flex items-center border border-[#E7E0D6] bg-white">
+                              {/* Stock Stepper */}
+                              <div className="inline-flex items-center border border-[#D6CFC5] bg-white rounded-lg shadow-2xs overflow-hidden">
                                 <button
+                                  type="button"
                                   onClick={() => handleStockDelta(p.id, -1)}
                                   disabled={p.stock <= 0}
-                                  className="p-1 text-[#78716C] hover:text-[#1C1917] disabled:opacity-30 cursor-pointer"
+                                  className="px-2 py-1 text-[#78716C] hover:text-[#1C1917] hover:bg-stone-50 disabled:opacity-30 cursor-pointer transition"
                                   aria-label="Decrease stock"
                                 >
                                   <Minus className="w-3 h-3" />
                                 </button>
-                                <span className="w-8 text-center font-semibold text-[#1C1917]">
+                                <span className="w-8 text-center font-mono font-bold text-xs text-[#1C1917]">
                                   {p.stock}
                                 </span>
                                 <button
+                                  type="button"
                                   onClick={() => handleStockDelta(p.id, 1)}
-                                  className="p-1 text-[#78716C] hover:text-[#1C1917] cursor-pointer"
+                                  className="px-2 py-1 text-[#78716C] hover:text-[#1C1917] hover:bg-stone-50 cursor-pointer transition"
                                   aria-label="Increase stock"
                                 >
                                   <Plus className="w-3 h-3" />
@@ -1628,7 +1552,7 @@ export function AdminFeature() {
                                   <button
                                     type="button"
                                     onClick={() => handleMarkOneSold(p)}
-                                    className="border border-amber-300 bg-amber-50 px-2 py-1 text-[10px] font-semibold uppercase tracking-wider text-amber-900 hover:bg-amber-100 transition cursor-pointer"
+                                    className="rounded-lg border border-amber-300 bg-amber-50 hover:bg-amber-100 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wider text-amber-900 transition cursor-pointer shadow-2xs"
                                     title="Deduct 1 unit sold via WhatsApp/Messenger/Offline"
                                   >
                                     Sold 1 (-1)
@@ -1636,7 +1560,7 @@ export function AdminFeature() {
                                   <button
                                     type="button"
                                     onClick={() => handleMarkSoldOut(p)}
-                                    className="border border-red-200 bg-red-50 px-2 py-1 text-[10px] font-semibold uppercase tracking-wider text-red-800 hover:bg-red-100 transition cursor-pointer"
+                                    className="rounded-lg border border-red-300 bg-red-50 hover:bg-red-100 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wider text-red-800 transition cursor-pointer shadow-2xs"
                                     title="Set stock to 0 (Out of Stock on storefront)"
                                   >
                                     Sold Out (0)
@@ -1646,7 +1570,7 @@ export function AdminFeature() {
                                 <button
                                   type="button"
                                   onClick={() => handleQuickRestock(p, 3)}
-                                  className="border border-emerald-300 bg-emerald-50 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider text-emerald-800 hover:bg-emerald-100 transition cursor-pointer"
+                                  className="rounded-lg border border-emerald-300 bg-emerald-50 hover:bg-emerald-100 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wider text-emerald-800 transition cursor-pointer shadow-2xs"
                                   title="Quickly restock +3 units"
                                 >
                                   + Restock 3
@@ -1656,34 +1580,37 @@ export function AdminFeature() {
                           </td>
                           <td className="py-3 px-4">
                             {p.stock > 2 ? (
-                              <span className="inline-flex items-center border border-emerald-200 bg-emerald-50 px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-emerald-800">
+                              <span className="inline-flex items-center rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-emerald-800">
                                 In Stock ({p.stock})
                               </span>
                             ) : p.stock > 0 ? (
-                              <span className="inline-flex items-center border border-amber-300 bg-amber-50 px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-amber-900">
+                              <span className="inline-flex items-center rounded-full border border-amber-300 bg-amber-50 px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-amber-900">
                                 Low Stock ({p.stock})
                               </span>
                             ) : (
-                              <span className="inline-flex items-center border border-red-200 bg-red-50 px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-red-800">
+                              <span className="inline-flex items-center rounded-full border border-red-200 bg-red-50 px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-red-800">
                                 Sold Out (0)
                               </span>
                             )}
                           </td>
                           <td className="py-3 px-4 text-right">
-                            <div className="inline-flex items-center gap-2">
+                            <div className="inline-flex items-center gap-1.5">
                               <button
+                                type="button"
                                 onClick={() => openEditModal(p)}
-                                className="inline-flex items-center gap-1 border border-[#E7E0D6] bg-white px-2.5 py-1 text-[11px] font-semibold text-[#1C1917] hover:border-[#C5A059] cursor-pointer"
+                                className="inline-flex items-center gap-1.5 rounded-lg border border-[#D6CFC5] bg-white hover:bg-stone-50 hover:border-[#9A7B3E] px-3 py-1.5 text-xs font-semibold text-[#1C1917] transition shadow-2xs cursor-pointer"
                               >
-                                <Edit3 className="w-3 h-3 text-[#9A7B3E]" />
+                                <Edit3 className="w-3.5 h-3.5 text-[#9A7B3E]" />
                                 <span>Edit</span>
                               </button>
                               <button
+                                type="button"
                                 onClick={() => handleDeleteProduct(p)}
-                                className="p-1.5 text-[#A8A29E] hover:text-red-600 cursor-pointer"
+                                className="p-1.5 rounded-lg text-stone-400 hover:text-red-600 hover:bg-red-50 transition cursor-pointer"
                                 aria-label={`Delete ${p.name}`}
+                                title={`Delete ${p.name}`}
                               >
-                                <Trash2 className="w-3.5 h-3.5" />
+                                <Trash2 className="w-4 h-4" />
                               </button>
                             </div>
                           </td>
@@ -1773,6 +1700,81 @@ export function AdminFeature() {
         image={zoomedImage}
         onClose={() => setZoomedImage(null)}
       />
+
+      {/* Custom Delete Confirmation Modal */}
+      {productToDelete && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-150"
+          onClick={() => setProductToDelete(null)}
+        >
+          <div
+            className="w-full max-w-md bg-white border border-[#E7E0D6] rounded-2xl shadow-2xl overflow-hidden p-6 text-left"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-start gap-3.5">
+              <div className="w-10 h-10 rounded-full bg-red-50 border border-red-200 flex items-center justify-center flex-shrink-0 text-red-600">
+                <Trash2 className="w-5 h-5" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <h3 className="font-serif-display text-xl font-semibold text-[#1C1917]">
+                  Delete Jewellery Piece?
+                </h3>
+                <p className="text-xs text-[#78716C] mt-1 leading-relaxed">
+                  Are you sure you want to delete this piece? It will be permanently removed from your catalog and inventory.
+                </p>
+              </div>
+            </div>
+
+            {/* Product Card Preview */}
+            <div className="my-4 p-3 rounded-xl bg-[#FAF7F2] border border-[#E7E0D6] flex items-center gap-3">
+              <div className="relative h-14 w-12 rounded-lg overflow-hidden border border-[#D6CFC5] bg-white flex-shrink-0">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={productToDelete.imageUrl}
+                  alt={productToDelete.name}
+                  className="h-full w-full object-cover"
+                />
+              </div>
+              <div className="truncate flex-1 min-w-0">
+                <div className="font-medium text-xs text-[#1C1917] truncate">
+                  {productToDelete.name}
+                </div>
+                <div className="text-[11px] text-[#78716C] mt-0.5">
+                  {productToDelete.categoryName} ·{' '}
+                  <span className="font-mono font-semibold text-[#1C1917]">৳{productToDelete.priceBDT}</span> · Stock:{' '}
+                  {productToDelete.stock}
+                </div>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-end gap-2.5 pt-1">
+              <button
+                type="button"
+                onClick={() => setProductToDelete(null)}
+                className="rounded-lg border border-[#D6CFC5] bg-white hover:bg-stone-50 px-4 py-2 text-xs font-semibold text-[#78716C] hover:text-[#1C1917] transition cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  productService.deleteProduct(productToDelete.id);
+                  refreshProducts();
+                  setSyncMessage(`Deleted "${productToDelete.name}" from catalogue.`);
+                  setTimeout(() => setSyncMessage(null), 3000);
+                  setProductToDelete(null);
+                }}
+                className="rounded-lg bg-red-600 hover:bg-red-700 text-white px-5 py-2 text-xs font-semibold shadow-sm transition flex items-center gap-1.5 cursor-pointer"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+                <span>Yes, Delete Piece</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

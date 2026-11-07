@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -53,14 +54,15 @@ export function QuickViewModal({ product, isOpen, onClose }: QuickViewModalProps
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isOpen, onClose]);
 
-  if (!isOpen || !product) return null;
+  if (typeof document === 'undefined' || !isOpen || !product) return null;
 
-  return (
+  return createPortal(
     <div
       role="dialog"
       aria-modal="true"
       aria-labelledby="quick-view-title"
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-[#181512]/75 backdrop-blur-xs transition-opacity duration-300"
+      className="fixed inset-0 flex items-center justify-center p-4 sm:p-6 bg-[#181512]/75 backdrop-blur-xs transition-opacity duration-300"
+      style={{ zIndex: 99999 }}
       onClick={onClose}
     >
       <QuickViewModalContent
@@ -68,7 +70,8 @@ export function QuickViewModal({ product, isOpen, onClose }: QuickViewModalProps
         product={product}
         onClose={onClose}
       />
-    </div>
+    </div>,
+    document.body
   );
 }
 
