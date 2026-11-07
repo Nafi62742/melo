@@ -1,5 +1,5 @@
 import { Order, OrderStatus, PaymentStatus } from '../models/order.model';
-import { orderRepository } from '../repositories/order.repository';
+import { orderRepository, isValidUuid } from '../repositories/order.repository';
 import { customerService } from './customer.service';
 import { cleanPhoneNumber } from '../utils/tracking.util';
 
@@ -89,7 +89,7 @@ class OrderService {
     void customerService
       .ensureCustomerFromOrder(normalizedOrder.customer, normalizedOrder.total)
       .then((profile) => {
-        if (!normalizedOrder.customerId && profile) {
+        if (profile?.id && isValidUuid(profile.id)) {
           normalizedOrder.customerId = profile.id;
           const currentLocal = this.getOrders();
           const target = currentLocal.find((o) => o.id === normalizedOrder.id);
@@ -97,6 +97,7 @@ class OrderService {
             target.customerId = profile.id;
             orderRepository.saveLocal(currentLocal);
           }
+          void orderRepository.updateCustomerIdInDb(normalizedOrder.id, profile.id);
         }
       });
 

@@ -83,11 +83,14 @@ export class CustomerRepository {
   async upsertInDb(customer: CustomerProfile, password?: string): Promise<CustomerProfile | null> {
     if (!supabaseClient.isConfigured()) return null;
     try {
+      const resolvedPassword =
+        password !== undefined ? password : customer.password !== undefined ? customer.password : '';
+
       const payload: CustomerRow = {
         phone: customer.phone,
         email: customer.email || null,
         full_name: customer.fullName,
-        ...(password ? { password } : {}),
+        password: resolvedPassword,
         default_address: customer.defaultAddress,
         delivery_zone: customer.deliveryZone,
         total_orders: customer.totalOrders ?? 0,
@@ -111,6 +114,7 @@ export class CustomerRepository {
         phone: row.phone,
         email: row.email || undefined,
         fullName: row.full_name,
+        password: row.password || undefined,
         defaultAddress: row.default_address,
         deliveryZone: row.delivery_zone,
         totalOrders: row.total_orders ?? customer.totalOrders ?? 0,
@@ -173,6 +177,7 @@ export class CustomerRepository {
         phone: row.phone,
         email: row.email || undefined,
         fullName: row.full_name,
+        password: row.password || undefined,
         defaultAddress: row.default_address,
         deliveryZone: row.delivery_zone,
         totalOrders: row.total_orders ?? 0,
@@ -206,6 +211,7 @@ export class CustomerRepository {
         phone: row.phone,
         email: row.email || undefined,
         fullName: row.full_name,
+        password: row.password || undefined,
         defaultAddress: row.default_address,
         deliveryZone: row.delivery_zone,
         savedTrxIds: Array.isArray(row.saved_trx_ids) ? row.saved_trx_ids : [],

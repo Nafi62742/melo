@@ -5,13 +5,18 @@ const ORDERS_STORAGE_KEY = 'melo_orders';
 const BKASH_NUMBER_KEY = 'melo_bkash_number';
 const DEFAULT_BKASH_NUMBER = process.env.NEXT_PUBLIC_BKASH_NUMBER || '01760887297';
 
+export const isValidUuid = (val?: string | null): boolean =>
+  Boolean(val && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(val));
+
 /**
  * OrderRepository — Handles all database (`public.orders`) and local storage
  * persistence for customer & manual orders.
  */
 export class OrderRepository {
+  private memoryOrders: Order[] = [];
+
   loadLocal(): Order[] {
-    if (typeof window === 'undefined') return [];
+    if (typeof window === 'undefined') return this.memoryOrders;
     try {
       const stored = localStorage.getItem(ORDERS_STORAGE_KEY);
       if (stored) {
@@ -20,10 +25,11 @@ export class OrderRepository {
     } catch {
       // ignore storage errors
     }
-    return [];
+    return this.memoryOrders;
   }
 
   saveLocal(orders: Order[]): void {
+    this.memoryOrders = orders;
     if (typeof window === 'undefined') return;
     try {
       localStorage.setItem(ORDERS_STORAGE_KEY, JSON.stringify(orders));
@@ -74,7 +80,7 @@ export class OrderRepository {
         id: order.id,
         orderNumber: order.orderNumber,
         createdAt: order.createdAt,
-        customerId: order.customerId || null,
+        customerId: isValidUuid(order.customerId) ? order.customerId : null,
         customerPhone: order.customerPhone || order.customer.phone,
         customerName: order.customer.fullName,
         deliveryAddress: order.customer.address,
@@ -106,6 +112,23 @@ export class OrderRepository {
         }),
         body: JSON.stringify(payload),
       });
+      return res.ok;
+    } catch {
+      return false;
+    }
+  }
+
+  async updateCustomerIdInDb(orderId: string, customerId: string): Promise<boolean> {
+    if (!supabaseClient.isConfigured() || !isValidUuid(customerId)) return false;
+    try {
+      const res = await fetch(
+        `${supabaseClient.baseUrl}/rest/v1/orders?id=eq.${encodeURIComponent(orderId)}`,
+        {
+          method: 'PATCH',
+          headers: supabaseClient.getHeaders(),
+          body: JSON.stringify({ customerId }),
+        }
+      );
       return res.ok;
     } catch {
       return false;
