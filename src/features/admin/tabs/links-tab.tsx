@@ -3,6 +3,7 @@
 import React from 'react';
 import { StoreLink, StoreLinkCategory } from '@/core/models/store-link.model';
 import { Link2, Trash2 } from 'lucide-react';
+import { useI18n } from '@/core/i18n/i18n.context';
 
 interface AdminLinksTabProps {
   storeLinks: StoreLink[];
@@ -35,6 +36,7 @@ export function AdminLinksTab({
   onChangeNewLinkCategory,
   onAddNewStoreLink,
 }: AdminLinksTabProps) {
+  const { t } = useI18n();
   return (
     <div className="space-y-6">
       <div className="border border-[#E7E0D6] bg-white p-6 rounded-xl shadow-xs">
@@ -43,11 +45,10 @@ export function AdminLinksTab({
             <Link2 className="w-5 h-5 text-[#9A7B3E]" />
             <div>
               <h2 className="font-serif-display text-2xl font-medium text-[#1C1917]">
-                Messenger, WhatsApp &amp; Custom Store URLs
+                {t.admin.linksTab.title}
               </h2>
               <p className="text-xs text-[#78716C]">
-                Update your floating concierge chat links (WhatsApp &amp; Messenger) or add any
-                custom social/external URL.
+                {t.admin.linksTab.subtitle}
               </p>
             </div>
           </div>
@@ -105,7 +106,7 @@ export function AdminLinksTab({
                     }}
                     className="accent-[#1C1917] rounded"
                   />
-                  <span className="text-[11px] font-semibold">Active</span>
+                  <span className="text-[11px] font-semibold">{t.admin.linksTab.active}</span>
                 </label>
 
                 <button
@@ -113,7 +114,7 @@ export function AdminLinksTab({
                   onClick={() => onUpdateStoreLink(item)}
                   className="boutique-btn-primary px-3.5 py-2 text-[10px] cursor-pointer rounded-lg shadow-2xs"
                 >
-                  Save URL
+                  {t.admin.linksTab.saveUrl}
                 </button>
 
                 {item.key !== 'whatsapp' && item.key !== 'messenger' && (
@@ -139,17 +140,17 @@ export function AdminLinksTab({
       >
         <div>
           <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[#9A7B3E] block">
-            Add Custom URL
+            {t.admin.linksTab.addBadge}
           </span>
           <h3 className="font-serif-display text-2xl font-medium text-[#1C1917]">
-            Add Any New Chat, Social, or External URL
+            {t.admin.linksTab.addTitle}
           </h3>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-4 gap-4 text-xs">
           <div>
             <label className="block text-[11px] font-semibold uppercase tracking-wider text-[#1C1917] mb-1">
-              Display Label *
+              {t.admin.linksTab.displayLabel}
             </label>
             <input
               type="text"
@@ -163,7 +164,7 @@ export function AdminLinksTab({
 
           <div>
             <label className="block text-[11px] font-semibold uppercase tracking-wider text-[#1C1917] mb-1">
-              Unique Key (Optional)
+              {t.admin.linksTab.uniqueKey}
             </label>
             <input
               type="text"
@@ -176,7 +177,7 @@ export function AdminLinksTab({
 
           <div>
             <label className="block text-[11px] font-semibold uppercase tracking-wider text-[#1C1917] mb-1">
-              Full URL *
+              {t.admin.linksTab.fullUrl}
             </label>
             <input
               type="text"
@@ -190,16 +191,16 @@ export function AdminLinksTab({
 
           <div>
             <label className="block text-[11px] font-semibold uppercase tracking-wider text-[#1C1917] mb-1">
-              Placement Category
+              {t.admin.linksTab.placementCategory}
             </label>
             <select
               value={newLinkCategory}
               onChange={(e) => onChangeNewLinkCategory(e.target.value as StoreLinkCategory)}
               className="w-full border border-[#D6CFC5] px-3 py-2 text-[#1C1917] bg-white focus:outline-none focus:border-[#C5A059] rounded-lg"
             >
-              <option value="chat">Floating Chat Popup (chat)</option>
-              <option value="social">Footer Social Link (social)</option>
-              <option value="other">Footer Custom Link (other)</option>
+              <option value="chat">{t.admin.linksTab.catChat}</option>
+              <option value="social">{t.admin.linksTab.catSocial}</option>
+              <option value="other">{t.admin.linksTab.catOther}</option>
             </select>
           </div>
         </div>
@@ -209,7 +210,7 @@ export function AdminLinksTab({
             type="submit"
             className="boutique-btn-primary px-6 py-2.5 cursor-pointer rounded-lg shadow-2xs"
           >
-            + Add URL to Store
+            {t.admin.linksTab.addUrlBtn}
           </button>
         </div>
       </form>

@@ -6,6 +6,7 @@ import Image from 'next/image';
 import { Product } from '@/core/models/product.model';
 import { useWishlist } from '@/core/services/wishlist.context';
 import { useCart } from '@/core/services/cart.context';
+import { useI18n } from '@/core/i18n/i18n.context';
 import { productService, PRODUCTS_UPDATED_EVENT } from '@/core/services/product.service';
 import { formatBDT } from '@/core/utils/currency.util';
 import {
@@ -25,6 +26,7 @@ export function WishlistDrawer() {
     totalWishlist,
   } = useWishlist();
 
+  const { t } = useI18n();
   const { addItem, setIsCartDrawerOpen } = useCart();
   const [allProducts, setAllProducts] = useState<Product[]>(() =>
     productService.getAllProducts()
@@ -67,7 +69,7 @@ export function WishlistDrawer() {
           <div className="flex items-center gap-2.5">
             <Heart className="w-5 h-5 text-[#9A7B3E] fill-[#9A7B3E]/20" />
             <h2 className="font-serif-display text-xl font-semibold tracking-wide text-[#1C1917]">
-              Saved Pieces <span className="text-sm font-sans text-[#78716C]">({totalWishlist})</span>
+              {t.wishlist.title} <span className="text-sm font-sans text-[#78716C]">({totalWishlist})</span>
             </h2>
           </div>
           <button
@@ -88,17 +90,17 @@ export function WishlistDrawer() {
                 <Heart className="w-7 h-7 stroke-[1.25]" />
               </div>
               <h3 className="font-serif-display text-2xl font-medium text-[#1C1917]">
-                Your Wishlist is Empty
+                {t.wishlist.empty}
               </h3>
               <p className="mt-2 text-xs text-[#78716C] max-w-xs leading-relaxed">
-                Click the heart icon on any item or gadget you love to save it here for later.
+                {t.wishlist.emptyDesc}
               </p>
               <button
                 type="button"
                 onClick={() => setIsWishlistDrawerOpen(false)}
                 className="mt-6 boutique-btn-primary px-6 py-2.5 text-xs uppercase tracking-wider cursor-pointer"
               >
-                Explore Collection
+                {t.wishlist.exploreCollection}
               </button>
             </div>
           ) : (
@@ -176,7 +178,7 @@ export function WishlistDrawer() {
                       <div className="mt-3 pt-2 border-t border-[#F3EDE4] flex items-center justify-between">
                         {isOutOfStock ? (
                           <span className="text-[10px] font-semibold text-red-700 uppercase tracking-wider">
-                            Out of Stock
+                            {t.common.outOfStock}
                           </span>
                         ) : (
                           <button
@@ -185,7 +187,7 @@ export function WishlistDrawer() {
                             className="flex items-center gap-1.5 boutique-btn-primary px-3 py-1.5 text-[10px] uppercase tracking-wider cursor-pointer"
                           >
                             <ShoppingBag className="w-3 h-3" />
-                            <span>Add to Bag</span>
+                            <span>{t.common.addToBag}</span>
                           </button>
                         )}
 
@@ -194,7 +196,7 @@ export function WishlistDrawer() {
                           onClick={() => setIsWishlistDrawerOpen(false)}
                           className="text-[10px] text-[#78716C] hover:text-[#1C1917] hover:underline"
                         >
-                          View Details →
+                          {t.common.viewDetails} →
                         </Link>
                       </div>
                     </div>
@@ -215,7 +217,7 @@ export function WishlistDrawer() {
                 onClick={clearWishlist}
                 className="text-red-700 hover:underline cursor-pointer"
               >
-                Clear Wishlist
+                {t.wishlist.clearAll}
               </button>
             </div>
             <button

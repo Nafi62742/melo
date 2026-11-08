@@ -315,11 +315,11 @@ export function HomeFeature() {
               Shop by Department
             </span>
             <h2 className="font-serif-display text-3xl sm:text-5xl font-medium text-[#1C1917]">
-              {t.categories.title}
+              {t.home.categoriesTitle}
             </h2>
           </div>
           <p className="text-xs sm:text-sm text-[#78716C] max-w-md">
-            {t.categories.subtitle}
+            {t.home.categoriesSubtitle}
           </p>
         </div>
 

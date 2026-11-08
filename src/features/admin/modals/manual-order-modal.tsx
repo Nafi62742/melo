@@ -6,6 +6,7 @@ import { Product } from '@/core/models/product.model';
 import { CartItem } from '@/core/models/cart.model';
 import { DeliveryZone, OrderSource, PaymentMethod } from '@/core/models/order.model';
 import { MessageCircle, X } from 'lucide-react';
+import { useI18n } from '@/core/i18n/i18n.context';
 
 interface AdminManualOrderModalProps {
   isOpen: boolean;
@@ -66,6 +67,7 @@ export function AdminManualOrderModal({
   onRemoveManualItem,
   onSubmitManualOrder,
 }: AdminManualOrderModalProps) {
+  const { t } = useI18n();
   if (!isOpen) return null;
 
   return (
@@ -74,11 +76,10 @@ export function AdminManualOrderModal({
         <div className="flex items-center justify-between bg-[#181512] px-6 py-4 text-[#FAF7F2]">
           <div>
             <h3 className="font-serif-display text-2xl font-medium">
-              Create Manual Order (WhatsApp / Messenger)
+              {t.admin.modals.manualModalTitle}
             </h3>
             <p className="text-[11px] text-[#A8A29E] mt-0.5">
-              Automatically deducts stock, saves to public.orders, and lets the customer track on
-              /account by phone number.
+              {t.admin.modals.manualModalSub}
             </p>
           </div>
           <button
@@ -93,7 +94,7 @@ export function AdminManualOrderModal({
           {/* Order Source Channel */}
           <div>
             <label className="block text-[11px] font-semibold uppercase tracking-wider text-[#1C1917] mb-2">
-              Order Channel *
+              {t.admin.modals.orderChannel}
             </label>
             <div className="grid grid-cols-2 gap-3">
               <button
@@ -106,7 +107,7 @@ export function AdminManualOrderModal({
                 }`}
               >
                 <MessageCircle className="w-4 h-4" />
-                WhatsApp Order
+                {t.admin.modals.whatsappOrder}
               </button>
               <button
                 type="button"
@@ -118,7 +119,7 @@ export function AdminManualOrderModal({
                 }`}
               >
                 <MessageCircle className="w-4 h-4" />
-                Facebook Messenger
+                {t.admin.modals.messengerOrder}
               </button>
             </div>
           </div>
@@ -127,7 +128,7 @@ export function AdminManualOrderModal({
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="block text-[11px] font-semibold uppercase tracking-wider text-[#1C1917] mb-1">
-                Customer Full Name *
+                {t.admin.modals.custFullName}
               </label>
               <input
                 type="text"
@@ -141,7 +142,7 @@ export function AdminManualOrderModal({
 
             <div>
               <label className="block text-[11px] font-semibold uppercase tracking-wider text-[#1C1917] mb-1">
-                Customer Phone (For /account Tracking) *
+                {t.admin.modals.custPhone}
               </label>
               <input
                 type="tel"
@@ -156,7 +157,7 @@ export function AdminManualOrderModal({
 
           <div>
             <label className="block text-[11px] font-semibold uppercase tracking-wider text-[#1C1917] mb-1">
-              Full Delivery Address *
+              {t.admin.modals.fullAddress}
             </label>
             <input
               type="text"
@@ -171,21 +172,21 @@ export function AdminManualOrderModal({
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="block text-[11px] font-semibold uppercase tracking-wider text-[#1C1917] mb-1">
-                Delivery Zone *
+                {t.admin.modals.deliveryZone}
               </label>
               <select
                 value={manualDeliveryZone}
                 onChange={(e) => onChangeManualDeliveryZone(e.target.value as DeliveryZone)}
                 className="w-full border border-[#D6CFC5] bg-white px-3 py-2 text-[#1C1917] focus:outline-none focus:border-[#C5A059] rounded-lg"
               >
-                <option value="inside_dhaka">Inside Dhaka (৳70)</option>
-                <option value="outside_dhaka">Outside Dhaka (৳130)</option>
+                <option value="inside_dhaka">Inside Dhaka (৳60)</option>
+                <option value="outside_dhaka">Outside Dhaka (৳120)</option>
               </select>
             </div>
 
             <div>
               <label className="block text-[11px] font-semibold uppercase tracking-wider text-[#1C1917] mb-1">
-                Payment Method *
+                {t.admin.modals.paymentMethod}
               </label>
               <select
                 value={manualPaymentMethod}
@@ -231,7 +232,7 @@ export function AdminManualOrderModal({
           {/* Piece Selector */}
           <div className="border border-[#E7E0D6] bg-[#FAF7F2] p-4 space-y-3 rounded-xl">
             <label className="block text-[11px] font-semibold uppercase tracking-wider text-[#1C1917]">
-              Select Jewellery Piece(s) Bought *
+              {t.admin.modals.selectPieces}
             </label>
             <div className="flex flex-col sm:flex-row gap-2">
               <select
@@ -263,13 +264,13 @@ export function AdminManualOrderModal({
                 onClick={onAddManualItem}
                 className="bg-[#1C1917] text-white px-4 py-2 text-[11px] font-semibold uppercase tracking-wider hover:bg-[#332E2A] cursor-pointer rounded-lg shadow-2xs"
               >
-                + Add Piece
+                {t.admin.modals.addPieceBtn}
               </button>
             </div>
 
             {manualItems.length === 0 ? (
               <p className="text-[11px] text-[#78716C] italic">
-                No pieces added yet. Choose a piece above and click &ldquo;+ Add Piece&rdquo;.
+                {t.admin.modals.noPiecesAdded}
               </p>
             ) : (
               <div className="space-y-2 pt-2">
@@ -284,6 +285,7 @@ export function AdminManualOrderModal({
                         alt={item.product.name}
                         width={32}
                         height={32}
+                        unoptimized
                         className="w-8 h-8 object-cover border border-[#E7E0D6] rounded"
                       />
                       <div>
@@ -301,23 +303,33 @@ export function AdminManualOrderModal({
                       onClick={() => onRemoveManualItem(item.product.id)}
                       className="text-red-600 hover:text-red-800 text-[11px] font-semibold cursor-pointer p-1 rounded hover:bg-red-50"
                     >
-                      Remove
+                      {t.admin.modals.remove}
                     </button>
                   </div>
                 ))}
 
-                <div className="flex items-center justify-between pt-2 border-t border-[#E7E0D6] text-xs">
-                  <span className="text-[#78716C]">
-                    Subtotal + Delivery (৳{manualDeliveryZone === 'inside_dhaka' ? 70 : 130}):
-                  </span>
-                  <span className="font-serif-display text-lg font-semibold text-[#1C1917]">
-                    ৳
-                    {(
-                      manualItems.reduce((acc, i) => acc + i.product.priceBDT * i.quantity, 0) +
-                      (manualDeliveryZone === 'inside_dhaka' ? 70 : 130)
-                    ).toLocaleString()}
-                  </span>
-                </div>
+                {(() => {
+                  const manualSubtotal = manualItems.reduce(
+                    (acc, i) => acc + i.product.priceBDT * i.quantity,
+                    0
+                  );
+                  const manualFee =
+                    manualSubtotal >= 1500
+                      ? 0
+                      : manualDeliveryZone === 'inside_dhaka'
+                      ? 60
+                      : 120;
+                  return (
+                    <div className="flex items-center justify-between pt-2 border-t border-[#E7E0D6] text-xs">
+                      <span className="text-[#78716C]">
+                        Subtotal + Delivery (৳{manualFee}):
+                      </span>
+                      <span className="font-serif-display text-lg font-semibold text-[#1C1917]">
+                        ৳{(manualSubtotal + manualFee).toLocaleString()}
+                      </span>
+                    </div>
+                  );
+                })()}
               </div>
             )}
           </div>
@@ -328,13 +340,13 @@ export function AdminManualOrderModal({
               onClick={onClose}
               className="boutique-btn-outline px-5 py-2.5 cursor-pointer rounded-lg shadow-2xs"
             >
-              Cancel
+              {t.admin.modals.cancel}
             </button>
             <button
               type="submit"
               className="boutique-btn-primary px-6 py-2.5 cursor-pointer rounded-lg shadow-2xs"
             >
-              Create Order &amp; Deduct Stock
+              {t.admin.modals.createOrderBtn}
             </button>
           </div>
         </form>

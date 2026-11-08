@@ -12,6 +12,7 @@ import {
   AlertTriangle,
   Loader2,
 } from 'lucide-react';
+import { useI18n } from '@/core/i18n/i18n.context';
 
 export interface AdminZoomImage {
   src: string;
@@ -61,6 +62,7 @@ function AdminImageZoomContent({
   image: AdminZoomImage;
   onClose: () => void;
 }) {
+  const { t } = useI18n();
   const [scale, setScale] = useState<number>(1);
   const [zoomOrigin, setZoomOrigin] = useState<{ x: number; y: number }>({ x: 50, y: 50 });
   const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -216,7 +218,7 @@ function AdminImageZoomContent({
               aria-label="Close image zoom"
             >
               <X className="w-3.5 h-3.5" />
-              <span>Close</span>
+              <span>{t.admin.modals.close}</span>
             </button>
           </div>
         </div>
@@ -238,7 +240,7 @@ function AdminImageZoomContent({
             className="absolute top-20 left-1/2 -translate-x-1/2 z-30 inline-flex items-center gap-1.5 px-4 py-2 bg-[#1C1917] hover:bg-[#2A241E] border border-[#C5A059] text-xs font-medium text-[#FAF7F2] rounded-full shadow-2xl transition cursor-pointer"
           >
             <RotateCcw className="w-3.5 h-3.5 text-[#C5A059]" />
-            <span>Click to Reset Zoom ({Math.round(scale * 100)}%)</span>
+            <span>{t.admin.modals.resetZoom} ({Math.round(scale * 100)}%)</span>
           </button>
         )}
 
@@ -246,7 +248,7 @@ function AdminImageZoomContent({
         {isLoading && !hasError && (
           <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 text-stone-400 z-10 pointer-events-none">
             <Loader2 className="w-8 h-8 animate-spin text-[#C5A059]" />
-            <span className="text-xs tracking-wider">Loading image...</span>
+            <span className="text-xs tracking-wider">{t.admin.modals.loadingImage}</span>
           </div>
         )}
 
@@ -258,7 +260,7 @@ function AdminImageZoomContent({
           >
             <AlertTriangle className="w-10 h-10 text-amber-500 mb-3" />
             <h4 className="font-serif-display text-lg text-white font-medium mb-1">
-              Image Could Not Be Loaded
+              {t.admin.modals.imageLoadError}
             </h4>
             <p className="text-xs text-[#A8A29E] mb-4 font-mono break-all">
               {image.src}
@@ -270,7 +272,7 @@ function AdminImageZoomContent({
               className="inline-flex items-center gap-1.5 px-4 py-2 bg-[#25201A] border border-[#3E3832] text-xs text-[#C5A059] hover:text-white transition rounded-full"
             >
               <ExternalLink className="w-3.5 h-3.5" />
-              <span>Try Opening Direct Link</span>
+              <span>{t.admin.modals.openDirectLink}</span>
             </a>
           </div>
         ) : (

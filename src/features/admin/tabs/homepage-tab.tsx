@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { Product } from '@/core/models/product.model';
 import { HeroContent, StoreContent } from '@/core/models/store-content.model';
 import { storeContentService } from '@/core/services/store-content.service';
+import { useI18n } from '@/core/i18n/i18n.context';
 import {
   Sparkles,
   Save,
@@ -25,6 +26,7 @@ interface AdminHomepageTabProps {
 }
 
 export function AdminHomepageTab({ products, onNotify }: AdminHomepageTabProps) {
+  const { t } = useI18n();
   const [storeContent, setStoreContent] = useState<StoreContent>(() =>
     storeContentService.getStoreContent()
   );
@@ -77,13 +79,13 @@ export function AdminHomepageTab({ products, onNotify }: AdminHomepageTabProps) 
         <div>
           <div className="inline-flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.2em] text-[#9A7B3E] mb-1">
             <Sparkles className="w-3.5 h-3.5" />
-            <span>Storefront Customizer</span>
+            <span>{t.admin.homepageTab.badge}</span>
           </div>
           <h2 className="font-serif-display text-2xl font-semibold text-[#1C1917]">
-            Homepage &amp; Hero Editor
+            {t.admin.homepageTab.title}
           </h2>
           <p className="text-xs text-[#78716C] mt-1">
-            Select featured showcase products for the hero arch, edit headline copy, action buttons, trust metrics, and announcement tickers.
+            {t.admin.homepageTab.subtitle}
           </p>
         </div>
 
@@ -95,7 +97,7 @@ export function AdminHomepageTab({ products, onNotify }: AdminHomepageTabProps) 
             className="inline-flex items-center gap-1.5 border border-[#E7E0D6] bg-[#FAF7F2] px-3.5 py-2 text-xs font-semibold text-[#1C1917] hover:border-[#1C1917] transition rounded-lg shadow-2xs"
           >
             <ExternalLink className="w-3.5 h-3.5" />
-            <span>View Storefront</span>
+            <span>{t.admin.homepageTab.viewStorefront}</span>
           </Link>
 
           <button
@@ -104,7 +106,7 @@ export function AdminHomepageTab({ products, onNotify }: AdminHomepageTabProps) 
             className="inline-flex items-center gap-1.5 border border-[#E7E0D6] bg-white px-3.5 py-2 text-xs font-semibold text-[#78716C] hover:text-[#1C1917] hover:border-[#1C1917] transition cursor-pointer rounded-lg shadow-2xs"
           >
             <RotateCcw className="w-3.5 h-3.5" />
-            <span>Reset</span>
+            <span>{t.admin.homepageTab.reset}</span>
           </button>
 
           <button
@@ -119,12 +121,12 @@ export function AdminHomepageTab({ products, onNotify }: AdminHomepageTabProps) 
             {isSaved ? (
               <>
                 <CheckCircle2 className="w-4 h-4" />
-                <span>Saved!</span>
+                <span>{t.admin.homepageTab.saved}</span>
               </>
             ) : (
               <>
                 <Save className="w-4 h-4" />
-                <span>Save Changes</span>
+                <span>{t.admin.homepageTab.saveChanges}</span>
               </>
             )}
           </button>
@@ -136,11 +138,11 @@ export function AdminHomepageTab({ products, onNotify }: AdminHomepageTabProps) 
         <div className="flex items-center gap-2 border-b border-[#E7E0D6] pb-3">
           <Star className="w-4 h-4 text-[#9A7B3E]" />
           <h3 className="font-serif-display text-lg font-semibold text-[#1C1917]">
-            1. Hero Featured Showcase Products
+            {t.admin.homepageTab.sec1Title}
           </h3>
         </div>
         <p className="text-xs text-[#78716C]">
-          Choose which products appear on the right side of the Hero banner. Prices, discounts, and inventory status are automatically synced from your product catalog.
+          {t.admin.homepageTab.sec1Sub}
         </p>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -148,7 +150,7 @@ export function AdminHomepageTab({ products, onNotify }: AdminHomepageTabProps) 
           <div className="border border-[#E7E0D6] bg-[#FAF7F2] p-5 space-y-4">
             <div className="flex items-center justify-between">
               <span className="text-xs font-bold uppercase tracking-wider text-[#1C1917]">
-                A. Primary Arch Showcase Piece
+                {t.admin.homepageTab.primaryArch}
               </span>
               <span className="text-[10px] uppercase tracking-widest text-[#9A7B3E] font-semibold">
                 Large Arch Frame
@@ -157,7 +159,7 @@ export function AdminHomepageTab({ products, onNotify }: AdminHomepageTabProps) 
 
             <div>
               <label className="block text-[11px] font-semibold uppercase tracking-wider text-[#78716C] mb-1">
-                Select Product:
+                {t.admin.homepageTab.selectProduct}
               </label>
               <select
                 value={heroForm.primaryProductSlug}
@@ -176,7 +178,7 @@ export function AdminHomepageTab({ products, onNotify }: AdminHomepageTabProps) 
 
             <div>
               <label className="block text-[11px] font-semibold uppercase tracking-wider text-[#78716C] mb-1">
-                Badge / Tag Label:
+                {t.admin.homepageTab.badgeLabel}
               </label>
               <input
                 type="text"
@@ -197,6 +199,7 @@ export function AdminHomepageTab({ products, onNotify }: AdminHomepageTabProps) 
                     src={primarySelectedProduct.imageUrl}
                     alt={primarySelectedProduct.name}
                     fill
+                    unoptimized
                     className="object-cover"
                   />
                 </div>
@@ -208,7 +211,7 @@ export function AdminHomepageTab({ products, onNotify }: AdminHomepageTabProps) 
                     {primarySelectedProduct.name}
                   </div>
                   <div className="text-[11px] text-[#78716C]">
-                    Current Price: <strong className="text-[#1C1917]">৳{primarySelectedProduct.priceBDT}</strong>
+                    {t.admin.homepageTab.currentPrice} <strong className="text-[#1C1917]">৳{primarySelectedProduct.priceBDT}</strong>
                     {primarySelectedProduct.originalPriceBDT &&
                       primarySelectedProduct.originalPriceBDT > primarySelectedProduct.priceBDT && (
                         <span className="line-through ml-1 text-[10px]">
@@ -225,7 +228,7 @@ export function AdminHomepageTab({ products, onNotify }: AdminHomepageTabProps) 
           <div className="border border-[#E7E0D6] bg-[#FAF7F2] p-5 space-y-4">
             <div className="flex items-center justify-between">
               <span className="text-xs font-bold uppercase tracking-wider text-[#1C1917]">
-                B. Secondary Floating Card
+                {t.admin.homepageTab.secondaryCard}
               </span>
               <span className="text-[10px] uppercase tracking-widest text-[#9A7B3E] font-semibold">
                 Bottom-Left Overlap
@@ -234,7 +237,7 @@ export function AdminHomepageTab({ products, onNotify }: AdminHomepageTabProps) 
 
             <div>
               <label className="block text-[11px] font-semibold uppercase tracking-wider text-[#78716C] mb-1">
-                Select Product:
+                {t.admin.homepageTab.selectProduct}
               </label>
               <select
                 value={heroForm.secondaryProductSlug}
@@ -253,7 +256,7 @@ export function AdminHomepageTab({ products, onNotify }: AdminHomepageTabProps) 
 
             <div>
               <label className="block text-[11px] font-semibold uppercase tracking-wider text-[#78716C] mb-1">
-                Badge / Tag Label:
+                {t.admin.homepageTab.badgeLabel}
               </label>
               <input
                 type="text"
@@ -274,6 +277,7 @@ export function AdminHomepageTab({ products, onNotify }: AdminHomepageTabProps) 
                     src={secondarySelectedProduct.imageUrl}
                     alt={secondarySelectedProduct.name}
                     fill
+                    unoptimized
                     className="object-cover"
                   />
                 </div>
@@ -285,7 +289,7 @@ export function AdminHomepageTab({ products, onNotify }: AdminHomepageTabProps) 
                     {secondarySelectedProduct.name}
                   </div>
                   <div className="text-[11px] text-[#78716C]">
-                    Current Price: <strong className="text-[#1C1917]">৳{secondarySelectedProduct.priceBDT}</strong>
+                    {t.admin.homepageTab.currentPrice} <strong className="text-[#1C1917]">৳{secondarySelectedProduct.priceBDT}</strong>
                   </div>
                 </div>
               </div>
@@ -299,14 +303,14 @@ export function AdminHomepageTab({ products, onNotify }: AdminHomepageTabProps) 
         <div className="flex items-center gap-2 border-b border-[#E7E0D6] pb-3">
           <Type className="w-4 h-4 text-[#9A7B3E]" />
           <h3 className="font-serif-display text-lg font-semibold text-[#1C1917]">
-            2. Hero Headline &amp; Narrative Copy
+            {t.admin.homepageTab.sec2Title}
           </h3>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="md:col-span-3">
             <label className="block text-[11px] font-semibold uppercase tracking-wider text-[#78716C] mb-1">
-              Top Small Badge
+              {t.admin.homepageTab.topBadge}
             </label>
             <input
               type="text"
@@ -319,7 +323,7 @@ export function AdminHomepageTab({ products, onNotify }: AdminHomepageTabProps) 
 
           <div className="md:col-span-2">
             <label className="block text-[11px] font-semibold uppercase tracking-wider text-[#78716C] mb-1">
-              Headline Line 1 (Dark Serif)
+              {t.admin.homepageTab.headline1}
             </label>
             <input
               type="text"
@@ -332,7 +336,7 @@ export function AdminHomepageTab({ products, onNotify }: AdminHomepageTabProps) 
 
           <div>
             <label className="block text-[11px] font-semibold uppercase tracking-wider text-[#78716C] mb-1">
-              Headline Highlight (Italic Gold)
+              {t.admin.homepageTab.headlineHighlight}
             </label>
             <input
               type="text"
@@ -345,7 +349,7 @@ export function AdminHomepageTab({ products, onNotify }: AdminHomepageTabProps) 
 
           <div className="md:col-span-3">
             <label className="block text-[11px] font-semibold uppercase tracking-wider text-[#78716C] mb-1">
-              Subheading / Description Narrative
+              {t.admin.homepageTab.subheading}
             </label>
             <textarea
               rows={3}
@@ -363,7 +367,7 @@ export function AdminHomepageTab({ products, onNotify }: AdminHomepageTabProps) 
         <div className="flex items-center gap-2 border-b border-[#E7E0D6] pb-3">
           <Link2 className="w-4 h-4 text-[#9A7B3E]" />
           <h3 className="font-serif-display text-lg font-semibold text-[#1C1917]">
-            3. Call-To-Action (CTA) Buttons
+            {t.admin.homepageTab.sec3Title}
           </h3>
         </div>
 
@@ -371,11 +375,11 @@ export function AdminHomepageTab({ products, onNotify }: AdminHomepageTabProps) 
           {/* Primary CTA */}
           <div className="border border-[#E7E0D6] p-4 bg-[#FAF7F2] space-y-3">
             <span className="text-xs font-bold uppercase tracking-wider text-[#1C1917] block">
-              Primary Dark Button
+              {t.admin.homepageTab.primaryDarkBtn}
             </span>
             <div>
               <label className="block text-[10px] font-semibold uppercase tracking-wider text-[#78716C] mb-1">
-                Button Label
+                {t.admin.homepageTab.btnLabel}
               </label>
               <input
                 type="text"
@@ -386,7 +390,7 @@ export function AdminHomepageTab({ products, onNotify }: AdminHomepageTabProps) 
             </div>
             <div>
               <label className="block text-[10px] font-semibold uppercase tracking-wider text-[#78716C] mb-1">
-                Destination Link URL
+                {t.admin.homepageTab.destUrl}
               </label>
               <input
                 type="text"
@@ -400,11 +404,11 @@ export function AdminHomepageTab({ products, onNotify }: AdminHomepageTabProps) 
           {/* Secondary CTA */}
           <div className="border border-[#E7E0D6] p-4 bg-[#FAF7F2] space-y-3">
             <span className="text-xs font-bold uppercase tracking-wider text-[#1C1917] block">
-              Secondary Outline Button
+              {t.admin.homepageTab.secondaryOutlineBtn}
             </span>
             <div>
               <label className="block text-[10px] font-semibold uppercase tracking-wider text-[#78716C] mb-1">
-                Button Label
+                {t.admin.homepageTab.btnLabel}
               </label>
               <input
                 type="text"
@@ -415,7 +419,7 @@ export function AdminHomepageTab({ products, onNotify }: AdminHomepageTabProps) 
             </div>
             <div>
               <label className="block text-[10px] font-semibold uppercase tracking-wider text-[#78716C] mb-1">
-                Destination Link URL
+                {t.admin.homepageTab.destUrl}
               </label>
               <input
                 type="text"
@@ -433,7 +437,7 @@ export function AdminHomepageTab({ products, onNotify }: AdminHomepageTabProps) 
         <div className="flex items-center gap-2 border-b border-[#E7E0D6] pb-3">
           <ShieldCheck className="w-4 h-4 text-[#9A7B3E]" />
           <h3 className="font-serif-display text-lg font-semibold text-[#1C1917]">
-            4. Architectural Trust Metrics (3 Stats)
+            {t.admin.homepageTab.sec4Title}
           </h3>
         </div>
 
@@ -445,7 +449,7 @@ export function AdminHomepageTab({ products, onNotify }: AdminHomepageTabProps) 
               </span>
               <div>
                 <label className="block text-[10px] font-semibold uppercase tracking-wider text-[#78716C] mb-1">
-                  Value Display
+                  {t.admin.homepageTab.valueDisplay}
                 </label>
                 <input
                   type="text"
@@ -464,7 +468,7 @@ export function AdminHomepageTab({ products, onNotify }: AdminHomepageTabProps) 
               </div>
               <div>
                 <label className="block text-[10px] font-semibold uppercase tracking-wider text-[#78716C] mb-1">
-                  Label / Description
+                  {t.admin.homepageTab.labelDesc}
                 </label>
                 <input
                   type="text"
@@ -491,7 +495,7 @@ export function AdminHomepageTab({ products, onNotify }: AdminHomepageTabProps) 
         <div className="flex items-center gap-2 border-b border-[#E7E0D6] pb-3">
           <Layers className="w-4 h-4 text-[#9A7B3E]" />
           <h3 className="font-serif-display text-lg font-semibold text-[#1C1917]">
-            5. Value Strip / Announcement Tickers
+            {t.admin.homepageTab.sec5Title}
           </h3>
         </div>
 
@@ -521,7 +525,7 @@ export function AdminHomepageTab({ products, onNotify }: AdminHomepageTabProps) 
           onClick={handleReset}
           className="border border-[#E7E0D6] bg-white px-5 py-2.5 text-xs font-semibold text-[#78716C] hover:text-[#1C1917] transition cursor-pointer rounded-lg shadow-2xs"
         >
-          Reset to Defaults
+          {t.admin.homepageTab.resetDefaults}
         </button>
 
         <button
@@ -529,7 +533,7 @@ export function AdminHomepageTab({ products, onNotify }: AdminHomepageTabProps) 
           onClick={handleSave}
           className="bg-[#1C1917] text-[#FAF7F2] hover:bg-[#9A7B3E] px-8 py-2.5 text-xs font-semibold uppercase tracking-wider transition shadow-2xs cursor-pointer rounded-lg"
         >
-          Save All Changes
+          {t.admin.homepageTab.saveAllChanges}
         </button>
       </div>
     </div>

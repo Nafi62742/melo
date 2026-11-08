@@ -183,7 +183,7 @@ export function CartDrawer() {
                     onChange={() => setDeliveryZone('inside_dhaka')}
                     className="accent-[#1C1917]"
                   />
-                  <span>Inside Dhaka (৳60)</span>
+                  <span>{t.checkout.insideDhaka}</span>
                 </label>
                 <label
                   className={`flex items-center gap-2 border px-2.5 py-2 cursor-pointer transition ${
@@ -199,7 +199,7 @@ export function CartDrawer() {
                     onChange={() => setDeliveryZone('outside_dhaka')}
                     className="accent-[#1C1917]"
                   />
-                  <span>Outside Dhaka (৳120)</span>
+                  <span>{t.checkout.outsideDhaka}</span>
                 </label>
               </div>
             </div>
@@ -214,7 +214,7 @@ export function CartDrawer() {
                 <span className="font-medium text-[#1C1917]">
                   {subtotal >= 1500 ? (
                     <span className="text-emerald-700 font-semibold uppercase tracking-wider text-[11px]">
-                      Complimentary (Over ৳1,500)
+                      {t.cart.complimentary}
                     </span>
                   ) : (
                     formatBDT(deliveryFee)
@@ -222,7 +222,7 @@ export function CartDrawer() {
                 </span>
               </div>
               <div className="flex justify-between pt-2.5 border-t border-[#E7E0D6] text-sm font-semibold text-[#1C1917]">
-                <span className="uppercase tracking-wider text-xs">Total</span>
+                <span className="uppercase tracking-wider text-xs">{t.common.total}</span>
                 <span className="font-serif-display text-xl font-bold text-[#1C1917]">
                   {formatBDT(total)}
                 </span>

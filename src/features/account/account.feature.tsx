@@ -9,6 +9,7 @@ import { orderService } from '@/core/services/order.service';
 import { CustomerProfile } from '@/core/models/customer.model';
 import { Order, DeliveryZone } from '@/core/models/order.model';
 import { formatBDT } from '@/core/utils/currency.util';
+import { useI18n } from '@/core/i18n/i18n.context';
 import {
   User,
   Package,
@@ -44,6 +45,7 @@ export function AccountFeature() {
 }
 
 function AccountContent() {
+  const { t } = useI18n();
   const searchParams = useSearchParams();
   const initialQuery = searchParams?.get('orderNumber') || searchParams?.get('phone') || '';
 
@@ -184,7 +186,7 @@ function AccountContent() {
         className="inline-flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-[#78716C] hover:text-[#1C1917] mb-6"
       >
         <ArrowLeft className="w-3.5 h-3.5" />
-        <span>Continue Shopping</span>
+        <span>{t.checkout.continueShopping}</span>
       </Link>
 
       {toastMessage && (
@@ -200,13 +202,13 @@ function AccountContent() {
           <div className="lg:col-span-7 border border-[#E7E0D6] bg-white p-8 shadow-sm">
             <div className="border-b border-[#E7E0D6] pb-4 mb-6">
               <span className="text-[10px] font-semibold uppercase tracking-[0.22em] text-[#9A7B3E] block">
-                MELO Customer Portal
+                {t.account.portalTitle}
               </span>
               <h1 className="font-serif-display text-3xl font-medium text-[#1C1917] mt-1">
-                {authMode === 'login' ? 'Sign In to View All Orders' : 'Create Your MELO Account'}
+                {authMode === 'login' ? t.account.signInTitle : t.account.registerTitle}
               </h1>
               <p className="text-xs text-[#78716C] mt-1">
-                Sign in with your mobile number to view purchase history, saved delivery addresses, and tracked shipments.
+                {t.account.portalSubtitle}
               </p>
             </div>
 
@@ -224,7 +226,7 @@ function AccountContent() {
                     : 'text-[#78716C] hover:text-[#1C1917]'
                 }`}
               >
-                Sign In
+                {t.account.signIn}
               </button>
               <button
                 type="button"
@@ -238,7 +240,7 @@ function AccountContent() {
                     : 'text-[#78716C] hover:text-[#1C1917]'
                 }`}
               >
-                Register
+                {t.account.register}
               </button>
             </div>
 
@@ -252,14 +254,14 @@ function AccountContent() {
               {authMode === 'register' && (
                 <div>
                   <label className="block text-[11px] font-semibold uppercase tracking-wider text-[#1C1917] mb-1.5">
-                    Full Name *
+                    {t.account.fullName}
                   </label>
                   <input
                     type="text"
                     required
                     value={fullName}
                     onChange={(e) => setFullName(e.target.value)}
-                    placeholder="Nusrat Jahan"
+                    placeholder={t.account.fullNamePlaceholder}
                     className="w-full border border-[#D6CFC5] bg-white px-3.5 py-2.5 text-xs text-[#1C1917] focus:outline-none focus:border-[#C5A059]"
                   />
                 </div>
@@ -267,28 +269,28 @@ function AccountContent() {
 
               <div>
                 <label className="block text-[11px] font-semibold uppercase tracking-wider text-[#1C1917] mb-1.5">
-                  Mobile Number *
+                  {t.account.mobileNumber}
                 </label>
                 <input
                   type="tel"
                   required
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
-                  placeholder="017XXXXXXXX"
+                  placeholder={t.account.mobilePlaceholder}
                   className="w-full border border-[#D6CFC5] bg-white px-3.5 py-2.5 text-xs text-[#1C1917] focus:outline-none focus:border-[#C5A059]"
                 />
               </div>
 
               <div>
                 <label className="block text-[11px] font-semibold uppercase tracking-wider text-[#1C1917] mb-1.5">
-                  Password *
+                  {t.account.password}
                 </label>
                 <input
                   type="password"
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  placeholder="••••••••"
+                  placeholder={t.account.passwordPlaceholder}
                   className="w-full border border-[#D6CFC5] bg-white px-3.5 py-2.5 text-xs text-[#1C1917] focus:outline-none focus:border-[#C5A059]"
                 />
               </div>
@@ -297,41 +299,41 @@ function AccountContent() {
                 <>
                   <div>
                     <label className="block text-[11px] font-semibold uppercase tracking-wider text-[#1C1917] mb-1.5">
-                      Email Address (Optional)
+                      {t.account.email}
                     </label>
                     <input
                       type="email"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
-                      placeholder="nusrat@example.com"
+                      placeholder={t.account.emailPlaceholder}
                       className="w-full border border-[#D6CFC5] bg-white px-3.5 py-2.5 text-xs text-[#1C1917] focus:outline-none focus:border-[#C5A059]"
                     />
                   </div>
 
                   <div>
                     <label className="block text-[11px] font-semibold uppercase tracking-wider text-[#1C1917] mb-1.5">
-                      Delivery Address
+                      {t.account.defaultAddress}
                     </label>
                     <textarea
                       rows={2}
                       value={address}
                       onChange={(e) => setAddress(e.target.value)}
-                      placeholder="House, Road, Area, City"
+                      placeholder={t.account.addressPlaceholder}
                       className="w-full border border-[#D6CFC5] bg-white px-3.5 py-2.5 text-xs text-[#1C1917] focus:outline-none focus:border-[#C5A059]"
                     />
                   </div>
 
                   <div>
                     <label className="block text-[11px] font-semibold uppercase tracking-wider text-[#1C1917] mb-1.5">
-                      Default Delivery Zone
+                      {t.account.deliveryLocation}
                     </label>
                     <select
                       value={deliveryZone}
                       onChange={(e) => setDeliveryZone(e.target.value as DeliveryZone)}
                       className="w-full border border-[#D6CFC5] bg-white px-3.5 py-2.5 text-xs font-medium text-[#1C1917] focus:outline-none focus:border-[#C5A059]"
                     >
-                      <option value="inside_dhaka">Inside Dhaka (৳60)</option>
-                      <option value="outside_dhaka">Outside Dhaka (৳120)</option>
+                      <option value="inside_dhaka">{t.account.insideDhaka} (৳60)</option>
+                      <option value="outside_dhaka">{t.account.outsideDhaka} (৳120)</option>
                     </select>
                   </div>
                 </>
@@ -343,10 +345,10 @@ function AccountContent() {
                 className="w-full boutique-btn-primary py-3.5 text-xs uppercase tracking-wider mt-2 cursor-pointer"
               >
                 {isSubmitting
-                  ? 'Processing...'
+                  ? t.checkout.processing
                   : authMode === 'login'
-                  ? 'Sign In & View My Orders'
-                  : 'Create Account & Track Orders'}
+                  ? t.account.signIn
+                  : t.account.register}
               </button>
             </form>
           </div>
@@ -355,13 +357,13 @@ function AccountContent() {
           <div className="lg:col-span-5 border border-[#E7E0D6] bg-white p-7 space-y-6 shadow-sm">
             <div>
               <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[#9A7B3E] block">
-                Instant Order Check
+                {t.account.trackQuickTitle}
               </span>
               <h2 className="font-serif-display text-2xl font-medium text-[#1C1917] mt-1">
-                Track by Order # or Mobile Phone
+                {t.account.trackButton}
               </h2>
               <p className="text-xs text-[#78716C] mt-1">
-                Enter your <code className="bg-[#FAF7F2] px-1.5 py-0.5 text-[#1C1917]">MELO-XXXXXX</code> reference number or the mobile number used at checkout.
+                {t.account.trackQuickSubtitle}
               </p>
             </div>
 
@@ -369,7 +371,7 @@ function AccountContent() {
               <div className="relative flex-1">
                 <input
                   type="text"
-                  placeholder="e.g. MELO-123456 or 017XXXXXXXX"
+                  placeholder={t.account.trackSearchPlaceholder}
                   value={lookupOrderNo}
                   onChange={(e) => setLookupOrderNo(e.target.value)}
                   className="w-full border border-[#D6CFC5] bg-[#FAF7F2]/50 pl-9 pr-3 py-2.5 text-xs font-mono uppercase text-[#1C1917] focus:bg-white focus:outline-none focus:border-[#C5A059]"
@@ -377,7 +379,7 @@ function AccountContent() {
                 <Search className="w-3.5 h-3.5 text-[#78716C] absolute left-3 top-3" />
               </div>
               <button type="submit" className="boutique-btn-primary px-5 py-2.5 cursor-pointer">
-                Track
+                {t.account.trackButton}
               </button>
             </form>
 
@@ -438,7 +440,7 @@ function AccountContent() {
               className="inline-flex items-center gap-1.5 border border-[#E7E0D6] bg-white px-4 py-2 text-[11px] font-semibold uppercase tracking-wider text-[#78716C] hover:border-red-400 hover:text-red-700 transition cursor-pointer self-start sm:self-auto"
             >
               <LogOut className="w-3.5 h-3.5" />
-              <span>Sign Out</span>
+              <span>{t.account.signOut}</span>
             </button>
           </div>
 
@@ -446,17 +448,17 @@ function AccountContent() {
           <div className="border border-[#E7E0D6] bg-white p-6 space-y-4">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
               <h3 className="font-serif-display text-lg font-semibold text-[#1C1917]">
-                Quick Reference Lookup
+                {t.account.trackQuickTitle}
               </h3>
               <span className="text-xs text-[#78716C]">
-                Search specific orders or consignment numbers
+                {t.account.trackQuickSubtitle}
               </span>
             </div>
             <form onSubmit={handleQuickLookup} className="flex gap-2 max-w-md">
               <div className="relative flex-1">
                 <input
                   type="text"
-                  placeholder="e.g. MELO-123456 or Consignment ID"
+                  placeholder={t.account.trackSearchPlaceholder}
                   value={lookupOrderNo}
                   onChange={(e) => setLookupOrderNo(e.target.value)}
                   className="w-full border border-[#D6CFC5] bg-[#FAF7F2]/50 pl-9 pr-3 py-2 text-xs font-mono uppercase text-[#1C1917] focus:bg-white focus:outline-none focus:border-[#C5A059]"
@@ -464,7 +466,7 @@ function AccountContent() {
                 <Search className="w-3.5 h-3.5 text-[#78716C] absolute left-3 top-2.5" />
               </div>
               <button type="submit" className="boutique-btn-primary px-4 py-2 text-xs cursor-pointer">
-                Find
+                {t.account.trackButton}
               </button>
             </form>
           </div>
@@ -473,7 +475,7 @@ function AccountContent() {
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <h2 className="font-serif-display text-2xl font-medium text-[#1C1917]">
-                My Orders &amp; Delivery Tracking ({orders.length})
+                {t.account.myOrders} ({orders.length})
               </h2>
               <span className="text-xs text-[#78716C]">
                 Synced with your mobile number {customer.phone}
@@ -527,11 +529,12 @@ function OrderTrackingDisplayCard({
   onChangeTrx: (val: string) => void;
   onSaveTrx: () => void;
 }) {
+  const { t } = useI18n();
   const steps = [
-    { key: 'pending', label: 'Order Placed' },
-    { key: 'confirmed', label: 'Confirmed & Inspected' },
-    { key: 'dispatched', label: 'Dispatched with Courier' },
-    { key: 'delivered', label: 'Delivered' },
+    { key: 'pending', label: t.account.statusPending },
+    { key: 'confirmed', label: t.account.statusConfirmed },
+    { key: 'dispatched', label: t.account.statusDispatched },
+    { key: 'delivered', label: t.account.statusDelivered },
   ];
 
   const getStepIndex = (status: string) => {
@@ -579,7 +582,7 @@ function OrderTrackingDisplayCard({
         <div className="flex items-center gap-3">
           <div className="text-right">
             <div className="text-[10px] uppercase tracking-wider text-[#78716C]">
-              Total Amount
+              {t.checkout.totalAmount}
             </div>
             <div className="font-serif-display text-xl font-bold text-[#1C1917]">
               {formatBDT(order.total)}
@@ -598,7 +601,17 @@ function OrderTrackingDisplayCard({
             }`}
           >
             <Truck className="w-3.5 h-3.5 text-[#E6D5B8]" />
-            <span>{order.status}</span>
+            <span>
+              {order.status === 'delivered'
+                ? t.account.statusDelivered
+                : order.status === 'dispatched'
+                ? t.account.statusDispatched
+                : order.status === 'confirmed'
+                ? t.account.statusConfirmed
+                : order.status === 'cancelled'
+                ? t.account.statusCancelled
+                : t.account.statusPending}
+            </span>
           </div>
         </div>
       </div>

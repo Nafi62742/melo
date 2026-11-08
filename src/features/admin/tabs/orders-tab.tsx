@@ -6,6 +6,7 @@ import { Order, OrderStatus, PaymentStatus } from '@/core/models/order.model';
 import { CustomerProfile } from '@/core/models/customer.model';
 import { formatBDT } from '@/core/utils/currency.util';
 import { COURIER_OPTIONS, buildCourierTrackingUrl } from '@/core/utils/tracking.util';
+import { useI18n } from '@/core/i18n/i18n.context';
 import {
   Clock,
   Plus,
@@ -49,6 +50,7 @@ export function AdminOrdersTab({
   onUpdateOrderTracking,
   onZoomImage,
 }: AdminOrdersTabProps) {
+  const { t } = useI18n();
   const [viewMode, setViewMode] = useState<'orders' | 'customers'>('orders');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState('');
@@ -185,7 +187,7 @@ export function AdminOrdersTab({
         <div>
           <div className="flex items-center gap-3">
             <h2 className="text-xs font-semibold uppercase tracking-[0.2em] text-[#1C1917]">
-              Customer &amp; Order Fulfillment Hub
+              {t.admin.ordersTab.title}
             </h2>
             <div className="inline-flex border border-[#E7E0D6] p-0.5 bg-[#FAF7F2] text-xs rounded-lg gap-0.5">
               <button
@@ -197,7 +199,7 @@ export function AdminOrdersTab({
                     : 'text-[#78716C] hover:text-[#1C1917]'
                 }`}
               >
-                Orders ({orders.length})
+                {t.admin.ordersTab.ordersBtn} ({orders.length})
               </button>
               <button
                 type="button"
@@ -209,12 +211,12 @@ export function AdminOrdersTab({
                 }`}
               >
                 <Users className="w-3 h-3" />
-                <span>Customers Directory ({customerDirectory.length})</span>
+                <span>{t.admin.ordersTab.customersBtn} ({customerDirectory.length})</span>
               </button>
             </div>
           </div>
           <p className="text-[11px] text-[#78716C] mt-1">
-            Track customer deliveries, assign courier consignment numbers (Pathao, Steadfast), and manage manual payments.
+            {t.admin.ordersTab.subtitle}
           </p>
         </div>
 
@@ -225,7 +227,7 @@ export function AdminOrdersTab({
             className="inline-flex items-center gap-1.5 bg-emerald-700 text-white px-3.5 py-2 text-[11px] font-semibold uppercase tracking-wider hover:bg-emerald-800 transition cursor-pointer rounded-lg shadow-2xs"
           >
             <Plus className="w-3.5 h-3.5" />
-            <span>+ Manual Order (WhatsApp/FB)</span>
+            <span>{t.admin.ordersTab.manualOrderBtn}</span>
           </button>
 
           <button
@@ -233,7 +235,7 @@ export function AdminOrdersTab({
             className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#9A7B3E] hover:text-[#1C1917] cursor-pointer rounded-lg px-2.5 py-1.5 transition"
           >
             <RefreshCw className="w-3.5 h-3.5" />
-            <span>Refresh</span>
+            <span>{t.admin.ordersTab.refresh}</span>
           </button>
         </div>
       </div>
@@ -246,26 +248,26 @@ export function AdminOrdersTab({
             {/* Status Filter Pills */}
             <div className="flex flex-wrap items-center gap-1">
               {[
-                { key: 'all', label: `All (${orders.length})` },
+                { key: 'all', label: `${t.admin.ordersTab.all} (${orders.length})` },
                 {
                   key: 'pending',
-                  label: `Pending (${orders.filter((o) => o.status === 'pending').length})`,
+                  label: `${t.admin.ordersTab.pending} (${orders.filter((o) => o.status === 'pending').length})`,
                 },
                 {
                   key: 'confirmed',
-                  label: `Confirmed (${orders.filter((o) => o.status === 'confirmed').length})`,
+                  label: `${t.admin.ordersTab.confirmed} (${orders.filter((o) => o.status === 'confirmed').length})`,
                 },
                 {
                   key: 'dispatched',
-                  label: `Dispatched (${orders.filter((o) => o.status === 'dispatched').length})`,
+                  label: `${t.admin.ordersTab.dispatched} (${orders.filter((o) => o.status === 'dispatched').length})`,
                 },
                 {
                   key: 'delivered',
-                  label: `Delivered (${orders.filter((o) => o.status === 'delivered').length})`,
+                  label: `${t.admin.ordersTab.delivered} (${orders.filter((o) => o.status === 'delivered').length})`,
                 },
                 {
                   key: 'cancelled',
-                  label: `Cancelled (${orders.filter((o) => o.status === 'cancelled').length})`,
+                  label: `${t.admin.ordersTab.cancelled} (${orders.filter((o) => o.status === 'cancelled').length})`,
                 },
               ].map((pill) => (
                 <button
@@ -289,7 +291,7 @@ export function AdminOrdersTab({
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search by Order #, Phone, Name, TrxID..."
+                placeholder={t.admin.ordersTab.searchPlaceholder}
                 className="w-72 border border-[#D6CFC5] bg-white pl-8 pr-3 py-1.5 text-xs text-[#1C1917] focus:outline-none focus:border-[#C5A059] rounded-lg shadow-2xs"
               />
               <Search className="w-3.5 h-3.5 text-[#78716C] absolute left-2.5 top-2.5" />
@@ -299,9 +301,9 @@ export function AdminOrdersTab({
           {filteredOrders.length === 0 ? (
             <div className="p-14 text-center text-[#78716C]">
               <Clock className="w-8 h-8 mx-auto text-[#C5A059] mb-2 stroke-[1.25]" />
-              <div className="font-serif-display text-2xl text-[#1C1917]">No orders matched</div>
+              <div className="font-serif-display text-2xl text-[#1C1917]">{t.admin.ordersTab.noOrders}</div>
               <div className="text-xs text-[#78716C] mt-1">
-                Try clearing your search query or switching your status filter.
+                {t.admin.ordersTab.noOrdersSub}
               </div>
             </div>
           ) : (
@@ -309,13 +311,13 @@ export function AdminOrdersTab({
               <table className="w-full text-left text-xs text-[#78716C]">
                 <thead className="bg-[#FAF7F2] border-b border-[#E7E0D6] text-[#1C1917] uppercase font-semibold text-[10px] tracking-[0.16em]">
                   <tr>
-                    <th className="py-3.5 px-4">Order Ref &amp; Date</th>
-                    <th className="py-3.5 px-4">Customer Details</th>
-                    <th className="py-3.5 px-4">Items</th>
-                    <th className="py-3.5 px-4">Total</th>
-                    <th className="py-3.5 px-4">Payment &amp; TrxID</th>
-                    <th className="py-3.5 px-4">Courier &amp; Tracking</th>
-                    <th className="py-3.5 px-4">Fulfillment Status</th>
+                    <th className="py-3.5 px-4">{t.admin.ordersTab.colRef}</th>
+                    <th className="py-3.5 px-4">{t.admin.ordersTab.colCustomer}</th>
+                    <th className="py-3.5 px-4">{t.admin.ordersTab.colItems}</th>
+                    <th className="py-3.5 px-4">{t.admin.ordersTab.colTotal}</th>
+                    <th className="py-3.5 px-4">{t.admin.ordersTab.colPayment}</th>
+                    <th className="py-3.5 px-4">{t.admin.ordersTab.colCourier}</th>
+                    <th className="py-3.5 px-4">{t.admin.ordersTab.colStatus}</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-[#F3EDE4]">
@@ -392,6 +394,7 @@ export function AdminOrdersTab({
                                       src={item.product.imageUrl}
                                       alt={item.product.name}
                                       fill
+                                      unoptimized
                                       className="object-cover"
                                     />
                                   </button>
@@ -443,9 +446,9 @@ export function AdminOrdersTab({
                                   : 'border-amber-300 bg-amber-50 text-amber-800'
                               }`}
                             >
-                              <option value="pending">Check TrxID</option>
-                              <option value="verified">Verified ✓</option>
-                              <option value="failed">Unpaid ✗</option>
+                              <option value="pending">{t.admin.ordersTab.checkTrx}</option>
+                              <option value="verified">{t.admin.ordersTab.verified}</option>
+                              <option value="failed">{t.admin.ordersTab.unpaid}</option>
                             </select>
                           </div>
 
@@ -474,7 +477,7 @@ export function AdminOrdersTab({
                                   rel="noopener noreferrer"
                                   className="inline-flex items-center gap-1 text-[10px] font-semibold text-[#9A7B3E] hover:underline"
                                 >
-                                  <span>Live Track</span>
+                                  <span>{t.admin.ordersTab.liveTrack}</span>
                                   <ExternalLink className="w-2.5 h-2.5" />
                                 </a>
                               )}
@@ -483,7 +486,7 @@ export function AdminOrdersTab({
                                 onClick={() => openTrackingModal(o)}
                                 className="block text-[10px] text-[#78716C] hover:text-[#1C1917] underline cursor-pointer"
                               >
-                                Edit Tracking
+                                {t.admin.ordersTab.editTracking}
                               </button>
                             </div>
                           ) : (
@@ -493,7 +496,7 @@ export function AdminOrdersTab({
                               className="inline-flex items-center gap-1 border border-[#D6CFC5] bg-white px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider text-[#1C1917] hover:border-[#9A7B3E] cursor-pointer rounded-lg shadow-2xs"
                             >
                               <Truck className="w-3 h-3 text-[#9A7B3E]" />
-                              <span>+ Add Courier</span>
+                              <span>{t.admin.ordersTab.addCourier}</span>
                             </button>
                           )}
                         </td>
@@ -505,11 +508,11 @@ export function AdminOrdersTab({
                             onChange={(e) => onOrderStatusChange(o.id, e.target.value as OrderStatus)}
                             className="border border-[#D6CFC5] bg-white px-2.5 py-1 text-xs font-semibold text-[#1C1917] focus:outline-none focus:border-[#C5A059] cursor-pointer rounded-lg shadow-2xs"
                           >
-                            <option value="pending">Pending</option>
-                            <option value="confirmed">Confirmed</option>
-                            <option value="dispatched">Dispatched 🚚</option>
-                            <option value="delivered">Delivered ✓</option>
-                            <option value="cancelled">Cancelled</option>
+                            <option value="pending">{t.admin.ordersTab.pending}</option>
+                            <option value="confirmed">{t.admin.ordersTab.confirmed}</option>
+                            <option value="dispatched">{t.admin.ordersTab.dispatched} 🚚</option>
+                            <option value="delivered">{t.admin.ordersTab.delivered} ✓</option>
+                            <option value="cancelled">{t.admin.ordersTab.cancelled}</option>
                           </select>
                         </td>
                       </tr>
@@ -528,13 +531,13 @@ export function AdminOrdersTab({
           <table className="w-full text-left text-xs text-[#78716C]">
             <thead className="bg-[#FAF7F2] border-b border-[#E7E0D6] text-[#1C1917] uppercase font-semibold text-[10px] tracking-[0.16em]">
               <tr>
-                <th className="py-3.5 px-4">Customer Name</th>
-                <th className="py-3.5 px-4">Phone / WhatsApp</th>
-                <th className="py-3.5 px-4">Delivery Address</th>
-                <th className="py-3.5 px-4">Zone</th>
-                <th className="py-3.5 px-4">Total Orders</th>
-                <th className="py-3.5 px-4">Lifetime Spend</th>
-                <th className="py-3.5 px-4 text-right">Quick Contact</th>
+                <th className="py-3.5 px-4">{t.admin.ordersTab.colCustName}</th>
+                <th className="py-3.5 px-4">{t.admin.ordersTab.colPhone}</th>
+                <th className="py-3.5 px-4">{t.admin.ordersTab.colAddress}</th>
+                <th className="py-3.5 px-4">{t.admin.ordersTab.colZone}</th>
+                <th className="py-3.5 px-4">{t.admin.ordersTab.colTotalOrders}</th>
+                <th className="py-3.5 px-4">{t.admin.ordersTab.colLifetimeSpend}</th>
+                <th className="py-3.5 px-4 text-right">{t.admin.ordersTab.colQuickContact}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-[#F3EDE4]">
@@ -542,7 +545,7 @@ export function AdminOrdersTab({
                 <tr key={idx} className="hover:bg-[#FAF7F2]/60">
                   <td className="py-3.5 px-4 font-semibold text-[#1C1917] flex items-center gap-2">
                     <User className="w-3.5 h-3.5 text-[#9A7B3E]" />
-                    <span>{c.fullName || 'Guest Customer'}</span>
+                    <span>{c.fullName || t.admin.ordersTab.guestCustomer}</span>
                   </td>
                   <td className="py-3.5 px-4 font-mono font-medium text-[#1C1917]">
                     {c.phone}
@@ -561,7 +564,7 @@ export function AdminOrdersTab({
                   </td>
                   <td className="py-3.5 px-4 text-right space-x-2">
                     <a
-                      href={`https://wa.me/88${c.phone}`}
+                      href={`https://wa.me/88${c.phone.replace(/^\+?88/, '').replace(/\D/g, '')}`}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="inline-flex items-center gap-1 border border-emerald-300 bg-emerald-50 px-2 py-1 text-[10px] font-semibold text-emerald-800 hover:bg-emerald-100"
@@ -572,7 +575,7 @@ export function AdminOrdersTab({
                       href={`tel:${c.phone}`}
                       className="inline-flex items-center gap-1 border border-[#E7E0D6] bg-white px-2 py-1 text-[10px] font-semibold text-[#1C1917] hover:border-[#1C1917]"
                     >
-                      <span>Call</span>
+                      <span>{t.admin.ordersTab.call}</span>
                     </a>
                   </td>
                 </tr>
@@ -590,7 +593,7 @@ export function AdminOrdersTab({
               <div className="flex items-center gap-2">
                 <Truck className="w-4 h-4 text-[#9A7B3E]" />
                 <h3 className="font-serif-display text-lg font-semibold text-[#1C1917]">
-                  Assign Courier &amp; Tracking
+                  {t.admin.ordersTab.modalTitle}
                 </h3>
               </div>
               <button
@@ -609,7 +612,7 @@ export function AdminOrdersTab({
             <div className="space-y-3 text-xs">
               <div>
                 <label className="block text-[10px] font-semibold uppercase tracking-wider text-[#78716C] mb-1">
-                  Courier Service Provider:
+                  {t.admin.ordersTab.providerLabel}
                 </label>
                 <select
                   value={courierKey}
@@ -627,7 +630,7 @@ export function AdminOrdersTab({
               {courierKey === 'other' && (
                 <div>
                   <label className="block text-[10px] font-semibold uppercase tracking-wider text-[#78716C] mb-1">
-                    Custom Courier Name:
+                    {t.admin.ordersTab.customCourierLabel}
                   </label>
                   <input
                     type="text"
@@ -641,7 +644,7 @@ export function AdminOrdersTab({
 
               <div>
                 <label className="block text-[10px] font-semibold uppercase tracking-wider text-[#78716C] mb-1">
-                  Consignment / Tracking Number *:
+                  {t.admin.ordersTab.trackingNumLabel}
                 </label>
                 <input
                   type="text"
@@ -654,7 +657,7 @@ export function AdminOrdersTab({
 
               <div>
                 <label className="block text-[10px] font-semibold uppercase tracking-wider text-[#78716C] mb-1">
-                  Estimated Delivery Window:
+                  {t.admin.ordersTab.estDeliveryLabel}
                 </label>
                 <input
                   type="text"
@@ -674,7 +677,7 @@ export function AdminOrdersTab({
                   className="accent-[#C5A059]"
                 />
                 <label htmlFor="autoDispatched" className="text-xs text-[#1C1917] font-medium cursor-pointer">
-                  Automatically set order status to &ldquo;Dispatched&rdquo;
+                  {t.admin.ordersTab.autoDispatchedLabel}
                 </label>
               </div>
             </div>
@@ -685,7 +688,7 @@ export function AdminOrdersTab({
                 onClick={() => setTrackingModalOrder(null)}
                 className="border border-[#E7E0D6] bg-white px-4 py-2 text-xs font-semibold text-[#78716C] hover:text-[#1C1917] cursor-pointer rounded-lg shadow-2xs"
               >
-                Cancel
+                {t.admin.modals.cancel}
               </button>
               <button
                 type="button"
@@ -693,7 +696,7 @@ export function AdminOrdersTab({
                 disabled={!trackingCode.trim()}
                 className="bg-[#1C1917] text-[#FAF7F2] hover:bg-[#9A7B3E] disabled:opacity-40 px-5 py-2 text-xs font-semibold uppercase tracking-wider transition cursor-pointer rounded-lg shadow-2xs"
               >
-                Save &amp; Update Customer
+                {t.admin.ordersTab.saveUpdateBtn}
               </button>
             </div>
           </div>

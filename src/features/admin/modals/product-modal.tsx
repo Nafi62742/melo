@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { ProductType } from '@/core/models/product-type.model';
 import { X, ZoomIn, Plus, Trash2, Image as ImageIcon } from 'lucide-react';
+import { useI18n } from '@/core/i18n/i18n.context';
 
 export interface ProductFormState {
   id?: string;
@@ -40,6 +41,7 @@ export function AdminProductModal({
   onSaveProduct,
   onZoomImage,
 }: AdminProductModalProps) {
+  const { t } = useI18n();
   const [newGalleryUrl, setNewGalleryUrl] = useState('');
 
   if (!isOpen) return null;
@@ -108,7 +110,7 @@ export function AdminProductModal({
         <div className="flex items-center justify-between bg-[#181512] px-6 py-4 text-[#FAF7F2] flex-shrink-0">
           <div>
             <h3 className="font-serif-display text-xl sm:text-2xl font-medium text-white">
-              {editingId ? 'Edit Product Details' : 'Add New Jewellery Piece'}
+              {editingId ? t.admin.modals.editProductTitle : t.admin.modals.addProductTitle}
             </h3>
             <p className="text-[11px] text-[#D4C3A3] mt-0.5">
               {editingId ? `Editing piece ID: ${editingId}` : 'Add a new piece to your boutique catalog'}
@@ -129,7 +131,7 @@ export function AdminProductModal({
           {/* Product Name */}
           <div>
             <label className="block text-[11px] font-semibold uppercase tracking-wider text-[#1C1917] mb-1">
-              Product Name *
+              {t.admin.modals.productName}
             </label>
             <input
               type="text"
@@ -145,7 +147,7 @@ export function AdminProductModal({
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="block text-[11px] font-semibold uppercase tracking-wider text-[#1C1917] mb-1">
-                Product Type *
+                {t.admin.modals.productType}
               </label>
               <select
                 value={form.category}
@@ -167,7 +169,7 @@ export function AdminProductModal({
 
             <div>
               <label className="block text-[11px] font-semibold uppercase tracking-wider text-[#1C1917] mb-1">
-                Stock Quantity *
+                {t.admin.modals.stockQty}
               </label>
               <input
                 type="number"
@@ -184,7 +186,7 @@ export function AdminProductModal({
           <div className="grid grid-cols-3 gap-3">
             <div>
               <label className="block text-[11px] font-semibold uppercase tracking-wider text-[#1C1917] mb-1">
-                Cost Price (¥ / ৳)
+                {t.admin.modals.costPrice}
               </label>
               <input
                 type="number"
@@ -197,7 +199,7 @@ export function AdminProductModal({
 
             <div>
               <label className="block text-[11px] font-semibold uppercase tracking-wider text-[#1C1917] mb-1">
-                Selling Price (BDT ৳) *
+                {t.admin.modals.sellingPrice}
               </label>
               <input
                 type="number"
@@ -211,7 +213,7 @@ export function AdminProductModal({
 
             <div>
               <label className="block text-[11px] font-semibold uppercase tracking-wider text-[#1C1917] mb-1">
-                Original Price (BDT ৳)
+                {t.admin.modals.originalPrice}
               </label>
               <input
                 type="number"
@@ -230,7 +232,7 @@ export function AdminProductModal({
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-1.5 font-semibold text-xs text-[#1C1917] uppercase tracking-wider">
                 <ImageIcon className="w-4 h-4 text-[#C5A059]" />
-                <span>Product Images ({allImages.length})</span>
+                <span>{t.admin.modals.productImages} ({allImages.length})</span>
               </div>
               <span className="text-[11px] text-[#78716C]">
                 Click thumbnail to zoom · Set main cover
@@ -279,7 +281,7 @@ export function AdminProductModal({
                       <div className="mt-1.5 flex items-center justify-between gap-1 text-[10px]">
                         {isMain ? (
                           <span className="px-1.5 py-0.5 rounded-md bg-[#C5A059] text-white font-semibold">
-                            Main Cover
+                            {t.admin.modals.mainCover}
                           </span>
                         ) : (
                           <button
@@ -287,7 +289,7 @@ export function AdminProductModal({
                             onClick={() => handleSetMainCover(imgUrl)}
                             className="text-[#9A7B3E] hover:underline cursor-pointer font-medium"
                           >
-                            Set Main
+                            {t.admin.modals.setMain}
                           </button>
                         )}
 
@@ -313,7 +315,7 @@ export function AdminProductModal({
             {/* Main Cover Image Path Input */}
             <div>
               <label className="block text-[10px] font-semibold uppercase tracking-wider text-[#78716C] mb-1">
-                Main Cover Image URL / Path *
+                {t.admin.modals.mainCoverUrl}
               </label>
               <input
                 type="text"
@@ -337,7 +339,7 @@ export function AdminProductModal({
                     handleAddGalleryImage();
                   }
                 }}
-                placeholder="Add extra gallery image path/URL..."
+                placeholder={t.admin.modals.addGalleryPlaceholder}
                 className="flex-1 border border-[#D6CFC5] rounded-lg px-3 py-1.5 text-xs text-[#1C1917] bg-white focus:outline-none focus:border-[#C5A059] font-mono"
               />
               <button
@@ -346,7 +348,7 @@ export function AdminProductModal({
                 className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg border border-[#C5A059] bg-[#FAF7F2] text-xs font-semibold text-[#9A7B3E] hover:bg-[#1C1917] hover:text-white transition cursor-pointer"
               >
                 <Plus className="w-3.5 h-3.5" />
-                <span>Add Image</span>
+                <span>{t.admin.modals.addImage}</span>
               </button>
             </div>
           </div>
@@ -354,7 +356,7 @@ export function AdminProductModal({
           {/* Description */}
           <div>
             <label className="block text-[11px] font-semibold uppercase tracking-wider text-[#1C1917] mb-1">
-              Description *
+              {t.admin.modals.description}
             </label>
             <textarea
               rows={3}
@@ -374,7 +376,7 @@ export function AdminProductModal({
                 onChange={(e) => onChangeForm({ ...form, isFeatured: e.target.checked })}
                 className="accent-[#1C1917] rounded"
               />
-              <span className="font-semibold text-[#1C1917]">Featured on Storefront</span>
+              <span className="font-semibold text-[#1C1917]">{t.admin.modals.featuredStorefront}</span>
             </label>
 
             <label className="flex items-center gap-2 cursor-pointer">
@@ -384,7 +386,7 @@ export function AdminProductModal({
                 onChange={(e) => onChangeForm({ ...form, isNew: e.target.checked })}
                 className="accent-[#1C1917] rounded"
               />
-              <span className="font-semibold text-[#1C1917]">Mark as New Arrival</span>
+              <span className="font-semibold text-[#1C1917]">{t.admin.modals.markNewArrival}</span>
             </label>
           </div>
 
@@ -395,13 +397,13 @@ export function AdminProductModal({
               onClick={onClose}
               className="px-5 py-2.5 rounded-lg border border-[#D6CFC5] bg-white hover:bg-stone-50 text-xs font-semibold text-[#78716C] hover:text-[#1C1917] transition cursor-pointer"
             >
-              Cancel
+              {t.admin.modals.cancel}
             </button>
             <button
               type="submit"
               className="px-6 py-2.5 rounded-lg bg-[#1C1917] hover:bg-[#9A7B3E] text-white text-xs font-semibold shadow-md transition cursor-pointer"
             >
-              {editingId ? 'Save Changes' : 'Add Piece'}
+              {editingId ? t.admin.modals.saveChanges : t.admin.modals.addPiece}
             </button>
           </div>
         </form>

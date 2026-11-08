@@ -3,6 +3,7 @@
 import React, { useSyncExternalStore } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { useI18n } from '@/core/i18n/i18n.context';
 import {
   Truck,
   ShieldCheck,
@@ -32,6 +33,7 @@ const subscribeTypes = (callback: () => void) => {
 
 export function Footer() {
   const pathname = usePathname();
+  const { t } = useI18n();
   const links = useSyncExternalStore(
     subscribeLinks,
     () => storeLinkService.getAllLinks(),
@@ -61,10 +63,10 @@ export function Footer() {
               </div>
               <div>
                 <div className="font-serif-display text-lg font-medium text-[#FAF7F2]">
-                  Nationwide Delivery
+                  {t.footer.nationwideTitle}
                 </div>
                 <div className="mt-0.5 text-xs text-[#A8A29E]">
-                  Dhaka within 24–48h • All BD in 3–4 days
+                  {t.footer.nationwideDesc}
                 </div>
               </div>
             </div>
@@ -75,10 +77,10 @@ export function Footer() {
               </div>
               <div>
                 <div className="font-serif-display text-lg font-medium text-[#FAF7F2]">
-                  Card, bKash &amp; COD
+                  {t.footer.paymentTitle}
                 </div>
                 <div className="mt-0.5 text-xs text-[#A8A29E]">
-                  Card &amp; bKash preferred • Doorstep COD available
+                  {t.footer.paymentDesc}
                 </div>
               </div>
             </div>
@@ -89,10 +91,10 @@ export function Footer() {
               </div>
               <div>
                 <div className="font-serif-display text-lg font-medium text-[#FAF7F2]">
-                  Painless Silicone Clips
+                  {t.footer.clipsTitle}
                 </div>
                 <div className="mt-0.5 text-xs text-[#A8A29E]">
-                  Hypoallergenic cushions for unpierced ears
+                  {t.footer.clipsDesc}
                 </div>
               </div>
             </div>
@@ -103,10 +105,10 @@ export function Footer() {
               </div>
               <div>
                 <div className="font-serif-display text-lg font-medium text-[#FAF7F2]">
-                  WhatsApp &amp; Messenger
+                  {t.footer.supportTitle}
                 </div>
                 <div className="mt-0.5 text-xs text-[#A8A29E]">
-                  Instant live chat via bottom-right concierge
+                  {t.footer.supportDesc}
                 </div>
               </div>
             </div>
@@ -124,15 +126,15 @@ export function Footer() {
                 MELO
               </span>
               <span className="block text-[9px] uppercase tracking-[0.3em] text-[#C5A059] mt-1">
-                Dhaka • Fine &amp; Light Luxury
+                {t.footer.brandTagline}
               </span>
             </Link>
             <p className="text-xs text-[#A8A29E] max-w-sm leading-relaxed">
-              MELO curates French-style light luxury ear clips with transparent silicone cushions, tarnish-free 316L stainless steel rings, and delicate giftable bracelets across Bangladesh.
+              {t.footer.brandAbout}
             </p>
             <div className="inline-flex items-center gap-2 text-xs italic font-serif-display text-[#E6D5B8]">
               <Sparkles className="w-3.5 h-3.5 text-[#C5A059]" />
-              <span>&ldquo;Where Little Wonders Light Up — Discover. Love. Repeat.&rdquo;</span>
+              <span>&ldquo;{t.footer.brandMotto}&rdquo;</span>
             </div>
 
             {activeSocialAndCustomLinks.length > 0 && (
@@ -156,7 +158,7 @@ export function Footer() {
           {/* Curated Collections */}
           <div className="md:col-span-2">
             <div className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[#E6D5B8] mb-4">
-              Collections
+              {t.footer.collectionsTitle}
             </div>
             <ul className="space-y-2.5 text-xs text-[#A8A29E]">
               {productTypes.map((pt) => (
@@ -171,12 +173,12 @@ export function Footer() {
               ))}
               <li>
                 <Link href="/shop" className="hover:text-[#C5A059] transition">
-                  All Curated Pieces
+                  {t.footer.allPieces}
                 </Link>
               </li>
               <li>
                 <Link href="/account" className="hover:text-[#C5A059] transition">
-                  Track Order &amp; Account
+                  {t.footer.trackAccount}
                 </Link>
               </li>
             </ul>
@@ -185,27 +187,27 @@ export function Footer() {
           {/* Client Care */}
           <div className="md:col-span-2">
             <div className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[#E6D5B8] mb-4">
-              Client Care
+              {t.footer.clientCareTitle}
             </div>
             <ul className="space-y-2.5 text-xs text-[#A8A29E]">
               <li>
                 <span className="hover:text-[#FAF7F2] transition cursor-pointer">
-                  Delivery Rates (৳60 / ৳120)
+                  {t.footer.deliveryRates}
                 </span>
               </li>
               <li>
                 <span className="hover:text-[#FAF7F2] transition cursor-pointer">
-                  Doorstep Inspection
+                  {t.footer.doorstepCheck}
                 </span>
               </li>
               <li>
                 <span className="hover:text-[#FAF7F2] transition cursor-pointer">
-                  Silicone Clip Guide
+                  {t.footer.siliconeComfort}
                 </span>
               </li>
               <li>
                 <span className="hover:text-[#FAF7F2] transition cursor-pointer">
-                  316L Steel Care
+                  {t.footer.careInstructions}
                 </span>
               </li>
             </ul>
@@ -214,7 +216,7 @@ export function Footer() {
           {/* Payment Badges: Card & bKash Preferred + COD */}
           <div className="md:col-span-3">
             <div className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[#E6D5B8] mb-4">
-              Payments Accepted
+              {t.checkout.paymentMethod}
             </div>
             <div className="flex flex-col gap-2 text-[11px] font-medium">
               <div className="flex items-center justify-between border border-[#C5A059]/50 bg-[#221E1A] px-3 py-1.5 text-[#FAF7F2]">
@@ -244,10 +246,10 @@ export function Footer() {
 
         {/* Bottom Copyright */}
         <div className="mt-8 flex flex-col sm:flex-row items-center justify-between text-xs text-[#78716C] gap-4">
-          <div>© 2026 MELO Bangladesh. Crafted for Everyday Elegance.</div>
+          <div>{t.footer.copyright}</div>
           <div className="flex items-center gap-6">
             <Link href="/shop" className="hover:text-[#C5A059] transition">
-              Catalogue
+              {t.catalog.breadcrumb}
             </Link>
           </div>
         </div>
