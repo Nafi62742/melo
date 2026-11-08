@@ -1,5 +1,7 @@
 <div align="center">
 
+<img src="public/melo_icon_192x192.png" alt="MELO Fine Luxury Emblem" width="110" />
+
 # M E L O
 ### *Fine & Light Luxury • Dhaka*
 **Discover. Adorn. Repeat.**

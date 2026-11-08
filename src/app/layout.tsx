@@ -31,6 +31,41 @@ export const metadata: Metadata = {
   title: 'MELO | Curated Lifestyle, Accessories & Little Wonders — Dhaka, Bangladesh',
   description:
     'MELO is your boutique destination for curated lifestyle finds, aesthetic gadgets, French ear clips, and charming accessories in Bangladesh. Card, bKash & Cash on Delivery.',
+  manifest: '/site.webmanifest',
+  icons: {
+    icon: [
+      { url: '/favicon.ico', sizes: 'any' },
+      { url: '/favicon-16x16.png', sizes: '16x16', type: 'image/png' },
+      { url: '/favicon-32x32.png', sizes: '32x32', type: 'image/png' },
+      { url: '/melo_icon_192x192.png', sizes: '192x192', type: 'image/png' },
+      { url: '/melo_icon_512x512.png', sizes: '512x512', type: 'image/png' },
+    ],
+    shortcut: '/favicon-32x32.png',
+    apple: [
+      { url: '/apple-touch-icon.png', sizes: '180x180', type: 'image/png' },
+    ],
+  },
+  openGraph: {
+    title: 'MELO | Fine & Light Luxury • Dhaka',
+    description:
+      'Discover French-inspired light luxury jewellery, earrings, rings, bracelets, and curated gifts across Bangladesh.',
+    images: [
+      {
+        url: '/melo_icon_1024x1024.png',
+        width: 1024,
+        height: 1024,
+        alt: 'MELO Fine Luxury',
+      },
+    ],
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'MELO | Fine & Light Luxury • Dhaka',
+    description:
+      'Discover French-inspired light luxury jewellery, earrings, rings, bracelets, and curated gifts across Bangladesh.',
+    images: ['/melo_icon_1024x1024.png'],
+  },
 };
 
 export default function RootLayout({

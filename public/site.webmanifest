@@ -1,0 +1,29 @@
+{
+  "name": "MELO — Fine & Light Luxury • Dhaka",
+  "short_name": "MELO",
+  "description": "MELO is your boutique destination for curated lifestyle finds, French ear clips, rings, bracelets, and charming accessories in Bangladesh.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#FAF7F2",
+  "theme_color": "#181512",
+  "icons": [
+    {
+      "src": "/melo_icon_192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/melo_icon_512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/melo_icon_1024x1024.png",
+      "sizes": "1024x1024",
+      "type": "image/png"
+    }
+  ]
+}
+
