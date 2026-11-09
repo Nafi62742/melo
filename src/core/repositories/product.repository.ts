@@ -1,32 +1,42 @@
 import { Product } from '../models/product.model';
 import { supabaseClient } from './supabase.client';
 
+export const PRODUCTS_STORAGE_KEY = 'melo_products_catalogue_v3';
 export const PRODUCTS_UPDATED_EVENT = 'melo-products-updated';
 
-/** Legacy localStorage keys that used to cache the catalogue in the browser. */
-const LEGACY_PRODUCT_STORAGE_KEYS = [
-  'melo_products_catalogue_v3',
-  'melo_products_catalogue_v2',
-  'melo_products_catalogue',
-];
-
 /**
- * ProductRepository — Handles all database (`public.products`) persistence for
- * catalogue products. Supabase is the single source of truth; nothing is cached
- * in localStorage.
+ * ProductRepository — Handles all database (`public.products`) and local storage
+ * persistence for catalogue products. Supabase is synced when configured, with
+ * offline-first local storage fallback.
  */
 export class ProductRepository {
-  /** Notify listeners in the current tab that the in-memory catalogue changed. */
+  /** Notify listeners in the current tab that the catalogue changed. */
   notifyUpdated(): void {
     if (typeof window === 'undefined') return;
     window.dispatchEvent(new CustomEvent(PRODUCTS_UPDATED_EVENT));
   }
 
-  /** Remove any catalogue copies left in localStorage by older versions of the app. */
-  clearLegacyLocalCache(): void {
+  loadLocal(): Product[] | null {
+    if (typeof window === 'undefined') return null;
+    try {
+      const stored = localStorage.getItem(PRODUCTS_STORAGE_KEY);
+      if (stored) {
+        const parsed = JSON.parse(stored) as Product[];
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          return parsed;
+        }
+      }
+    } catch {
+      // ignore storage errors
+    }
+    return null;
+  }
+
+  saveLocal(products: Product[]): void {
     if (typeof window === 'undefined') return;
     try {
-      LEGACY_PRODUCT_STORAGE_KEYS.forEach((key) => localStorage.removeItem(key));
+      localStorage.setItem(PRODUCTS_STORAGE_KEY, JSON.stringify(products));
+      this.notifyUpdated();
     } catch {
       // ignore storage errors
     }
