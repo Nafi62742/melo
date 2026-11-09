@@ -36,6 +36,25 @@ body:has(.admin-theme) {
   color: #0F172A !important;
 }
 
+/* Centralized Admin Panel Palette Variables */
+.admin-theme {
+  --admin-bg: #F8FAFC;
+  --admin-surface: #FFFFFF;
+  --admin-surface-subtle: #F1F5F9;
+  --admin-border: #E2E8F0;
+  --admin-border-strong: #CBD5E1;
+  --admin-text-primary: #0F172A;
+  --admin-text-secondary: #334155;
+  --admin-text-muted: #64748B;
+  --admin-brand-primary: #0F172A;
+  --admin-brand-hover: #1E293B;
+  --admin-status-pending: #F59E0B;
+  --admin-status-confirmed: #10B981;
+  --admin-status-dispatched: #6366F1;
+  --admin-status-delivered: #3B82F6;
+  --admin-status-cancelled: #EF4444;
+}
+
 /* Editorial Display Typography */
 .font-serif-display {
   font-family: var(--font-serif);

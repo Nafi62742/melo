@@ -40,6 +40,7 @@ import { AdminProductModal, ProductFormState } from './modals/product-modal';
 import { AdminManualOrderModal } from './modals/manual-order-modal';
 import { AdminImageZoomModal, AdminZoomImage } from './modals/image-zoom-modal';
 import { AdminDeleteProductModal } from './modals/delete-product-modal';
+import { ADMIN_COLORS, adminTheme } from './admin.palette';
 
 import {
   CheckCircle,
@@ -967,11 +968,11 @@ export function AdminFeature({
                 <span>{t.admin.subTabs.orders}</span>
                 {orders.length > 0 ? (
                   <span
-                    style={{ backgroundColor: '#EF4444', color: '#FFFFFF' }}
+                    style={{ backgroundColor: ADMIN_COLORS.status.alert.badge, color: ADMIN_COLORS.text.white }}
                     className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-extrabold shadow-xs"
                   >
                     <span
-                      style={{ backgroundColor: '#FFFFFF' }}
+                      style={{ backgroundColor: ADMIN_COLORS.text.white }}
                       className="h-1.5 w-1.5 rounded-full animate-pulse"
                     />
                     {orders.length}
@@ -1054,13 +1055,13 @@ export function AdminFeature({
                 {totalNoticeCount > 0 && (
                   <span
                     style={{
-                      backgroundColor: criticalAlertCount > 0 ? '#EF4444' : '#F59E0B',
-                      color: '#FFFFFF',
+                      backgroundColor: criticalAlertCount > 0 ? ADMIN_COLORS.status.alert.badge : ADMIN_COLORS.status.pending.badge,
+                      color: ADMIN_COLORS.text.white,
                     }}
                     className="inline-flex items-center gap-1 rounded-full px-1.5 py-0.2 text-[10px] font-extrabold shadow-xs"
                   >
                     <span
-                      style={{ backgroundColor: '#FFFFFF' }}
+                      style={{ backgroundColor: ADMIN_COLORS.text.white }}
                       className="h-1.5 w-1.5 rounded-full animate-pulse"
                     />
                     {totalNoticeCount}
@@ -1105,7 +1106,7 @@ export function AdminFeature({
                         Pending
                       </span>
                       <span
-                        style={{ backgroundColor: '#F59E0B', color: '#FFFFFF' }}
+                        style={{ backgroundColor: ADMIN_COLORS.status.pending.badge, color: ADMIN_COLORS.text.white }}
                         className="rounded-full px-2 py-0.5 text-[10px] font-extrabold"
                       >
                         {pendingOrdersList.length}
@@ -1116,7 +1117,7 @@ export function AdminFeature({
                         &gt;2d Old
                       </span>
                       <span
-                        style={{ backgroundColor: '#EF4444', color: '#FFFFFF' }}
+                        style={{ backgroundColor: ADMIN_COLORS.status.alert.badge, color: ADMIN_COLORS.text.white }}
                         className="rounded-full px-2 py-0.5 text-[10px] font-extrabold"
                       >
                         {hangingOrders.length}
@@ -1127,7 +1128,7 @@ export function AdminFeature({
                         Alerts
                       </span>
                       <span
-                        style={{ backgroundColor: '#334155', color: '#FFFFFF' }}
+                        style={{ backgroundColor: ADMIN_COLORS.status.neutral.solid, color: ADMIN_COLORS.text.white }}
                         className="rounded-full px-2 py-0.5 text-[10px] font-extrabold"
                       >
                         {pendingBkashChecksList.length + (soldOutCount > 0 ? 1 : 0) + (lowStockCount > 0 ? 1 : 0)}
@@ -1332,7 +1333,8 @@ export function AdminFeature({
                     <span>{t.admin.subTabs.products}</span>
                     <span
                       style={{
-                        backgroundColor: activeTab === 'products' ? '#334155' : '#E2E8F0', color: activeTab === 'products' ? '#FFFFFF' : '#1E293B',
+                        backgroundColor: activeTab === 'products' ? ADMIN_COLORS.brand.hover : ADMIN_COLORS.border.default,
+                        color: activeTab === 'products' ? ADMIN_COLORS.text.white : ADMIN_COLORS.text.secondary,
                       }}
                       className="rounded-full px-2 py-0.5 text-[10px] font-extrabold"
                     >
@@ -1348,7 +1350,8 @@ export function AdminFeature({
                     <span>{t.admin.subTabs.productTypes}</span>
                     <span
                       style={{
-                        backgroundColor: activeTab === 'types' ? '#334155' : '#E2E8F0', color: activeTab === 'types' ? '#FFFFFF' : '#1E293B',
+                        backgroundColor: activeTab === 'types' ? ADMIN_COLORS.brand.hover : ADMIN_COLORS.border.default,
+                        color: activeTab === 'types' ? ADMIN_COLORS.text.white : ADMIN_COLORS.text.secondary,
                       }}
                       className="rounded-full px-2 py-0.5 text-[10px] font-extrabold"
                     >
