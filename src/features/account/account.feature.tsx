@@ -5,6 +5,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { customerService, CUSTOMER_AUTH_CHANGED_EVENT } from '@/core/services/customer.service';
+import { adminService, ADMIN_AUTH_CHANGED_EVENT } from '@/core/services/admin.service';
 import { orderService } from '@/core/services/order.service';
 import { CustomerProfile } from '@/core/models/customer.model';
 import { Order, DeliveryZone } from '@/core/models/order.model';
@@ -63,9 +64,11 @@ function AccountContent() {
       setCustomer(customerService.getCurrentCustomer());
     };
     window.addEventListener(CUSTOMER_AUTH_CHANGED_EVENT, handleAuthChange);
+    window.addEventListener(ADMIN_AUTH_CHANGED_EVENT, handleAuthChange);
     window.addEventListener('storage', handleAuthChange);
     return () => {
       window.removeEventListener(CUSTOMER_AUTH_CHANGED_EVENT, handleAuthChange);
+      window.removeEventListener(ADMIN_AUTH_CHANGED_EVENT, handleAuthChange);
       window.removeEventListener('storage', handleAuthChange);
     };
   }, []);
@@ -153,12 +156,23 @@ function AccountContent() {
     e.preventDefault();
     clearValidationErrors();
 
+    if (adminService.isAuthenticated()) {
+      setAuthError(
+        'You are currently signed in as Store Admin. Please sign out of the Admin Dashboard before signing in as a customer.'
+      );
+      return;
+    }
+
+    const adminEmail = adminService.getDefaultAdminEmail().toLowerCase();
     let hasError = false;
 
     if (authMode === 'login') {
       const cleanId = phone.trim();
       if (!cleanId) {
         setPhoneError('Please enter your mobile phone number or email address.');
+        hasError = true;
+      } else if (cleanId.toLowerCase() === adminEmail) {
+        setPhoneError('Admin email cannot be used for customer login. Please use /admin.');
         hasError = true;
       } else if (cleanId.includes('@')) {
         if (!validateEmail(cleanId)) {
@@ -228,7 +242,10 @@ function AccountContent() {
       }
 
       if (email.trim()) {
-        if (email.trim().length > 30) {
+        if (email.trim().toLowerCase() === adminEmail) {
+          setEmailError('Admin email cannot be registered as a customer account.');
+          hasError = true;
+        } else if (email.trim().length > 30) {
           setEmailError('Email address cannot exceed 30 characters.');
           hasError = true;
         } else if (!validateEmail(email)) {

@@ -6,5 +6,9 @@ export const metadata = {
 };
 
 export default function AdminPage() {
-  return <AdminClient />;
+  return (
+    <div className="admin-theme min-h-screen bg-slate-50 text-slate-900">
+      <AdminClient />
+    </div>
+  );
 }

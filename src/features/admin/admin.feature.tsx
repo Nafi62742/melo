@@ -31,6 +31,7 @@ import { AdminMetrics } from './components/admin-metrics';
 import { AdminProductsTab, StockFilterType } from './tabs/products-tab';
 import { AdminProductTypesTab } from './tabs/product-types-tab';
 import { AdminOrdersTab } from './tabs/orders-tab';
+import { AdminCustomersTab } from './tabs/customers-tab';
 import { AdminAnalyticsTab } from './tabs/analytics-tab';
 import { AdminLinksTab } from './tabs/links-tab';
 import { AdminHomepageTab } from './tabs/homepage-tab';
@@ -53,6 +54,11 @@ import {
   Store,
   Briefcase,
   ExternalLink,
+  ShoppingBag,
+  Bell,
+  AlertTriangle,
+  Clock,
+  Users,
 } from 'lucide-react';
 
 const INITIAL_FORM: ProductFormState = {
@@ -70,7 +76,11 @@ const INITIAL_FORM: ProductFormState = {
   isNew: true,
 };
 
-export function AdminFeature() {
+export function AdminFeature({
+  initialSection = 'store',
+}: {
+  initialSection?: 'store' | 'orders' | 'customers' | 'operations';
+} = {}) {
   const { t } = useI18n();
   // Authentication State (delegated to AdminService -> AdminRepository)
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() =>
@@ -83,10 +93,14 @@ export function AdminFeature() {
   const [dbReachable, setDbReachable] = useState<boolean | null>(null);
 
   // Dashboard State
-  const [adminSystem, setAdminSystem] = useState<'store' | 'operations'>('store');
+  const [adminSystem, setAdminSystem] = useState<'store' | 'orders' | 'customers' | 'operations'>(
+    initialSection
+  );
+  const [notifOpen, setNotifOpen] = useState(false);
+  const notifDropdownRef = useRef<HTMLDivElement | null>(null);
   const [zoomedImage, setZoomedImage] = useState<AdminZoomImage | null>(null);
   const [activeTab, setActiveTab] = useState<
-    'products' | 'types' | 'orders' | 'analytics' | 'links' | 'homepage'
+    'products' | 'types' | 'customers' | 'analytics' | 'links' | 'homepage'
   >('products');
   const [products, setProducts] = useState<Product[]>(() => [...productService.getAllProducts()]);
   const [productTypes, setProductTypes] = useState<ProductType[]>(() => [
@@ -232,6 +246,136 @@ export function AdminFeature() {
   useEffect(() => {
     void adminService.checkDatabaseConnection().then((ok) => setDbReachable(ok));
   }, []);
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (notifDropdownRef.current && !notifDropdownRef.current.contains(e.target as Node)) {
+        setNotifOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  // Compute Important Admin Notices (1. Pending Orders, 2. Hanging Orders > 2 Days, 3. Important Alerts)
+  const currentNow = nowMs ?? Date.now();
+  const twoDaysMs = 2 * 24 * 60 * 60 * 1000;
+  const hangingOrders = orders.filter((o) => {
+    if (o.status === 'delivered' || o.status === 'cancelled') return false;
+    const createdMs = new Date(o.createdAt).getTime();
+    return !Number.isNaN(createdMs) && currentNow - createdMs >= twoDaysMs;
+  });
+  const pendingOrdersList = orders.filter((o) => o.status === 'pending');
+  const pendingBkashChecksList = orders.filter(
+    (o) => o.paymentMethod === 'bkash' && o.paymentStatus === 'pending' && o.status !== 'cancelled'
+  );
+
+  type AdminNoticeItem = {
+    id: string;
+    category: 'hanging' | 'pending' | 'alert';
+    severity: 'critical' | 'warning' | 'info';
+    title: string;
+    description: string;
+    badge: string;
+    onClick: () => void;
+  };
+
+  const adminNotices: AdminNoticeItem[] = [
+    ...hangingOrders.map((o) => {
+      const daysOld = Math.max(2, Math.floor((currentNow - new Date(o.createdAt).getTime()) / (24 * 60 * 60 * 1000)));
+      return {
+        id: `hanging-${o.id}`,
+        category: 'hanging' as const,
+        severity: 'critical' as const,
+        title: `Order #${o.orderNumber} hanging for ${daysOld} days`,
+        description: `${o.customer.fullName} (${o.customer.phone}) • Status: ${o.status.toUpperCase()} • ৳${o.total.toLocaleString()}`,
+        badge: `${daysOld}d overdue`,
+        onClick: () => {
+          setAdminSystem('orders');
+          setNotifOpen(false);
+        },
+      };
+    }),
+    ...pendingOrdersList.map((o) => ({
+      id: `pending-${o.id}`,
+      category: 'pending' as const,
+      severity: 'warning' as const,
+      title: `Pending Order #${o.orderNumber} awaiting confirmation`,
+      description: `${o.customer.fullName} (${o.customer.phone}) • ${o.items.reduce((s, i) => s + i.quantity, 0)} item(s) • ৳${o.total.toLocaleString()}`,
+      badge: 'Pending Order',
+      onClick: () => {
+        setAdminSystem('orders');
+        setNotifOpen(false);
+      },
+    })),
+    ...pendingBkashChecksList.map((o) => ({
+      id: `bkash-${o.id}`,
+      category: 'alert' as const,
+      severity: 'critical' as const,
+      title: `bKash TrxID verification needed (#${o.orderNumber})`,
+      description: `TrxID: ${o.trxId || 'Not provided'} • Sender: ${o.bkashSenderNumber || o.customer.phone} • ৳${o.total.toLocaleString()}`,
+      badge: 'bKash Check',
+      onClick: () => {
+        setAdminSystem('orders');
+        setNotifOpen(false);
+      },
+    })),
+    ...(soldOutCount > 0
+      ? [
+          {
+            id: 'alert-sold-out',
+            category: 'alert' as const,
+            severity: 'critical' as const,
+            title: `${soldOutCount} product(s) are completely Sold Out`,
+            description: 'Restock sold-out pieces or mark them restocked in Store Management.',
+            badge: 'Inventory Alert',
+            onClick: () => {
+              setAdminSystem('store');
+              setActiveTab('products');
+              setStockFilter('sold_out');
+              setNotifOpen(false);
+            },
+          },
+        ]
+      : []),
+    ...(lowStockCount > 0
+      ? [
+          {
+            id: 'alert-low-stock',
+            category: 'alert' as const,
+            severity: 'warning' as const,
+            title: `${lowStockCount} product(s) running low on stock (≤2 left)`,
+            description: 'Review low-stock items to prevent stockouts on high-demand pieces.',
+            badge: 'Low Stock',
+            onClick: () => {
+              setAdminSystem('store');
+              setActiveTab('products');
+              setStockFilter('low_stock');
+              setNotifOpen(false);
+            },
+          },
+        ]
+      : []),
+    ...(!isSupabaseConnected || !dbReachable
+      ? [
+          {
+            id: 'alert-db-connection',
+            category: 'alert' as const,
+            severity: 'info' as const,
+            title: 'Store running in local fallback mode',
+            description: 'Verify cloud connection to sync live changes.',
+            badge: 'System Notice',
+            onClick: () => {
+              setNotifOpen(false);
+            },
+          },
+        ]
+      : []),
+  ];
+
+  const criticalAlertCount =
+    hangingOrders.length + pendingOrdersList.length + pendingBkashChecksList.length + (soldOutCount > 0 ? 1 : 0);
+  const totalNoticeCount = adminNotices.length;
 
   useEffect(() => {
     if (!isAuthenticated) return;
@@ -477,7 +621,7 @@ export function AdminFeature() {
     refreshProducts();
     setOrders(orderService.getOrders());
     setIsManualOrderOpen(false);
-    setActiveTab('orders');
+    setAdminSystem('orders');
     setSyncMessage(
       `Created ${manualSource.toUpperCase()} Order ${orderNumber} for ${manualCustName.trim()} (${manualCustPhone.trim()})! Stock automatically deducted and customer can track on /account.`
     );
@@ -771,314 +915,349 @@ export function AdminFeature() {
   }
 
   return (
-    <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8 md:py-14">
-      {/* Top Header */}
-      <div className="flex flex-col lg:flex-row lg:items-end justify-between pb-6 border-b border-[#E7E0D6] gap-4 mb-6">
-        <div>
-          <h1 className="font-serif-display text-3xl sm:text-4xl font-medium text-[#1C1917]">
-            {t.admin.header.title}
-          </h1>
-          <div className="flex flex-wrap items-center gap-2 text-xs text-[#78716C] mt-1">
-            <span>
-              {t.admin.header.signedInAs} <strong className="text-[#1C1917]">{adminEmail}</strong>
-            </span>
-            <span>•</span>
-            {isSupabaseConnected ? (
-              <span
-                className={`inline-flex items-center gap-1.5 border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider ${
-                  dbReachable
-                    ? 'border-emerald-200 bg-emerald-50 text-emerald-800'
-                    : 'border-amber-200 bg-amber-50 text-amber-800'
-                }`}
-              >
-                <span
-                  className={`h-1.5 w-1.5 rounded-full ${
-                    dbReachable ? 'bg-emerald-500' : 'bg-amber-500'
-                  }`}
-                />
-                <span>
-                  {dbReachable
-                    ? t.admin.header.dbConnected
-                    : t.admin.header.dbKeySet}
+    <div className="min-h-screen bg-slate-50 text-slate-900 py-3 md:py-5">
+      <div className="mx-auto max-w-[1600px] px-4 sm:px-6 lg:px-8">
+        {/* Modern High-Productivity Admin Top Bar */}
+        <div className="flex flex-wrap items-center justify-between bg-white border border-slate-200 rounded-2xl px-4 sm:px-5 py-3 shadow-xs gap-3 mb-4">
+          <div className="flex flex-wrap items-center gap-3 xl:gap-5">
+            {/* Brand Monogram & Admin Identity */}
+            <div className="flex items-center gap-3">
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-slate-900 border border-slate-800 shadow-xs">
+                <span className="font-serif-display text-base font-bold tracking-wider text-white">
+                  M
                 </span>
-              </span>
-            ) : (
-              <span className="inline-flex items-center gap-1.5 border border-stone-200 bg-stone-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-stone-700">
-                <span>{t.admin.header.localMode}</span>
-              </span>
-            )}
-          </div>
-        </div>
-
-        {/* Global Quick Actions */}
-        <div className="flex items-center gap-2">
-          <Link
-            href="/"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-1.5 border border-[#E7E0D6] bg-white px-3.5 py-2.5 text-[11px] font-semibold uppercase tracking-wider text-[#78716C] hover:border-[#1C1917] hover:text-[#1C1917] transition cursor-pointer rounded-lg shadow-2xs"
-            title="Open live storefront in new tab"
-          >
-            <ExternalLink className="w-3.5 h-3.5 text-[#9A7B3E]" />
-            <span>{t.admin.header.storefront}</span>
-          </Link>
-
-          <button
-            onClick={handleLogout}
-            className="inline-flex items-center gap-1.5 border border-[#E7E0D6] bg-white px-3.5 py-2.5 text-[11px] font-semibold uppercase tracking-wider text-[#78716C] hover:border-red-400 hover:text-red-700 transition cursor-pointer rounded-lg shadow-2xs"
-            title={t.admin.header.signOut}
-          >
-            <LogOut className="w-3.5 h-3.5" />
-            <span>{t.admin.header.signOut}</span>
-          </button>
-        </div>
-      </div>
-
-      {/* Primary System Switcher (Store Management vs Business Operations) */}
-      <div className="flex items-center gap-2 border-b border-[#E7E0D6] mb-8 pb-3 overflow-x-auto scrollbar-none">
-        <button
-          type="button"
-          onClick={() => setAdminSystem('store')}
-          className={`inline-flex items-center gap-2 px-5 py-2.5 text-xs font-semibold uppercase tracking-[0.14em] transition cursor-pointer rounded-xl ${
-            adminSystem === 'store'
-              ? 'bg-[#1C1917] text-[#FAF7F2] shadow-xs'
-              : 'bg-white border border-[#E7E0D6] text-[#78716C] hover:border-[#1C1917] hover:text-[#1C1917]'
-          }`}
-        >
-          <Store className="w-4 h-4 text-[#C5A059]" />
-          <span>{t.admin.header.storeManagement}</span>
-          <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-stone-700 text-stone-200">
-            {orders.length}
-          </span>
-        </button>
-
-        <button
-          type="button"
-          onClick={() => setAdminSystem('operations')}
-          className={`inline-flex items-center gap-2 px-5 py-2.5 text-xs font-semibold uppercase tracking-[0.14em] transition cursor-pointer rounded-xl ${
-            adminSystem === 'operations'
-              ? 'bg-[#1C1917] text-[#FAF7F2] shadow-xs'
-              : 'bg-white border border-[#E7E0D6] text-[#78716C] hover:border-[#1C1917] hover:text-[#1C1917]'
-          }`}
-        >
-          <Briefcase className="w-4 h-4 text-[#C5A059]" />
-          <span>{t.admin.header.businessOperations}</span>
-        </button>
-      </div>
-
-      {/* Non-Store System */}
-      {adminSystem === 'operations' && <AdminOperationsTab />}
-
-      {/* Store System */}
-      {adminSystem === 'store' && (
-        <>
-          {/* Action Controls & Store Sub-Tab Switch */}
-          <div className="flex flex-wrap items-center justify-between gap-3 mb-6 bg-white border border-[#E7E0D6] p-3 sm:p-4 rounded-xl shadow-xs">
-            <div className="flex flex-wrap items-center gap-2">
-              <input
-                ref={csvFileInputRef}
-                type="file"
-                accept=".csv,text/csv"
-                onChange={handleImportCsvFile}
-                className="hidden"
-              />
-
-              <button
-                onClick={openAddModal}
-                className="inline-flex items-center gap-2 boutique-btn-primary px-3.5 py-2 cursor-pointer text-xs rounded-lg shadow-2xs"
-              >
-                <Plus className="w-3.5 h-3.5" />
-                <span>{t.admin.header.addNewPiece}</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={openManualOrderModal}
-                className="inline-flex items-center gap-2 border border-emerald-600 bg-emerald-700 text-white px-3.5 py-2 text-xs font-semibold uppercase tracking-wider hover:bg-emerald-800 transition cursor-pointer rounded-lg shadow-2xs"
-                title="Create an order from WhatsApp or Facebook Messenger and automatically deduct stock"
-              >
-                <Plus className="w-3.5 h-3.5" />
-                <span>{t.admin.header.manualOrder}</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => csvFileInputRef.current?.click()}
-                className="inline-flex items-center gap-1.5 boutique-btn-outline px-3.5 py-2 cursor-pointer text-xs rounded-lg shadow-2xs"
-                title="Import CSV — only changed rows update, everything else stays untouched"
-              >
-                <Upload className="w-3.5 h-3.5 text-[#9A7B3E]" />
-                <span>{t.admin.header.importCsv}</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => handleExportCsv(false)}
-                className="inline-flex items-center gap-1.5 boutique-btn-outline px-3.5 py-2 cursor-pointer text-xs rounded-lg shadow-2xs"
-                title="Export full product catalogue to CSV"
-              >
-                <Download className="w-3.5 h-3.5 text-[#9A7B3E]" />
-                <span>{t.admin.header.exportCsv}</span>
-              </button>
-
-              <button
-                onClick={handlePushToDatabase}
-                className="inline-flex items-center gap-1.5 boutique-btn-outline px-3.5 py-2 cursor-pointer text-xs rounded-lg shadow-2xs"
-                title="Push local catalogue to Supabase PostgreSQL"
-              >
-                <Database className="w-3.5 h-3.5 text-[#9A7B3E]" />
-                <span>{t.admin.header.syncToDb}</span>
-              </button>
+              </div>
+              <div>
+                <h1 className="text-sm sm:text-base font-bold text-slate-900 tracking-tight leading-tight">
+                  {t.admin.header.title}
+                </h1>
+                <div className="flex flex-wrap items-center gap-1.5 text-[11px] text-slate-500">
+                  <span>
+                    {t.admin.header.signedInAs} <strong className="text-slate-900 font-semibold">{adminEmail}</strong>
+                  </span>
+                </div>
+              </div>
             </div>
 
-            {/* Store Sub-Tabs */}
-            <div className="flex flex-wrap border border-[#E7E0D6] bg-stone-50 p-1 text-xs font-semibold rounded-xl gap-1">
+            {/* Primary System Switcher Pill Group */}
+            <div className="flex flex-wrap items-center gap-1 bg-slate-100 border border-slate-200 p-1 rounded-xl shadow-inner">
               <button
-                onClick={() => setActiveTab('products')}
-                className={`px-3.5 py-1.5 text-[11px] uppercase tracking-[0.12em] transition cursor-pointer rounded-lg ${
-                  activeTab === 'products'
-                    ? 'bg-[#1C1917] text-[#FAF7F2] shadow-xs'
-                    : 'text-[#78716C] hover:text-[#1C1917]'
+                type="button"
+                onClick={() => setAdminSystem('store')}
+                className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-bold uppercase tracking-[0.08em] transition-all cursor-pointer rounded-lg ${
+                  adminSystem === 'store'
+                    ? 'bg-slate-900 text-white shadow-xs'
+                    : 'text-slate-700 hover:bg-white hover:text-slate-900'
                 }`}
               >
-                {t.admin.subTabs.products} ({products.length})
+                <Store className={`w-3.5 h-3.5 ${adminSystem === 'store' ? 'text-white' : 'text-slate-500'}`} />
+                <span>{t.admin.header.storeManagement}</span>
               </button>
+
               <button
-                onClick={() => setActiveTab('types')}
-                className={`px-3.5 py-1.5 text-[11px] uppercase tracking-[0.12em] transition cursor-pointer rounded-lg ${
-                  activeTab === 'types'
-                    ? 'bg-[#1C1917] text-[#FAF7F2] shadow-xs'
-                    : 'text-[#78716C] hover:text-[#1C1917]'
+                type="button"
+                onClick={() => setAdminSystem('orders')}
+                className={`relative inline-flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-bold uppercase tracking-[0.08em] transition-all cursor-pointer rounded-lg ${
+                  adminSystem === 'orders'
+                    ? 'bg-slate-900 text-white shadow-xs'
+                    : 'text-slate-700 hover:bg-white hover:text-slate-900'
                 }`}
               >
-                {t.admin.subTabs.productTypes} ({productTypes.length})
+                <ShoppingBag className={`w-3.5 h-3.5 ${adminSystem === 'orders' ? 'text-white' : 'text-slate-500'}`} />
+                <span>{t.admin.subTabs.orders}</span>
+                {orders.length > 0 ? (
+                  <span
+                    style={{ backgroundColor: '#EF4444', color: '#FFFFFF' }}
+                    className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-extrabold shadow-xs"
+                  >
+                    <span
+                      style={{ backgroundColor: '#FFFFFF' }}
+                      className="h-1.5 w-1.5 rounded-full animate-pulse"
+                    />
+                    {orders.length}
+                  </span>
+                ) : (
+                  <span
+                    className={`text-[10px] px-2 py-0.5 rounded-full font-extrabold ${
+                      adminSystem === 'orders' ? 'bg-slate-800 text-white' : 'bg-slate-200 text-slate-700'
+                    }`}
+                  >
+                    0
+                  </span>
+                )}
               </button>
+
               <button
-                onClick={() => setActiveTab('orders')}
-                className={`px-3.5 py-1.5 text-[11px] uppercase tracking-[0.12em] transition cursor-pointer rounded-lg ${
-                  activeTab === 'orders'
-                    ? 'bg-[#1C1917] text-[#FAF7F2] shadow-xs'
-                    : 'text-[#78716C] hover:text-[#1C1917]'
+                type="button"
+                onClick={() => setAdminSystem('customers')}
+                className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-bold uppercase tracking-[0.08em] transition-all cursor-pointer rounded-lg ${
+                  adminSystem === 'customers'
+                    ? 'bg-slate-900 text-white shadow-xs'
+                    : 'text-slate-700 hover:bg-white hover:text-slate-900'
                 }`}
               >
-                {t.admin.subTabs.orders} ({orders.length})
+                <Users className={`w-3.5 h-3.5 ${adminSystem === 'customers' ? 'text-white' : 'text-slate-500'}`} />
+                <span>Customers</span>
+                <span
+                  className={`text-[10px] px-2 py-0.5 rounded-full font-extrabold ${
+                    adminSystem === 'customers' ? 'bg-slate-800 text-white' : 'bg-slate-200 text-slate-700'
+                  }`}
+                >
+                  {customers.length}
+                </span>
               </button>
+
               <button
+                type="button"
+                onClick={() => setAdminSystem('operations')}
+                className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-bold uppercase tracking-[0.08em] transition-all cursor-pointer rounded-lg ${
+                  adminSystem === 'operations'
+                    ? 'bg-slate-900 text-white shadow-xs'
+                    : 'text-slate-700 hover:bg-white hover:text-slate-900'
+                }`}
+              >
+                <Briefcase className={`w-3.5 h-3.5 ${adminSystem === 'operations' ? 'text-white' : 'text-slate-500'}`} />
+                <span>{t.admin.header.businessOperations}</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Right Side: Notification Bell + Storefront + Sign Out (always pinned to the right) */}
+          <div className="flex items-center gap-2 ml-auto shrink-0">
+            {/* Notification Bell Icon Left to Storefront Button */}
+            <div className="relative" ref={notifDropdownRef}>
+              <button
+                type="button"
                 onClick={() => {
                   setNowMs(Date.now());
-                  setActiveTab('analytics');
+                  setNotifOpen((prev) => !prev);
                 }}
-                className={`inline-flex items-center gap-1.5 px-3.5 py-1.5 text-[11px] uppercase tracking-[0.12em] transition cursor-pointer rounded-lg ${
-                  activeTab === 'analytics'
-                    ? 'bg-[#1C1917] text-[#FAF7F2] shadow-xs'
-                    : 'text-[#78716C] hover:text-[#1C1917]'
+                className={`relative inline-flex items-center gap-1.5 border px-3 py-1.5 text-[11px] font-bold uppercase tracking-wider transition-all cursor-pointer rounded-xl shadow-2xs ${
+                  notifOpen
+                    ? 'border-slate-900 bg-slate-900 text-white'
+                    : criticalAlertCount > 0
+                    ? 'border-rose-300 bg-rose-50 text-rose-900 hover:border-rose-400 hover:bg-rose-100'
+                    : 'border-slate-200 bg-white text-slate-800 hover:border-slate-300 hover:bg-slate-50'
                 }`}
+                title="Important Store Notices & Order Alerts"
               >
-                <TrendingUp className="w-3.5 h-3.5 text-[#C5A059]" />
-                <span>{t.admin.subTabs.analytics}</span>
+                <Bell
+                  className={`w-3.5 h-3.5 ${
+                    notifOpen
+                      ? 'text-white'
+                      : criticalAlertCount > 0
+                      ? 'text-rose-600'
+                      : 'text-slate-700'
+                  }`}
+                />
+                <span className="hidden sm:inline">Notices</span>
+                {totalNoticeCount > 0 && (
+                  <span
+                    style={{
+                      backgroundColor: criticalAlertCount > 0 ? '#EF4444' : '#F59E0B',
+                      color: '#FFFFFF',
+                    }}
+                    className="inline-flex items-center gap-1 rounded-full px-1.5 py-0.2 text-[10px] font-extrabold shadow-xs"
+                  >
+                    <span
+                      style={{ backgroundColor: '#FFFFFF' }}
+                      className="h-1.5 w-1.5 rounded-full animate-pulse"
+                    />
+                    {totalNoticeCount}
+                  </span>
+                )}
               </button>
-              <button
-                onClick={() => setActiveTab('links')}
-                className={`px-3.5 py-1.5 text-[11px] uppercase tracking-[0.12em] transition cursor-pointer rounded-lg ${
-                  activeTab === 'links'
-                    ? 'bg-[#1C1917] text-[#FAF7F2] shadow-xs'
-                    : 'text-[#78716C] hover:text-[#1C1917]'
-                }`}
-              >
-                {t.admin.subTabs.links} ({storeLinks.length})
-              </button>
-              <button
-                onClick={() => setActiveTab('homepage')}
-                className={`inline-flex items-center gap-1.5 px-3.5 py-1.5 text-[11px] uppercase tracking-[0.12em] transition cursor-pointer rounded-lg ${
-                  activeTab === 'homepage'
-                    ? 'bg-[#1C1917] text-[#FAF7F2] shadow-xs'
-                    : 'text-[#78716C] hover:text-[#1C1917]'
-                }`}
-              >
-                <Sparkles className="w-3.5 h-3.5 text-[#C5A059]" />
-                <span>{t.admin.subTabs.homepage}</span>
-              </button>
-            </div>
-          </div>
 
-          {/* Status / Sync Toast */}
+              {/* Dropdown Popover for Important Notices */}
+              {notifOpen && (
+                <div
+                  style={{ width: '420px', maxWidth: 'calc(100vw - 24px)' }}
+                  className="absolute right-0 mt-2 rounded-2xl border border-slate-200 bg-white text-slate-900 shadow-xl z-50 overflow-hidden"
+                >
+                  {/* Header */}
+                  <div className="flex items-center justify-between border-b border-slate-200 bg-slate-50 px-4 py-3 text-slate-900">
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-indigo-50 border border-indigo-100 text-indigo-700">
+                        <Bell className="w-4 h-4" />
+                      </div>
+                      <div className="min-w-0">
+                        <h3 className="text-xs font-bold uppercase tracking-[0.14em] text-slate-900">
+                          Important Store Notices
+                        </h3>
+                        <p className="text-[11px] text-slate-500 mt-0.5 truncate">
+                          Pending orders, 2+ day hanging orders &amp; critical alerts
+                        </p>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setNotifOpen(false)}
+                      className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-200 hover:text-slate-800 transition cursor-pointer shrink-0"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+
+                  {/* Quick Summary Chips */}
+                  <div className="grid grid-cols-3 gap-2 border-b border-slate-100 bg-slate-50/70 p-3">
+                    <div className="flex items-center justify-between rounded-xl border border-amber-200 bg-amber-50 px-2.5 py-1.5">
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-amber-900">
+                        Pending
+                      </span>
+                      <span
+                        style={{ backgroundColor: '#F59E0B', color: '#FFFFFF' }}
+                        className="rounded-full px-2 py-0.5 text-[10px] font-extrabold"
+                      >
+                        {pendingOrdersList.length}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between rounded-xl border border-rose-200 bg-rose-50 px-2.5 py-1.5">
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-rose-900">
+                        &gt;2d Old
+                      </span>
+                      <span
+                        style={{ backgroundColor: '#EF4444', color: '#FFFFFF' }}
+                        className="rounded-full px-2 py-0.5 text-[10px] font-extrabold"
+                      >
+                        {hangingOrders.length}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between rounded-xl border border-slate-200 bg-white px-2.5 py-1.5">
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-slate-700">
+                        Alerts
+                      </span>
+                      <span
+                        style={{ backgroundColor: '#334155', color: '#FFFFFF' }}
+                        className="rounded-full px-2 py-0.5 text-[10px] font-extrabold"
+                      >
+                        {pendingBkashChecksList.length + (soldOutCount > 0 ? 1 : 0) + (lowStockCount > 0 ? 1 : 0)}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Notice List */}
+                  <div className="max-h-96 overflow-y-auto divide-y divide-slate-100">
+                    {adminNotices.length === 0 ? (
+                      <div className="px-5 py-8 text-center">
+                        <CheckCircle className="w-8 h-8 text-emerald-600 mx-auto mb-2" />
+                        <p className="text-xs font-bold text-slate-900">
+                          All caught up!
+                        </p>
+                        <p className="text-[11px] text-slate-500 mt-0.5">
+                          No pending orders, overdue shipments, or critical alerts.
+                        </p>
+                      </div>
+                    ) : (
+                      adminNotices.map((notice) => (
+                        <button
+                          key={notice.id}
+                          type="button"
+                          onClick={notice.onClick}
+                          className="w-full text-left px-4 py-3 hover:bg-slate-50 transition flex items-start gap-3 cursor-pointer group"
+                        >
+                          <div
+                            className={`mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-xl border ${
+                              notice.severity === 'critical'
+                                ? 'border-rose-200 bg-rose-50 text-rose-700'
+                                : notice.severity === 'warning'
+                                ? 'border-amber-200 bg-amber-50 text-amber-800'
+                                : 'border-slate-200 bg-slate-100 text-slate-700'
+                            }`}
+                          >
+                            {notice.category === 'hanging' ? (
+                              <Clock className="w-4 h-4" />
+                            ) : notice.category === 'pending' ? (
+                              <ShoppingBag className="w-4 h-4" />
+                            ) : (
+                              <AlertTriangle className="w-4 h-4" />
+                            )}
+                          </div>
+                          <div
+                            className="min-w-0 flex-1"
+                            style={{ overflowWrap: 'anywhere', wordBreak: 'break-word' }}
+                          >
+                            <div className="flex items-center justify-between gap-2 mb-1">
+                              <span
+                                className={`inline-flex items-center rounded-md px-2 py-0.5 text-[9px] font-extrabold uppercase tracking-wider ${
+                                  notice.severity === 'critical'
+                                    ? 'bg-rose-100 text-rose-900'
+                                    : notice.severity === 'warning'
+                                    ? 'bg-amber-100 text-amber-900'
+                                    : 'bg-slate-100 text-slate-800'
+                                }`}
+                              >
+                                {notice.badge}
+                              </span>
+                              <span className="text-[10px] font-bold text-indigo-600 group-hover:text-indigo-800 transition shrink-0">
+                                Open →
+                              </span>
+                            </div>
+                            <div className="text-xs font-bold text-slate-900 leading-snug">
+                              {notice.title}
+                            </div>
+                            <p className="text-[11px] text-slate-600 mt-1 leading-relaxed">
+                              {notice.description}
+                            </p>
+                          </div>
+                        </button>
+                      ))
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <Link
+              href="/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 border border-slate-200 bg-white px-3 py-1.5 text-[11px] font-bold uppercase tracking-wider text-slate-800 hover:border-slate-300 hover:bg-slate-50 transition-all cursor-pointer rounded-xl shadow-2xs"
+              title="Open live storefront in new tab"
+            >
+              <ExternalLink className="w-3.5 h-3.5 text-slate-700" />
+              <span>{t.admin.header.storefront}</span>
+            </Link>
+
+            <button
+              onClick={handleLogout}
+              className="inline-flex items-center gap-1.5 border border-slate-200 bg-white px-3 py-1.5 text-[11px] font-bold uppercase tracking-wider text-slate-600 hover:border-rose-300 hover:bg-rose-50 hover:text-rose-700 transition-all cursor-pointer rounded-xl shadow-2xs"
+              title={t.admin.header.signOut}
+            >
+              <LogOut className="w-3.5 h-3.5" />
+              <span>{t.admin.header.signOut}</span>
+            </button>
+          </div>
+        </div>
+
+        {/* Inner Page Container with Left & Right Whitespace */}
+        <div className="mx-auto max-w-7xl px-4 sm:px-8 lg:px-14 pt-2 pb-10">
+          {/* Global Status / Sync Toast */}
           {syncMessage && (
-            <div className="mt-4 flex items-center justify-between border border-[#C5A059] bg-white px-4 py-3 text-xs font-medium text-[#1C1917] rounded-xl shadow-xs">
+            <div className="mb-4 flex items-center justify-between border border-emerald-300 bg-emerald-50 px-4 py-2.5 text-xs font-semibold text-emerald-900 rounded-xl shadow-md">
               <div className="flex items-center gap-2">
-                <CheckCircle className="w-4 h-4 text-[#9A7B3E]" />
+                <CheckCircle className="w-4 h-4 text-emerald-400" />
                 <span>{syncMessage}</span>
               </div>
               <button
                 onClick={() => setSyncMessage(null)}
-                className="text-[#78716C] hover:text-[#1C1917] p-1 rounded-full hover:bg-stone-100 transition cursor-pointer"
+                className="text-emerald-700 hover:text-emerald-950 p-1 rounded-full hover:bg-emerald-100 transition cursor-pointer"
               >
                 <X className="w-4 h-4" />
               </button>
             </div>
           )}
 
-          {/* Store bKash Number Configuration Bar & Metrics Row */}
-          <AdminMetrics
-            bkashNumber={bkashNumber}
-            onChangeBkashNumber={setBkashNumber}
-            onSaveBkashNumber={handleSaveBkashNumber}
-            products={products}
-            orders={orders}
-            totalStock={totalStock}
-            soldOutCount={soldOutCount}
-            lowStockCount={lowStockCount}
-            isSupabaseConnected={isSupabaseConnected}
-          />
+          {/* Dedicated Page 1: Non-Store Business Operations */}
+          {adminSystem === 'operations' && <AdminOperationsTab />}
 
-          {/* Tab: Products Catalogue & Live Inventory Editor */}
-          {activeTab === 'products' && (
-            <AdminProductsTab
-              products={products}
-              filteredProducts={filteredProducts}
-              productTypes={productTypes}
-              selectedCategory={selectedCategory}
-              onChangeSelectedCategory={setSelectedCategory}
-              stockFilter={stockFilter}
-              onChangeStockFilter={setStockFilter}
-              searchQuery={searchQuery}
-              onChangeSearchQuery={setSearchQuery}
-              lowStockCount={lowStockCount}
-              soldOutCount={soldOutCount}
-              onTriggerCsvImport={() => csvFileInputRef.current?.click()}
-              onExportCsv={handleExportCsv}
-              getUnitLandedCost={getUnitLandedCost}
-              getUnitMinSellPrice={getUnitMinSellPrice}
-              getUnitNetProfit={getUnitNetProfit}
-              onZoomImage={setZoomedImage}
-              onToggleFeatured={handleToggleFeatured}
-              onStockDelta={handleStockDelta}
-              onMarkOneSold={handleMarkOneSold}
-              onMarkSoldOut={handleMarkSoldOut}
-              onQuickRestock={handleQuickRestock}
-              onOpenEditModal={openEditModal}
-              onDeleteProduct={handleDeleteProduct}
-            />
-          )}
-
-          {/* Tab: Manage Product Types */}
-          {activeTab === 'types' && (
-            <AdminProductTypesTab
-              products={products}
-              productTypes={productTypes}
-              newTypeName={newTypeName}
-              onChangeNewTypeName={setNewTypeName}
-              newTypeDesc={newTypeDesc}
-              onChangeNewTypeDesc={setNewTypeDesc}
-              onAddProductType={handleAddProductType}
-              onDeleteProductType={handleDeleteProductType}
-            />
-          )}
-
-          {/* Tab: Orders & Manual bKash TrxID Verification */}
-          {activeTab === 'orders' && (
+          {/* Dedicated Page 2: Orders & bKash Fulfillment Hub */}
+          {adminSystem === 'orders' && (
             <AdminOrdersTab
               orders={orders}
               customers={customers}
+              bkashNumber={bkashNumber}
+              onChangeBkashNumber={setBkashNumber}
+              onSaveBkashNumber={handleSaveBkashNumber}
               onOpenManualOrderModal={openManualOrderModal}
               onRefreshOrders={() => {
                 void orderService.syncFromDatabase().then((o) => setOrders([...o]));
@@ -1091,54 +1270,236 @@ export function AdminFeature() {
             />
           )}
 
-          {/* Tab: Profit, Cost & Revenue Analytics */}
-          {activeTab === 'analytics' && (
-            <AdminAnalyticsTab
-              products={products}
-              productTypes={productTypes}
-              shippingCostPerPiece={shippingCostPerPiece}
-              onChangeShippingCost={setShippingCostPerPiece}
-              analyticsTimeframe={analyticsTimeframe}
-              onChangeTimeframe={handleChangeTimeframe}
-              analyticsOrderScope={analyticsOrderScope}
-              onChangeOrderScope={setAnalyticsOrderScope}
-              totalStock={totalStock}
-              totalInventoryBaseCost={totalInventoryBaseCost}
-              totalInventoryLandedCost={totalInventoryLandedCost}
-              totalExpectedRevenue={totalExpectedRevenue}
-              totalExpectedNetProfit={totalExpectedNetProfit}
-              expectedMarginPercent={expectedMarginPercent}
-              analyticsFilteredOrders={analyticsFilteredOrders}
-              realizedOrderStats={realizedOrderStats}
-              getUnitLandedCost={getUnitLandedCost}
+          {/* Dedicated Page 3: Customer Directory */}
+          {adminSystem === 'customers' && (
+            <AdminCustomersTab
+              orders={orders}
+              customers={customers}
+              onZoomImage={setZoomedImage}
             />
           )}
 
-          {/* Tab: Storefront Chat & Social Links */}
-          {activeTab === 'links' && (
-            <AdminLinksTab
-              storeLinks={storeLinks}
-              onChangeStoreLinks={setStoreLinks}
-              onUpdateStoreLink={handleUpdateStoreLink}
-              onDeleteStoreLink={handleDeleteStoreLink}
-              newLinkKey={newLinkKey}
-              onChangeNewLinkKey={setNewLinkKey}
-              newLinkLabel={newLinkLabel}
-              onChangeNewLinkLabel={setNewLinkLabel}
-              newLinkUrl={newLinkUrl}
-              onChangeNewLinkUrl={setNewLinkUrl}
-              newLinkCategory={newLinkCategory}
-              onChangeNewLinkCategory={setNewLinkCategory}
-              onAddNewStoreLink={handleAddNewStoreLink}
-            />
-          )}
+          {/* Dedicated Page 4: Store Management */}
+          {adminSystem === 'store' && (
+            <>
+              {/* Action Controls & Store Sub-Tab Switch */}
+              <div className="flex flex-wrap items-center justify-between gap-3 mb-4 bg-white border border-slate-200 px-4 py-3 rounded-2xl shadow-xs">
+                <div className="flex flex-wrap items-center gap-2">
+                  <input
+                    ref={csvFileInputRef}
+                    type="file"
+                    accept=".csv,text/csv"
+                    onChange={handleImportCsvFile}
+                    className="hidden"
+                  />
 
-          {/* Tab: Homepage & Hero Customizer */}
-          {activeTab === 'homepage' && (
-            <AdminHomepageTab products={products} onNotify={setSyncMessage} />
+                  <button
+                    onClick={openAddModal}
+                    className="inline-flex items-center gap-1.5 bg-slate-900 hover:bg-black text-white px-4 py-2 cursor-pointer text-[11px] font-bold uppercase tracking-wider rounded-xl shadow-xs transition-all"
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                    <span>{t.admin.header.addNewPiece}</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={openManualOrderModal}
+                    className="inline-flex items-center gap-1.5 border border-emerald-500 bg-emerald-600 text-white px-3.5 py-2 text-[11px] font-bold uppercase tracking-wider hover:bg-emerald-500 transition-all cursor-pointer rounded-xl shadow-sm"
+                    title="Create an order from WhatsApp or Facebook Messenger and automatically deduct stock"
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                    <span>{t.admin.header.manualOrder}</span>
+                  </button>
+
+                  <button
+                    onClick={handlePushToDatabase}
+                    className="inline-flex items-center gap-1.5 border border-slate-300 bg-white text-slate-800 hover:bg-slate-50 px-3.5 py-2 cursor-pointer text-[11px] font-bold uppercase tracking-wider rounded-xl shadow-2xs transition-all"
+                    title="Sync local catalogue to live cloud store"
+                  >
+                    <Database className="w-3.5 h-3.5 text-indigo-400" />
+                    <span>{t.admin.header.syncToDb}</span>
+                  </button>
+                </div>
+
+                {/* Store Sub-Tabs */}
+                <div className="flex flex-wrap border border-slate-200 bg-slate-100 p-1 text-xs font-semibold rounded-xl gap-1">
+                  <button
+                    onClick={() => setActiveTab('products')}
+                    className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-[11px] uppercase tracking-[0.1em] transition-all cursor-pointer rounded-lg ${
+                      activeTab === 'products' ? 'bg-slate-900 text-white shadow-xs' : 'text-slate-700 hover:bg-white hover:text-slate-900'
+                    }`}
+                  >
+                    <span>{t.admin.subTabs.products}</span>
+                    <span
+                      style={{
+                        backgroundColor: activeTab === 'products' ? '#334155' : '#E2E8F0', color: activeTab === 'products' ? '#FFFFFF' : '#1E293B',
+                      }}
+                      className="rounded-full px-2 py-0.5 text-[10px] font-extrabold"
+                    >
+                      {products.length}
+                    </span>
+                  </button>
+                  <button
+                    onClick={() => setActiveTab('types')}
+                    className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-[11px] uppercase tracking-[0.1em] transition-all cursor-pointer rounded-lg ${
+                      activeTab === 'types' ? 'bg-slate-900 text-white shadow-xs' : 'text-slate-700 hover:bg-white hover:text-slate-900'
+                    }`}
+                  >
+                    <span>{t.admin.subTabs.productTypes}</span>
+                    <span
+                      style={{
+                        backgroundColor: activeTab === 'types' ? '#334155' : '#E2E8F0', color: activeTab === 'types' ? '#FFFFFF' : '#1E293B',
+                      }}
+                      className="rounded-full px-2 py-0.5 text-[10px] font-extrabold"
+                    >
+                      {productTypes.length}
+                    </span>
+                  </button>
+                  <button
+                    onClick={() => {
+                      setNowMs(Date.now());
+                      setActiveTab('analytics');
+                    }}
+                    className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-[11px] uppercase tracking-[0.1em] transition-all cursor-pointer rounded-lg ${
+                      activeTab === 'analytics' ? 'bg-slate-900 text-white shadow-xs' : 'text-slate-700 hover:bg-white hover:text-slate-900'
+                    }`}
+                  >
+                    <TrendingUp className="w-3.5 h-3.5 text-indigo-400" />
+                    <span>{t.admin.subTabs.analytics}</span>
+                  </button>
+                  <button
+                    onClick={() => setActiveTab('links')}
+                    className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-[11px] uppercase tracking-[0.1em] transition-all cursor-pointer rounded-lg ${
+                      activeTab === 'links' ? 'bg-slate-900 text-white shadow-xs' : 'text-slate-700 hover:bg-white hover:text-slate-900'
+                    }`}
+                  >
+                    <span>{t.admin.subTabs.links}</span>
+                    <span
+                      style={{
+                        backgroundColor: activeTab === 'links' ? '#334155' : '#E2E8F0', color: activeTab === 'links' ? '#FFFFFF' : '#1E293B',
+                      }}
+                      className="rounded-full px-2 py-0.5 text-[10px] font-extrabold"
+                    >
+                      {storeLinks.length}
+                    </span>
+                  </button>
+                  <button
+                    onClick={() => setActiveTab('homepage')}
+                    className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-[11px] uppercase tracking-[0.1em] transition-all cursor-pointer rounded-lg ${
+                      activeTab === 'homepage' ? 'bg-slate-900 text-white shadow-xs' : 'text-slate-700 hover:bg-white hover:text-slate-900'
+                    }`}
+                  >
+                    <Sparkles className="w-3.5 h-3.5 text-indigo-400" />
+                    <span>{t.admin.subTabs.homepage}</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Compact Store Metrics Row */}
+              <AdminMetrics
+                products={products}
+                orders={orders}
+                totalStock={totalStock}
+                soldOutCount={soldOutCount}
+                lowStockCount={lowStockCount}
+                onOpenOrdersPage={() => setAdminSystem('orders')}
+              />
+
+              {/* Tab: Products Catalogue & Live Inventory Editor */}
+              {activeTab === 'products' && (
+                <AdminProductsTab
+                  products={products}
+                  filteredProducts={filteredProducts}
+                  productTypes={productTypes}
+                  selectedCategory={selectedCategory}
+                  onChangeSelectedCategory={setSelectedCategory}
+                  stockFilter={stockFilter}
+                  onChangeStockFilter={setStockFilter}
+                  searchQuery={searchQuery}
+                  onChangeSearchQuery={setSearchQuery}
+                  lowStockCount={lowStockCount}
+                  soldOutCount={soldOutCount}
+                  onTriggerCsvImport={() => csvFileInputRef.current?.click()}
+                  onExportCsv={handleExportCsv}
+                  getUnitLandedCost={getUnitLandedCost}
+                  getUnitMinSellPrice={getUnitMinSellPrice}
+                  getUnitNetProfit={getUnitNetProfit}
+                  onZoomImage={setZoomedImage}
+                  onToggleFeatured={handleToggleFeatured}
+                  onStockDelta={handleStockDelta}
+                  onMarkOneSold={handleMarkOneSold}
+                  onMarkSoldOut={handleMarkSoldOut}
+                  onQuickRestock={handleQuickRestock}
+                  onOpenAddModal={openAddModal}
+                  onOpenEditModal={openEditModal}
+                  onDeleteProduct={handleDeleteProduct}
+                />
+              )}
+
+              {/* Tab: Manage Product Types */}
+              {activeTab === 'types' && (
+                <AdminProductTypesTab
+                  products={products}
+                  productTypes={productTypes}
+                  newTypeName={newTypeName}
+                  onChangeNewTypeName={setNewTypeName}
+                  newTypeDesc={newTypeDesc}
+                  onChangeNewTypeDesc={setNewTypeDesc}
+                  onAddProductType={handleAddProductType}
+                  onDeleteProductType={handleDeleteProductType}
+                />
+              )}
+
+              {/* Tab: Profit, Cost & Revenue Analytics */}
+              {activeTab === 'analytics' && (
+                <AdminAnalyticsTab
+                  products={products}
+                  productTypes={productTypes}
+                  shippingCostPerPiece={shippingCostPerPiece}
+                  onChangeShippingCost={setShippingCostPerPiece}
+                  analyticsTimeframe={analyticsTimeframe}
+                  onChangeTimeframe={handleChangeTimeframe}
+                  analyticsOrderScope={analyticsOrderScope}
+                  onChangeOrderScope={setAnalyticsOrderScope}
+                  totalStock={totalStock}
+                  totalInventoryBaseCost={totalInventoryBaseCost}
+                  totalInventoryLandedCost={totalInventoryLandedCost}
+                  totalExpectedRevenue={totalExpectedRevenue}
+                  totalExpectedNetProfit={totalExpectedNetProfit}
+                  expectedMarginPercent={expectedMarginPercent}
+                  analyticsFilteredOrders={analyticsFilteredOrders}
+                  realizedOrderStats={realizedOrderStats}
+                  getUnitLandedCost={getUnitLandedCost}
+                />
+              )}
+
+              {/* Tab: Storefront Chat & Social Links */}
+              {activeTab === 'links' && (
+                <AdminLinksTab
+                  storeLinks={storeLinks}
+                  onChangeStoreLinks={setStoreLinks}
+                  onUpdateStoreLink={handleUpdateStoreLink}
+                  onDeleteStoreLink={handleDeleteStoreLink}
+                  newLinkKey={newLinkKey}
+                  onChangeNewLinkKey={setNewLinkKey}
+                  newLinkLabel={newLinkLabel}
+                  onChangeNewLinkLabel={setNewLinkLabel}
+                  newLinkUrl={newLinkUrl}
+                  onChangeNewLinkUrl={setNewLinkUrl}
+                  newLinkCategory={newLinkCategory}
+                  onChangeNewLinkCategory={setNewLinkCategory}
+                  onAddNewStoreLink={handleAddNewStoreLink}
+                />
+              )}
+
+              {/* Tab: Homepage & Hero Customizer */}
+              {activeTab === 'homepage' && (
+                <AdminHomepageTab products={products} onNotify={setSyncMessage} />
+              )}
+            </>
           )}
-        </>
-      )}
+        </div>
+      </div>
 
       {/* Add / Edit Product Modal */}
       <AdminProductModal
@@ -1157,6 +1518,7 @@ export function AdminFeature() {
         isOpen={isManualOrderOpen}
         onClose={() => setIsManualOrderOpen(false)}
         products={products}
+        customers={customers}
         manualSource={manualSource}
         onChangeManualSource={setManualSource}
         manualCustName={manualCustName}
@@ -1178,6 +1540,7 @@ export function AdminFeature() {
         manualSelectedQty={manualSelectedQty}
         onChangeManualSelectedQty={setManualSelectedQty}
         manualItems={manualItems}
+        onUpdateManualItems={setManualItems}
         onAddManualItem={handleAddManualItem}
         onRemoveManualItem={handleRemoveManualItem}
         onSubmitManualOrder={handleSubmitManualOrder}

@@ -17,7 +17,10 @@ const AdminFeature = dynamic(
   }
 );
 
-export function AdminClient() {
-  return <AdminFeature />;
+export function AdminClient({
+  initialSection = 'store',
+}: {
+  initialSection?: 'store' | 'orders' | 'operations';
+}) {
+  return <AdminFeature initialSection={initialSection} />;
 }
-
