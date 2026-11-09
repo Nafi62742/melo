@@ -6,7 +6,7 @@ export const DEFAULT_STORE_LINKS: StoreLink[] = [
     label: 'WhatsApp Concierge',
     url: process.env.NEXT_PUBLIC_WHATSAPP_NUMBER
       ? `https://wa.me/${process.env.NEXT_PUBLIC_WHATSAPP_NUMBER}`
-      : 'https://wa.me/8801700000000',
+      : 'https://wa.me/8801522111036',
     category: 'chat',
     isActive: true,
   },
@@ -15,14 +15,14 @@ export const DEFAULT_STORE_LINKS: StoreLink[] = [
     label: 'Facebook Messenger',
     url: process.env.NEXT_PUBLIC_MESSENGER_USERNAME
       ? `https://m.me/${process.env.NEXT_PUBLIC_MESSENGER_USERNAME}`
-      : 'https://m.me/melobangladesh',
+      : 'https://www.facebook.com/profile.php?id=61596527274952',
     category: 'chat',
     isActive: true,
   },
   {
     key: 'facebook',
     label: 'Facebook Page',
-    url: 'https://facebook.com/melobangladesh',
+    url: 'https://www.facebook.com/profile.php?id=61596527274952',
     category: 'social',
     isActive: true,
   },

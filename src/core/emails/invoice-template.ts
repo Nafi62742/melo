@@ -125,13 +125,13 @@ export function generateInvoiceHtml(order: Order): string {
           <!-- Direct Support Assistance -->
           <div style="margin-top: 28px; text-align: center; border-top: 1px solid #E7E0D6; padding-top: 20px;">
             <p style="font-size: 12px; color: #78716C; margin: 0 0 12px 0;">Need any assistance with your order or ear clip sizing?</p>
-            <a href="https://wa.me/8801700000000?text=Hi%20MELO!%20Inquiry%20regarding%20Order%20${order.orderNumber}"
+            <a href="https://wa.me/8801522111036?text=Hi%20MELO!%20Inquiry%20regarding%20Order%20${order.orderNumber}"
                style="display: inline-block; background-color: #25D366; color: #FFFFFF; text-decoration: none; padding: 8px 18px; border-radius: 9999px; font-size: 11.5px; font-weight: 700; margin-right: 6px;">
               WhatsApp Support
             </a>
-            <a href="https://m.me/melobangladesh"
+            <a href="https://www.facebook.com/profile.php?id=61596527274952"
                style="display: inline-block; background-color: #0084FF; color: #FFFFFF; text-decoration: none; padding: 8px 18px; border-radius: 9999px; font-size: 11.5px; font-weight: 700;">
-              Messenger
+              Facebook Page
             </a>
           </div>
 

@@ -31,6 +31,7 @@ export function ChatWidget() {
 
   const whatsappLink = links.find((l) => l.key === 'whatsapp' && l.isActive && l.url);
   const messengerLink = links.find((l) => l.key === 'messenger' && l.isActive && l.url);
+  const facebookLink = links.find((l) => l.key === 'facebook' && l.isActive && l.url);
   const customChatLinks = links.filter(
     (l) => l.category === 'chat' && l.isActive && l.url && l.key !== 'whatsapp' && l.key !== 'messenger'
   );
@@ -42,13 +43,14 @@ export function ChatWidget() {
           'Hello MELO! I have a question about your collection.'
         )}`
     : '';
-  const messengerUrl = messengerLink ? messengerLink.url : '';
+  const facebookUrl = facebookLink?.url || messengerLink?.url || 'https://www.facebook.com/profile.php?id=61596527274952';
+  const messengerUrl = messengerLink?.url || facebookUrl;
 
   if (pathname?.startsWith('/admin')) {
     return null;
   }
 
-  if (!whatsappUrl && !messengerUrl && customChatLinks.length === 0) {
+  if (!whatsappUrl && !messengerUrl && !facebookUrl && customChatLinks.length === 0) {
     return null;
   }
 
@@ -195,23 +197,26 @@ export function ChatWidget() {
             href={messengerUrl}
             target="_blank"
             rel="noopener noreferrer"
-            aria-label="Chat on Facebook Messenger"
-            title="Chat on Messenger"
+            aria-label="Chat on Facebook"
+            title="Chat on Facebook"
             className="flex h-11 w-11 items-center justify-center rounded-full bg-[#0084FF] text-white shadow-lg hover:bg-blue-600 hover:scale-105 transition-all"
           >
             <MessageCircle className="w-4 h-4" />
           </a>
         )}
 
-        {/* Main Boutique Chat Toggle Pill */}
-        <button
-          onClick={() => setIsOpen((prev) => !prev)}
-          aria-label="Toggle live chat popup"
+        {/* Main Boutique Chat Direct Button */}
+        <a
+          href={facebookUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label="Chat with Us on Facebook"
+          title="Chat with Us on Facebook"
           className="flex items-center gap-2 rounded-full border border-[#C5A059] bg-[#181512] px-4 py-3 text-xs font-semibold uppercase tracking-[0.14em] text-[#FAF7F2] shadow-xl hover:bg-[#9A7B3E] hover:border-[#9A7B3E] transition-all cursor-pointer"
         >
           <MessageCircle className="w-4 h-4 text-[#C5A059]" />
           <span className="hidden sm:inline">Chat with Us</span>
-        </button>
+        </a>
       </div>
     </div>
   );

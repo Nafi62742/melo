@@ -135,7 +135,7 @@ export function ProductDetailFeature({ product: initialProduct }: ProductDetailF
       }
     }
     if (!cleanPhone) {
-      cleanPhone = '8801760887297';
+      cleanPhone = '8801522111036';
     }
 
     const currentUrl = typeof window !== 'undefined' ? window.location.href : '';

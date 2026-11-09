@@ -6,14 +6,14 @@ import { MessageCircle, X, Sparkles } from 'lucide-react';
 export function FloatingChat() {
   const [isOpen, setIsOpen] = useState(false);
 
-  // You can replace these with your actual WhatsApp number and Facebook Page ID/Username
-  const whatsappNumber = '8801700000000'; // e.g., 88017XXXXXXXX
-  const facebookPageUsername = 'melobangladesh'; // e.g., your Facebook Page username
+  // WhatsApp number and Facebook Page URL
+  const whatsappNumber = '8801522111036'; // 01522111036
+  const facebookUrl = 'https://www.facebook.com/profile.php?id=61596527274952';
 
   const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(
     'Hi MELO! I would like to know more about your jewellery collection and delivery.'
   )}`;
-  const messengerUrl = `https://m.me/${facebookPageUsername}`;
+  const messengerUrl = facebookUrl;
 
   return (
     <div className="fixed bottom-6 right-6 z-40 flex flex-col items-end">

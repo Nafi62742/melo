@@ -19,7 +19,20 @@ class StoreLinkService {
     if (this.loadedFromStorage) return;
     const stored = storeLinkRepository.loadLocal();
     if (stored && stored.length > 0) {
-      this.links = stored;
+      this.links = stored.map((item) => {
+        // Upgrade legacy placeholder URLs to current defaults
+        if (
+          item.url &&
+          ((item.url.includes('melobangladesh') && (item.key === 'facebook' || item.key === 'messenger')) ||
+            (item.key === 'whatsapp' && (item.url.includes('8801700000000') || item.url.includes('8801760887297'))))
+        ) {
+          const defaultItem = DEFAULT_STORE_LINKS.find((d) => d.key === item.key);
+          if (defaultItem) {
+            return { ...item, url: defaultItem.url };
+          }
+        }
+        return item;
+      });
     }
     if (typeof window !== 'undefined') {
       this.loadedFromStorage = true;
