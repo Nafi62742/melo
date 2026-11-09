@@ -1,3 +1,4 @@
+import { Suspense } from 'react';
 import { notFound } from 'next/navigation';
 import { productRepository } from '@/core/repositories/product.repository';
 import { productService } from '@/core/services/product.service';
@@ -37,7 +38,7 @@ export async function generateMetadata({ params }: ProductPageProps) {
   };
 }
 
-export default async function ProductPage({ params }: ProductPageProps) {
+async function ProductPageContent({ params }: ProductPageProps) {
   const { slug } = await params;
   const product = await getProductBySlug(slug);
 
@@ -46,4 +47,18 @@ export default async function ProductPage({ params }: ProductPageProps) {
   }
 
   return <ProductDetailFeature product={product} />;
+}
+
+export default function ProductPage({ params }: ProductPageProps) {
+  return (
+    <Suspense
+      fallback={
+        <div className="mx-auto max-w-6xl px-4 py-20 text-center text-xs text-[#78716C]">
+          Loading piece details...
+        </div>
+      }
+    >
+      <ProductPageContent params={params} />
+    </Suspense>
+  );
 }

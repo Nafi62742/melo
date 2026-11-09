@@ -2,6 +2,8 @@ import { CustomerProfile } from '../models/customer.model';
 import { DeliveryZone, OrderCustomerInfo } from '../models/order.model';
 import { customerRepository } from '../repositories/customer.repository';
 
+export const CUSTOMER_AUTH_CHANGED_EVENT = 'melo_customer_auth_changed';
+
 /**
  * CustomerService — Domain service for customer registration, login, and profile management.
  * Delegates all DB & storage I/O to CustomerRepository.
@@ -13,6 +15,9 @@ class CustomerService {
 
   setCurrentCustomer(customer: CustomerProfile | null): void {
     customerRepository.saveCurrentLocal(customer);
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent(CUSTOMER_AUTH_CHANGED_EVENT, { detail: customer }));
+    }
   }
 
   async register(params: {
@@ -42,20 +47,22 @@ class CustomerService {
     return finalProfile;
   }
 
-  async login(phone: string, password: string): Promise<CustomerProfile | null> {
-    const cleanPhone = phone.trim().replace(/\s+/g, '');
+  async login(identifier: string, password: string): Promise<CustomerProfile | null> {
+    const rawId = identifier.trim();
     const cleanPass = password.trim();
+    const isEmail = rawId.includes('@');
+    const cleanId = isEmail ? rawId.toLowerCase() : rawId.replace(/\s+/g, '');
 
     // 1. Check Supabase public.customers table via CustomerRepository
-    const remote = await customerRepository.findByCredentialsInDb(cleanPhone, cleanPass);
+    const remote = await customerRepository.findByCredentialsInDb(cleanId, cleanPass);
     if (remote) {
       customerRepository.saveLocalCustomer({ ...remote, password: cleanPass });
       this.setCurrentCustomer(remote);
       return remote;
     }
 
-    // 2. Fallback to demo customer (01700000000 / melo1234)
-    if (cleanPhone === '01700000000' && cleanPass === 'melo1234') {
+    // 2. Fallback to demo customer (01700000000 or customer@melo.com / melo1234)
+    if ((cleanId === '01700000000' || cleanId === 'customer@melo.com') && cleanPass === 'melo1234') {
       const demo: CustomerProfile = {
         id: 'cust-demo',
         phone: '01700000000',
@@ -73,7 +80,12 @@ class CustomerService {
     // 3. Fallback to local customer records
     const local = customerRepository
       .loadAllLocal()
-      .find((c) => c.phone === cleanPhone && c.password === cleanPass);
+      .find((c) => {
+        const matchesId = isEmail
+          ? c.email && c.email.toLowerCase() === cleanId
+          : c.phone === cleanId;
+        return matchesId && c.password === cleanPass;
+      });
     if (local) {
       this.setCurrentCustomer(local);
       return local;
@@ -150,6 +162,13 @@ class CustomerService {
 
     customerRepository.saveLocalCustomer(newProfile);
     void customerRepository.upsertInDb(newProfile);
+
+    // If no customer session is currently active, persist this new profile as active session
+    const active = this.getCurrentCustomer();
+    if (!active) {
+      this.setCurrentCustomer(newProfile);
+    }
+
     return newProfile;
   }
 

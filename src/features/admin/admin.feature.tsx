@@ -410,8 +410,20 @@ export function AdminFeature() {
 
   const handleSubmitManualOrder = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!manualCustName.trim() || !manualCustPhone.trim() || !manualCustAddress.trim()) {
-      alert('Please enter customer name, phone number, and delivery address.');
+    const cleanName = manualCustName.trim().slice(0, 30);
+    const cleanPhone = manualCustPhone.trim().slice(0, 14);
+    const cleanAddress = manualCustAddress.trim().slice(0, 250);
+
+    if (!cleanName || cleanName.length < 2) {
+      alert('Please enter a valid customer full name (at least 2 characters, max 30).');
+      return;
+    }
+    if (!cleanPhone || !/^(?:\+?8801|01)[3-9]\d{8}$/.test(cleanPhone)) {
+      alert('Please enter a valid 11-digit Bangladeshi mobile number (e.g. 017XXXXXXXX).');
+      return;
+    }
+    if (!cleanAddress || cleanAddress.length < 5) {
+      alert('Please enter a complete delivery address (at least 5 characters, max 250).');
       return;
     }
     if (manualItems.length === 0) {
@@ -425,7 +437,8 @@ export function AdminFeature() {
     );
     const deliveryFee =
       subtotal >= 1500 ? 0 : manualDeliveryZone === 'inside_dhaka' ? 60 : 120;
-    const total = subtotal + deliveryFee;
+    const codFee = manualPaymentMethod === 'cod' ? 10 : 0;
+    const total = subtotal + deliveryFee + codFee;
     const orderNumber = `MELO-${Math.floor(100000 + Math.random() * 900000)}`;
 
     const newOrder: Order = {
@@ -433,14 +446,14 @@ export function AdminFeature() {
       orderNumber,
       createdAt: new Date().toISOString(),
       customer: {
-        fullName: manualCustName.trim(),
-        phone: manualCustPhone.trim(),
-        address: manualCustAddress.trim(),
+        fullName: cleanName,
+        phone: cleanPhone,
+        address: cleanAddress,
         deliveryZone: manualDeliveryZone,
         orderSource: manualSource,
         notes: `Manual ${manualSource === 'whatsapp' ? 'WhatsApp' : 'Facebook Messenger'} Order`,
       },
-      customerPhone: manualCustPhone.trim(),
+      customerPhone: cleanPhone,
       items: manualItems,
       subtotal,
       deliveryFee,
@@ -449,8 +462,8 @@ export function AdminFeature() {
       status: 'confirmed',
       paymentStatus:
         manualPaymentMethod === 'bkash' && manualTrxId.trim() ? 'verified' : 'pending',
-      trxId: manualTrxId.trim() ? manualTrxId.trim().toUpperCase() : undefined,
-      bkashSenderNumber: manualSenderPhone.trim() ? manualSenderPhone.trim() : undefined,
+      trxId: manualTrxId.trim() ? manualTrxId.trim().toUpperCase().slice(0, 15) : undefined,
+      bkashSenderNumber: manualSenderPhone.trim() ? manualSenderPhone.trim().slice(0, 14) : undefined,
       estimatedDelivery:
         manualDeliveryZone === 'inside_dhaka' ? '24–48 hours' : '3–4 business days',
     };

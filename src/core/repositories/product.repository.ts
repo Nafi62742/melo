@@ -61,7 +61,10 @@ export class ProductRepository {
     try {
       const res = await fetch(
         `${supabaseClient.baseUrl}/rest/v1/products?select=*&slug=eq.${encodeURIComponent(slug)}&limit=1`,
-        { headers: supabaseClient.getHeaders() }
+        {
+          headers: supabaseClient.getHeaders(),
+          next: { revalidate: 60 },
+        }
       );
       if (!res.ok) return null;
       const rows = (await res.json()) as Product[];
@@ -76,6 +79,7 @@ export class ProductRepository {
     try {
       const res = await fetch(`${supabaseClient.baseUrl}/rest/v1/products?select=slug`, {
         headers: supabaseClient.getHeaders(),
+        next: { revalidate: 60 },
       });
       if (!res.ok) return [];
       const rows = (await res.json()) as Array<{ slug: string }>;

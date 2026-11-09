@@ -3,8 +3,8 @@
 import React, { useState, useEffect, useSyncExternalStore } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { useSearchParams } from 'next/navigation';
-import { customerService } from '@/core/services/customer.service';
+import { useSearchParams, useRouter } from 'next/navigation';
+import { customerService, CUSTOMER_AUTH_CHANGED_EVENT } from '@/core/services/customer.service';
 import { orderService } from '@/core/services/order.service';
 import { CustomerProfile } from '@/core/models/customer.model';
 import { Order, DeliveryZone } from '@/core/models/order.model';
@@ -23,6 +23,7 @@ import {
   MapPin,
   Phone,
   AlertCircle,
+  XCircle,
 } from 'lucide-react';
 
 const emptySubscribe = () => () => {};
@@ -45,14 +46,29 @@ export function AccountFeature() {
 }
 
 function AccountContent() {
+  const router = useRouter();
   const { t } = useI18n();
   const searchParams = useSearchParams();
+  const redirectUrl = searchParams?.get('redirect');
   const initialQuery = searchParams?.get('orderNumber') || searchParams?.get('phone') || '';
 
   const [customer, setCustomer] = useState<CustomerProfile | null>(() =>
     customerService.getCurrentCustomer()
   );
   const [authMode, setAuthMode] = useState<'login' | 'register'>('login');
+
+  // Sync customer auth when changed in other tabs or components
+  useEffect(() => {
+    const handleAuthChange = () => {
+      setCustomer(customerService.getCurrentCustomer());
+    };
+    window.addEventListener(CUSTOMER_AUTH_CHANGED_EVENT, handleAuthChange);
+    window.addEventListener('storage', handleAuthChange);
+    return () => {
+      window.removeEventListener(CUSTOMER_AUTH_CHANGED_EVENT, handleAuthChange);
+      window.removeEventListener('storage', handleAuthChange);
+    };
+  }, []);
 
   // Auth Form Fields
   const [phone, setPhone] = useState('');
@@ -63,6 +79,44 @@ function AccountContent() {
   const [deliveryZone, setDeliveryZone] = useState<DeliveryZone>('inside_dhaka');
   const [authError, setAuthError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Field-level Validation Error States
+  const [nameError, setNameError] = useState<string | null>(null);
+  const [phoneError, setPhoneError] = useState<string | null>(null);
+  const [passwordError, setPasswordError] = useState<string | null>(null);
+  const [emailError, setEmailError] = useState<string | null>(null);
+  const [addressError, setAddressError] = useState<string | null>(null);
+
+  // Sanitization and Validation Utilities
+  const sanitizePhoneNumber = (value: string): string => {
+    const clean = value.replace(/[^\d+]/g, '');
+    if (clean.startsWith('+')) {
+      return '+' + clean.slice(1).replace(/\D/g, '').slice(0, 13);
+    }
+    if (clean.startsWith('880')) {
+      return clean.slice(0, 13);
+    }
+    return clean.slice(0, 11);
+  };
+
+  const validateBdPhone = (val: string): boolean => {
+    const clean = val.replace(/[\s\-\(\)]/g, '').trim();
+    return /^(?:\+?8801|01)[3-9]\d{8}$/.test(clean);
+  };
+
+  const validateEmail = (val: string): boolean => {
+    if (!val.trim()) return true;
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val.trim());
+  };
+
+  const clearValidationErrors = () => {
+    setAuthError(null);
+    setNameError(null);
+    setPhoneError(null);
+    setPasswordError(null);
+    setEmailError(null);
+    setAddressError(null);
+  };
 
   // Customer Orders & TrxID State
   const [orders, setOrders] = useState<Order[]>([]);
@@ -97,39 +151,123 @@ function AccountContent() {
 
   const handleAuthSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setAuthError(null);
-    setIsSubmitting(true);
+    clearValidationErrors();
 
-    try {
-      if (authMode === 'login') {
-        const loggedIn = await customerService.login(phone, password);
+    let hasError = false;
+
+    if (authMode === 'login') {
+      const cleanId = phone.trim();
+      if (!cleanId) {
+        setPhoneError('Please enter your mobile phone number or email address.');
+        hasError = true;
+      } else if (cleanId.includes('@')) {
+        if (!validateEmail(cleanId)) {
+          setPhoneError('Please enter a valid email address (e.g. user@example.com).');
+          hasError = true;
+        }
+      } else if (!validateBdPhone(cleanId)) {
+        setPhoneError('Please enter a valid 11-digit Bangladeshi mobile number or email address.');
+        hasError = true;
+      }
+
+      if (!password.trim()) {
+        setPasswordError('Please enter your password.');
+        hasError = true;
+      }
+
+      if (hasError) return;
+
+      setIsSubmitting(true);
+      try {
+        const loggedIn = await customerService.login(cleanId, password);
         if (loggedIn) {
           setCustomer(loggedIn);
           setToastMessage(`Welcome back, ${loggedIn.fullName}!`);
+          if (redirectUrl) {
+            router.push(redirectUrl);
+            return;
+          }
         } else {
-          setAuthError('Invalid phone number or password. Please check your credentials.');
+          setAuthError('Invalid mobile/email or password. Please check your credentials or register an account.');
         }
-      } else {
-        if (!fullName.trim() || !phone.trim() || !password.trim()) {
-          setAuthError('Please fill in your name, mobile number, and password.');
-          setIsSubmitting(false);
-          return;
+      } catch {
+        setAuthError('Authentication error. Please try again.');
+      } finally {
+        setIsSubmitting(false);
+      }
+    } else {
+      // REGISTER MODE VALIDATION
+      if (!fullName.trim() || fullName.trim().length < 2) {
+        setNameError('Please enter your full name (at least 2 characters).');
+        hasError = true;
+      } else if (fullName.trim().length > 30) {
+        setNameError('Full name cannot exceed 30 characters.');
+        hasError = true;
+      } else if (!/^[a-zA-Z\s\.\-'\u0980-\u09FF]+$/.test(fullName.trim())) {
+        setNameError('Please enter a valid name (letters and spaces only).');
+        hasError = true;
+      }
+
+      if (!phone.trim()) {
+        setPhoneError('Please enter your mobile phone number.');
+        hasError = true;
+      } else if (!validateBdPhone(phone)) {
+        setPhoneError('Please enter a valid 11-digit Bangladeshi mobile number (e.g., 017XXXXXXXX).');
+        hasError = true;
+      }
+
+      if (!password.trim()) {
+        setPasswordError('Please enter a password.');
+        hasError = true;
+      } else if (password.trim().length < 6) {
+        setPasswordError('Password must be at least 6 characters long.');
+        hasError = true;
+      } else if (password.length > 40) {
+        setPasswordError('Password cannot exceed 40 characters.');
+        hasError = true;
+      }
+
+      if (email.trim()) {
+        if (email.trim().length > 30) {
+          setEmailError('Email address cannot exceed 30 characters.');
+          hasError = true;
+        } else if (!validateEmail(email)) {
+          setEmailError('Please enter a valid email address (e.g. user@example.com).');
+          hasError = true;
         }
+      }
+
+      if (!address.trim() || address.trim().length < 5) {
+        setAddressError('Please enter your delivery address (at least 5 characters).');
+        hasError = true;
+      } else if (address.trim().length > 250) {
+        setAddressError('Address cannot exceed 250 characters.');
+        hasError = true;
+      }
+
+      if (hasError) return;
+
+      setIsSubmitting(true);
+      try {
         const registered = await customerService.register({
           phone,
           fullName,
           password,
-          email,
+          email: email.trim() || undefined,
           defaultAddress: address,
           deliveryZone,
         });
         setCustomer(registered);
         setToastMessage(`Welcome to MELO, ${registered.fullName}!`);
+        if (redirectUrl) {
+          router.push(redirectUrl);
+          return;
+        }
+      } catch {
+        setAuthError('Registration error. Please check your details and try again.');
+      } finally {
+        setIsSubmitting(false);
       }
-    } catch {
-      setAuthError('Authentication error. Please try again.');
-    } finally {
-      setIsSubmitting(false);
     }
   };
 
@@ -196,6 +334,23 @@ function AccountContent() {
         </div>
       )}
 
+      {redirectUrl && customer && (
+        <div className="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-3 border border-[#C5A059] bg-[#FAF7F2] p-4 text-xs">
+          <div className="flex items-center gap-2">
+            <CheckCircle2 className="w-4 h-4 text-[#9A7B3E] shrink-0" />
+            <span className="text-[#1C1917] font-medium">
+              You are signed in as <strong>{customer.fullName}</strong>. Ready to proceed?
+            </span>
+          </div>
+          <Link
+            href={redirectUrl}
+            className="inline-flex items-center justify-center rounded bg-[#1C1917] px-4 py-2 text-[11px] font-semibold text-white uppercase tracking-wider hover:bg-[#9A7B3E] transition shrink-0"
+          >
+            Return to Checkout →
+          </Link>
+        </div>
+      )}
+
       {!customer ? (
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-start">
           {/* Left Column: Customer Login / Registration Card */}
@@ -218,7 +373,7 @@ function AccountContent() {
                 type="button"
                 onClick={() => {
                   setAuthMode('login');
-                  setAuthError(null);
+                  clearValidationErrors();
                 }}
                 className={`px-4 py-1.5 text-[11px] font-semibold uppercase tracking-wider cursor-pointer ${
                   authMode === 'login'
@@ -232,7 +387,7 @@ function AccountContent() {
                 type="button"
                 onClick={() => {
                   setAuthMode('register');
-                  setAuthError(null);
+                  clearValidationErrors();
                 }}
                 className={`px-4 py-1.5 text-[11px] font-semibold uppercase tracking-wider cursor-pointer ${
                   authMode === 'register'
@@ -245,82 +400,199 @@ function AccountContent() {
             </div>
 
             {authError && (
-              <div className="mb-6 border border-red-200 bg-red-50 p-3 text-xs text-red-800">
-                {authError}
+              <div className="mb-6 flex items-center gap-2 border border-rose-300 bg-rose-50/80 p-3 text-xs text-rose-800 rounded-md">
+                <AlertCircle className="w-4 h-4 text-rose-600 flex-shrink-0" />
+                <span>{authError}</span>
               </div>
             )}
 
             <form onSubmit={handleAuthSubmit} className="space-y-4">
               {authMode === 'register' && (
                 <div>
-                  <label className="block text-[11px] font-semibold uppercase tracking-wider text-[#1C1917] mb-1.5">
-                    {t.account.fullName}
-                  </label>
+                  <div className="flex items-center justify-between mb-1.5">
+                    <label className="block text-[11px] font-semibold uppercase tracking-wider text-[#1C1917]">
+                      {t.account.fullName} <span className="text-rose-600">*</span>
+                    </label>
+                    <span className="text-[10px] text-[#78716C] font-mono">
+                      {fullName.length}/30
+                    </span>
+                  </div>
                   <input
                     type="text"
                     required
+                    maxLength={30}
                     value={fullName}
-                    onChange={(e) => setFullName(e.target.value)}
+                    onChange={(e) => {
+                      setFullName(e.target.value);
+                      if (nameError) setNameError(null);
+                    }}
                     placeholder={t.account.fullNamePlaceholder}
-                    className="w-full border border-[#D6CFC5] bg-white px-3.5 py-2.5 text-xs text-[#1C1917] focus:outline-none focus:border-[#C5A059]"
+                    className={`w-full border px-3.5 py-2.5 text-xs text-[#1C1917] focus:outline-none ${
+                      nameError
+                        ? 'border-rose-400 bg-rose-50/30 focus:border-rose-600'
+                        : 'border-[#D6CFC5] bg-white focus:border-[#C5A059]'
+                    }`}
                   />
+                  {nameError && (
+                    <p className="mt-1.5 text-[11px] font-medium text-rose-600 flex items-center gap-1">
+                      <AlertCircle className="w-3.5 h-3.5 flex-shrink-0" />
+                      <span>{nameError}</span>
+                    </p>
+                  )}
                 </div>
               )}
 
               <div>
-                <label className="block text-[11px] font-semibold uppercase tracking-wider text-[#1C1917] mb-1.5">
-                  {t.account.mobileNumber}
-                </label>
+                <div className="flex items-center justify-between mb-1.5">
+                  <label className="block text-[11px] font-semibold uppercase tracking-wider text-[#1C1917]">
+                    {authMode === 'login' ? 'Mobile Number or Email Address' : t.account.mobileNumber}{' '}
+                    <span className="text-rose-600">*</span>
+                  </label>
+                  <span className="text-[10px] text-[#78716C] font-mono">
+                    {authMode === 'login' ? `${phone.length}/30` : `${phone.length}/11 digits`}
+                  </span>
+                </div>
                 <input
-                  type="tel"
+                  type={authMode === 'login' ? 'text' : 'tel'}
                   required
+                  maxLength={authMode === 'login' ? 30 : 14}
                   value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                  placeholder={t.account.mobilePlaceholder}
-                  className="w-full border border-[#D6CFC5] bg-white px-3.5 py-2.5 text-xs text-[#1C1917] focus:outline-none focus:border-[#C5A059]"
+                  onChange={(e) => {
+                    const val = authMode === 'login'
+                      ? e.target.value.trim()
+                      : sanitizePhoneNumber(e.target.value);
+                    setPhone(val);
+                    if (phoneError) setPhoneError(null);
+                  }}
+                  placeholder={
+                    authMode === 'login'
+                      ? '017XXXXXXXX or user@example.com'
+                      : t.account.mobilePlaceholder
+                  }
+                  className={`w-full border px-3.5 py-2.5 text-xs text-[#1C1917] ${
+                    authMode === 'login' && !phone.includes('@') ? 'font-mono' : ''
+                  } focus:outline-none ${
+                    phoneError
+                      ? 'border-rose-400 bg-rose-50/30 focus:border-rose-600'
+                      : 'border-[#D6CFC5] bg-white focus:border-[#C5A059]'
+                  }`}
                 />
+                {phoneError ? (
+                  <p className="mt-1.5 text-[11px] font-medium text-rose-600 flex items-center gap-1">
+                    <AlertCircle className="w-3.5 h-3.5 flex-shrink-0" />
+                    <span>{phoneError}</span>
+                  </p>
+                ) : (
+                  <p className="mt-1 text-[10px] text-[#A8A29E]">
+                    {authMode === 'login'
+                      ? 'Enter your registered mobile phone number or email address'
+                      : 'Standard 11-digit mobile number (e.g., 017XXXXXXXX)'}
+                  </p>
+                )}
               </div>
 
               <div>
-                <label className="block text-[11px] font-semibold uppercase tracking-wider text-[#1C1917] mb-1.5">
-                  {t.account.password}
-                </label>
+                <div className="flex items-center justify-between mb-1.5">
+                  <label className="block text-[11px] font-semibold uppercase tracking-wider text-[#1C1917]">
+                    {t.account.password} <span className="text-rose-600">*</span>
+                  </label>
+                  <span className="text-[10px] text-[#78716C] font-mono">
+                    {password.length}/40
+                  </span>
+                </div>
                 <input
                   type="password"
                   required
+                  maxLength={40}
                   value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  onChange={(e) => {
+                    setPassword(e.target.value);
+                    if (passwordError) setPasswordError(null);
+                  }}
                   placeholder={t.account.passwordPlaceholder}
-                  className="w-full border border-[#D6CFC5] bg-white px-3.5 py-2.5 text-xs text-[#1C1917] focus:outline-none focus:border-[#C5A059]"
+                  className={`w-full border px-3.5 py-2.5 text-xs text-[#1C1917] focus:outline-none ${
+                    passwordError
+                      ? 'border-rose-400 bg-rose-50/30 focus:border-rose-600'
+                      : 'border-[#D6CFC5] bg-white focus:border-[#C5A059]'
+                  }`}
                 />
+                {passwordError ? (
+                  <p className="mt-1.5 text-[11px] font-medium text-rose-600 flex items-center gap-1">
+                    <AlertCircle className="w-3.5 h-3.5 flex-shrink-0" />
+                    <span>{passwordError}</span>
+                  </p>
+                ) : authMode === 'register' ? (
+                  <p className="mt-1 text-[10px] text-[#A8A29E]">
+                    Minimum 6 characters
+                  </p>
+                ) : null}
               </div>
 
               {authMode === 'register' && (
                 <>
                   <div>
-                    <label className="block text-[11px] font-semibold uppercase tracking-wider text-[#1C1917] mb-1.5">
-                      {t.account.email}
-                    </label>
+                    <div className="flex items-center justify-between mb-1.5">
+                      <label className="block text-[11px] font-semibold uppercase tracking-wider text-[#1C1917]">
+                        {t.account.email} <span className="text-[#A8A29E] font-normal lowercase">(optional — for digital invoices)</span>
+                      </label>
+                      <span className="text-[10px] text-[#78716C] font-mono">
+                        {email.length}/30
+                      </span>
+                    </div>
                     <input
                       type="email"
+                      maxLength={30}
                       value={email}
-                      onChange={(e) => setEmail(e.target.value)}
+                      onChange={(e) => {
+                        setEmail(e.target.value);
+                        if (emailError) setEmailError(null);
+                      }}
                       placeholder={t.account.emailPlaceholder}
-                      className="w-full border border-[#D6CFC5] bg-white px-3.5 py-2.5 text-xs text-[#1C1917] focus:outline-none focus:border-[#C5A059]"
+                      className={`w-full border px-3.5 py-2.5 text-xs text-[#1C1917] focus:outline-none ${
+                        emailError
+                          ? 'border-rose-400 bg-rose-50/30 focus:border-rose-600'
+                          : 'border-[#D6CFC5] bg-white focus:border-[#C5A059]'
+                      }`}
                     />
+                    {emailError && (
+                      <p className="mt-1.5 text-[11px] font-medium text-rose-600 flex items-center gap-1">
+                        <AlertCircle className="w-3.5 h-3.5 flex-shrink-0" />
+                        <span>{emailError}</span>
+                      </p>
+                    )}
                   </div>
 
                   <div>
-                    <label className="block text-[11px] font-semibold uppercase tracking-wider text-[#1C1917] mb-1.5">
-                      {t.account.defaultAddress}
-                    </label>
+                    <div className="flex items-center justify-between mb-1.5">
+                      <label className="block text-[11px] font-semibold uppercase tracking-wider text-[#1C1917]">
+                        {t.account.defaultAddress} <span className="text-rose-600">*</span>
+                      </label>
+                      <span className="text-[10px] text-[#78716C] font-mono">
+                        {address.length}/250
+                      </span>
+                    </div>
                     <textarea
+                      required
                       rows={2}
+                      maxLength={250}
                       value={address}
-                      onChange={(e) => setAddress(e.target.value)}
+                      onChange={(e) => {
+                        setAddress(e.target.value);
+                        if (addressError) setAddressError(null);
+                      }}
                       placeholder={t.account.addressPlaceholder}
-                      className="w-full border border-[#D6CFC5] bg-white px-3.5 py-2.5 text-xs text-[#1C1917] focus:outline-none focus:border-[#C5A059]"
+                      className={`w-full border px-3.5 py-2.5 text-xs text-[#1C1917] focus:outline-none ${
+                        addressError
+                          ? 'border-rose-400 bg-rose-50/30 focus:border-rose-600'
+                          : 'border-[#D6CFC5] bg-white focus:border-[#C5A059]'
+                      }`}
                     />
+                    {addressError && (
+                      <p className="mt-1.5 text-[11px] font-medium text-rose-600 flex items-center gap-1">
+                        <AlertCircle className="w-3.5 h-3.5 flex-shrink-0" />
+                        <span>{addressError}</span>
+                      </p>
+                    )}
                   </div>
 
                   <div>
@@ -342,7 +614,7 @@ function AccountContent() {
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="w-full boutique-btn-primary py-3.5 text-xs uppercase tracking-wider mt-2 cursor-pointer"
+                className="w-full boutique-btn-primary py-3.5 text-xs uppercase tracking-wider mt-2 cursor-pointer disabled:opacity-50"
               >
                 {isSubmitting
                   ? t.checkout.processing
@@ -590,17 +862,29 @@ function OrderTrackingDisplayCard({
           </div>
 
           <div
-            className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold uppercase tracking-wider ${
+            className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold uppercase tracking-wider rounded-md border ${
               order.status === 'delivered'
-                ? 'bg-emerald-800 text-white'
+                ? 'bg-emerald-50 text-emerald-800 border-emerald-300'
                 : order.status === 'dispatched'
-                ? 'bg-[#181512] text-[#FAF7F2]'
+                ? 'bg-indigo-50 text-indigo-800 border-indigo-300'
+                : order.status === 'confirmed'
+                ? 'bg-sky-50 text-sky-800 border-sky-300'
                 : order.status === 'cancelled'
-                ? 'bg-red-800 text-white'
-                : 'bg-[#C5A059] text-white'
+                ? 'bg-rose-50 text-rose-800 border-rose-300'
+                : 'bg-amber-50 text-amber-800 border-amber-300'
             }`}
           >
-            <Truck className="w-3.5 h-3.5 text-[#E6D5B8]" />
+            {order.status === 'delivered' ? (
+              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+            ) : order.status === 'dispatched' ? (
+              <Truck className="w-3.5 h-3.5 text-indigo-600" />
+            ) : order.status === 'confirmed' ? (
+              <CheckCircle2 className="w-3.5 h-3.5 text-sky-600" />
+            ) : order.status === 'cancelled' ? (
+              <XCircle className="w-3.5 h-3.5 text-rose-600" />
+            ) : (
+              <Clock className="w-3.5 h-3.5 text-amber-600" />
+            )}
             <span>
               {order.status === 'delivered'
                 ? t.account.statusDelivered
@@ -623,6 +907,15 @@ function OrderTrackingDisplayCard({
             {steps.map((st, idx) => {
               const isPassed = idx <= currentStep;
               const isCurrent = idx === currentStep;
+              const currentRingColor =
+                order.status === 'delivered'
+                  ? 'ring-2 ring-emerald-500'
+                  : order.status === 'dispatched'
+                  ? 'ring-2 ring-indigo-500'
+                  : order.status === 'confirmed'
+                  ? 'ring-2 ring-sky-500'
+                  : 'ring-2 ring-amber-500';
+
               return (
                 <div key={st.key} className="flex flex-col items-center text-center">
                   <div
@@ -630,7 +923,7 @@ function OrderTrackingDisplayCard({
                       isPassed
                         ? 'bg-[#1C1917] text-[#FAF7F2] border-[#1C1917]'
                         : 'bg-white text-[#A8A29E] border-[#E7E0D6]'
-                    } ${isCurrent ? 'ring-2 ring-[#C5A059]' : ''}`}
+                    } ${isCurrent ? currentRingColor : ''}`}
                   >
                     {isPassed ? '✓' : idx + 1}
                   </div>
@@ -758,7 +1051,7 @@ function OrderTrackingDisplayCard({
           </span>
 
           {order.trxId && (
-            <span className="border border-pink-200 bg-pink-50 px-2.5 py-1 font-mono text-xs font-bold text-pink-900">
+            <span className="border border-pink-200 bg-pink-50 px-2.5 py-1 font-mono text-xs font-bold text-pink-900 break-all max-w-xs" title={order.trxId}>
               TrxID: {order.trxId}
             </span>
           )}
@@ -768,9 +1061,10 @@ function OrderTrackingDisplayCard({
         <div className="flex items-center gap-2">
           <input
             type="text"
+            maxLength={15}
             placeholder={order.trxId ? 'Update bKash TrxID' : 'Add bKash TrxID'}
             value={editingTrx}
-            onChange={(e) => onChangeTrx(e.target.value.toUpperCase())}
+            onChange={(e) => onChangeTrx(e.target.value.replace(/[^a-zA-Z0-9]/g, '').toUpperCase().slice(0, 15))}
             className="border border-[#D6CFC5] bg-[#FAF7F2]/60 px-2.5 py-1.5 text-xs font-mono uppercase text-[#1C1917] focus:bg-white focus:outline-none focus:border-[#C5A059] w-44"
           />
           <button

@@ -127,12 +127,18 @@ export function AdminManualOrderModal({
           {/* Customer Info */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="block text-[11px] font-semibold uppercase tracking-wider text-[#1C1917] mb-1">
-                {t.admin.modals.custFullName}
-              </label>
+              <div className="flex items-center justify-between mb-1">
+                <label className="block text-[11px] font-semibold uppercase tracking-wider text-[#1C1917]">
+                  {t.admin.modals.custFullName} <span className="text-rose-600">*</span>
+                </label>
+                <span className="text-[10px] text-[#78716C] font-mono">
+                  {manualCustName.length}/30
+                </span>
+              </div>
               <input
                 type="text"
                 required
+                maxLength={30}
                 value={manualCustName}
                 onChange={(e) => onChangeManualCustName(e.target.value)}
                 placeholder="e.g. Tasnim Ahmed"
@@ -141,27 +147,42 @@ export function AdminManualOrderModal({
             </div>
 
             <div>
-              <label className="block text-[11px] font-semibold uppercase tracking-wider text-[#1C1917] mb-1">
-                {t.admin.modals.custPhone}
-              </label>
+              <div className="flex items-center justify-between mb-1">
+                <label className="block text-[11px] font-semibold uppercase tracking-wider text-[#1C1917]">
+                  {t.admin.modals.custPhone} <span className="text-rose-600">*</span>
+                </label>
+                <span className="text-[10px] text-[#78716C] font-mono">
+                  {manualCustPhone.length}/11 digits
+                </span>
+              </div>
               <input
                 type="tel"
                 required
+                maxLength={14}
                 value={manualCustPhone}
-                onChange={(e) => onChangeManualCustPhone(e.target.value)}
+                onChange={(e) => {
+                  const clean = e.target.value.replace(/[^\d+]/g, '').slice(0, 14);
+                  onChangeManualCustPhone(clean);
+                }}
                 placeholder="017XXXXXXXX"
-                className="w-full border border-[#D6CFC5] px-3 py-2 text-[#1C1917] focus:outline-none focus:border-[#C5A059] rounded-lg"
+                className="w-full border border-[#D6CFC5] px-3 py-2 text-[#1C1917] font-mono focus:outline-none focus:border-[#C5A059] rounded-lg"
               />
             </div>
           </div>
 
           <div>
-            <label className="block text-[11px] font-semibold uppercase tracking-wider text-[#1C1917] mb-1">
-              {t.admin.modals.fullAddress}
-            </label>
+            <div className="flex items-center justify-between mb-1">
+              <label className="block text-[11px] font-semibold uppercase tracking-wider text-[#1C1917]">
+                {t.admin.modals.fullAddress} <span className="text-rose-600">*</span>
+              </label>
+              <span className="text-[10px] text-[#78716C] font-mono">
+                {manualCustAddress.length}/250
+              </span>
+            </div>
             <input
               type="text"
               required
+              maxLength={250}
               value={manualCustAddress}
               onChange={(e) => onChangeManualCustAddress(e.target.value)}
               placeholder="House, Road, Area, City"
@@ -193,8 +214,8 @@ export function AdminManualOrderModal({
                 onChange={(e) => onChangeManualPaymentMethod(e.target.value as PaymentMethod)}
                 className="w-full border border-[#D6CFC5] bg-white px-3 py-2 text-[#1C1917] focus:outline-none focus:border-[#C5A059] rounded-lg"
               >
-                <option value="cod">Cash on Delivery (COD)</option>
-                <option value="bkash">bKash Merchant Payment</option>
+                <option value="cod">Cash on Delivery (COD) (+৳10)</option>
+                <option value="bkash">bKash Merchant Payment (Save ৳10)</option>
                 <option value="card">Card Payment</option>
               </select>
             </div>
@@ -203,27 +224,45 @@ export function AdminManualOrderModal({
           {manualPaymentMethod === 'bkash' && (
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-[#FAF7F2] border border-[#E7E0D6] p-3 rounded-xl">
               <div>
-                <label className="block text-[10px] font-semibold uppercase tracking-wider text-[#1C1917] mb-1">
-                  bKash Sender Number (Optional)
-                </label>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="block text-[10px] font-semibold uppercase tracking-wider text-[#1C1917]">
+                    bKash Sender Number (Optional)
+                  </label>
+                  <span className="text-[9px] text-[#78716C] font-mono">
+                    {manualSenderPhone.length}/11
+                  </span>
+                </div>
                 <input
                   type="text"
+                  maxLength={14}
                   value={manualSenderPhone}
-                  onChange={(e) => onChangeManualSenderPhone(e.target.value)}
+                  onChange={(e) => {
+                    const clean = e.target.value.replace(/[^\d+]/g, '').slice(0, 14);
+                    onChangeManualSenderPhone(clean);
+                  }}
                   placeholder="01XXXXXXXXX"
-                  className="w-full border border-[#D6CFC5] bg-white px-2.5 py-1.5 text-[#1C1917] rounded-lg"
+                  className="w-full border border-[#D6CFC5] bg-white px-2.5 py-1.5 text-[#1C1917] font-mono rounded-lg"
                 />
               </div>
               <div>
-                <label className="block text-[10px] font-semibold uppercase tracking-wider text-[#1C1917] mb-1">
-                  bKash TrxID (Optional — Auto-Verifies)
-                </label>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="block text-[10px] font-semibold uppercase tracking-wider text-[#1C1917]">
+                    bKash TrxID (Optional — Auto-Verifies)
+                  </label>
+                  <span className="text-[9px] text-[#78716C] font-mono">
+                    {manualTrxId.length}/15
+                  </span>
+                </div>
                 <input
                   type="text"
+                  maxLength={15}
                   value={manualTrxId}
-                  onChange={(e) => onChangeManualTrxId(e.target.value)}
+                  onChange={(e) => {
+                    const clean = e.target.value.replace(/[^a-zA-Z0-9]/g, '').toUpperCase().slice(0, 15);
+                    onChangeManualTrxId(clean);
+                  }}
                   placeholder="e.g. BKS982341A"
-                  className="w-full border border-[#D6CFC5] bg-white px-2.5 py-1.5 text-[#1C1917] uppercase rounded-lg"
+                  className="w-full border border-[#D6CFC5] bg-white px-2.5 py-1.5 text-[#1C1917] uppercase font-mono rounded-lg"
                 />
               </div>
             </div>
@@ -319,13 +358,14 @@ export function AdminManualOrderModal({
                       : manualDeliveryZone === 'inside_dhaka'
                       ? 60
                       : 120;
+                  const manualCodFee = manualPaymentMethod === 'cod' ? 10 : 0;
                   return (
                     <div className="flex items-center justify-between pt-2 border-t border-[#E7E0D6] text-xs">
                       <span className="text-[#78716C]">
-                        Subtotal + Delivery (৳{manualFee}):
+                        Subtotal + Delivery (৳{manualFee}){manualCodFee > 0 ? ' + COD (৳10)' : ''}:
                       </span>
                       <span className="font-serif-display text-lg font-semibold text-[#1C1917]">
-                        ৳{(manualSubtotal + manualFee).toLocaleString()}
+                        ৳{(manualSubtotal + manualFee + manualCodFee).toLocaleString()}
                       </span>
                     </div>
                   );
