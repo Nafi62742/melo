@@ -304,28 +304,8 @@ export function Navbar() {
             )}
           </div>
 
-          {/* Desktop Customer Account Link */}
-          <Link
-            href="/account"
-            className={`hidden sm:flex items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-[11px] font-semibold uppercase tracking-wider transition ${
-              pathname === '/account'
-                ? 'border-[#C5A059] bg-[#FAF7F2] text-[#1C1917]'
-                : 'border-[#E7E0D6] bg-white/80 text-[#1C1917] hover:border-[#C5A059]'
-            }`}
-            title={
-              currentCustomer
-                ? `Logged in as ${currentCustomer.fullName}`
-                : 'My Account & Order Tracking'
-            }
-          >
-            <User className={`w-3.5 h-3.5 ${currentCustomer ? 'text-emerald-600' : 'text-[#9A7B3E]'}`} />
-            <span className="hidden xl:inline">
-              {currentCustomer ? currentCustomer.fullName.split(' ')[0] : t.nav.account}
-            </span>
-          </Link>
-
-          {/* Admin Quick Link (Only when authenticated) */}
-          {isAdminLoggedIn && (
+          {/* Role Action: Admin Dashboard when logged in as Admin, otherwise Customer Account */}
+          {isAdminLoggedIn ? (
             <Link
               href="/admin"
               className="hidden sm:flex items-center gap-1.5 rounded-lg border border-[#1C1917] bg-[#1C1917] px-2.5 py-1.5 text-[10px] font-semibold uppercase tracking-wider text-[#FAF7F2] hover:bg-[#9A7B3E] transition"
@@ -333,6 +313,25 @@ export function Navbar() {
             >
               <ShieldCheck className="w-3.5 h-3.5 text-[#C5A059]" />
               <span className="hidden xl:inline">{t.nav.admin}</span>
+            </Link>
+          ) : (
+            <Link
+              href="/account"
+              className={`hidden sm:flex items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-[11px] font-semibold uppercase tracking-wider transition ${
+                pathname === '/account'
+                  ? 'border-[#C5A059] bg-[#FAF7F2] text-[#1C1917]'
+                  : 'border-[#E7E0D6] bg-white/80 text-[#1C1917] hover:border-[#C5A059]'
+              }`}
+              title={
+                currentCustomer
+                  ? `Logged in as ${currentCustomer.fullName}`
+                  : 'My Account & Order Tracking'
+              }
+            >
+              <User className={`w-3.5 h-3.5 ${currentCustomer ? 'text-emerald-600' : 'text-[#9A7B3E]'}`} />
+              <span className="hidden xl:inline">
+                {currentCustomer ? currentCustomer.fullName.split(' ')[0] : t.nav.account}
+              </span>
             </Link>
           )}
 
@@ -502,21 +501,35 @@ export function Navbar() {
               Account &amp; Language
             </div>
 
-            <Link
-              href="/account"
-              onClick={() => setMobileMenuOpen(false)}
-              className="flex items-center justify-between rounded-xl border border-[#E7E0D6] bg-white px-3.5 py-2.5 text-xs font-semibold uppercase tracking-wider text-[#1C1917] hover:border-[#C5A059] transition"
-            >
-              <div className="flex items-center gap-2.5">
-                <User className={`w-4 h-4 ${currentCustomer ? 'text-emerald-600' : 'text-[#9A7B3E]'}`} />
-                <span>
-                  {currentCustomer
-                    ? `Account (${currentCustomer.fullName.split(' ')[0]})`
-                    : 'My Orders & Tracking'}
-                </span>
-              </div>
-              <span className="text-[10px] text-[#8C7A5B]">→</span>
-            </Link>
+            {isAdminLoggedIn ? (
+              <Link
+                href="/admin"
+                onClick={() => setMobileMenuOpen(false)}
+                className="flex items-center justify-between rounded-xl border border-[#1C1917] bg-[#1C1917] px-3.5 py-2.5 text-xs font-semibold uppercase tracking-wider text-[#FAF7F2]"
+              >
+                <div className="flex items-center gap-2.5">
+                  <ShieldCheck className="w-4 h-4 text-[#C5A059]" />
+                  <span>{t.nav.admin} Dashboard</span>
+                </div>
+                <span className="text-[10px] text-[#C5A059]">→</span>
+              </Link>
+            ) : (
+              <Link
+                href="/account"
+                onClick={() => setMobileMenuOpen(false)}
+                className="flex items-center justify-between rounded-xl border border-[#E7E0D6] bg-white px-3.5 py-2.5 text-xs font-semibold uppercase tracking-wider text-[#1C1917] hover:border-[#C5A059] transition"
+              >
+                <div className="flex items-center gap-2.5">
+                  <User className={`w-4 h-4 ${currentCustomer ? 'text-emerald-600' : 'text-[#9A7B3E]'}`} />
+                  <span>
+                    {currentCustomer
+                      ? `Account (${currentCustomer.fullName.split(' ')[0]})`
+                      : 'My Orders & Tracking'}
+                  </span>
+                </div>
+                <span className="text-[10px] text-[#8C7A5B]">→</span>
+              </Link>
+            )}
 
             {/* In-drawer Language Selector */}
             <div className="rounded-xl border border-[#E7E0D6] bg-white p-2.5 space-y-1.5">
@@ -553,17 +566,6 @@ export function Navbar() {
                 </button>
               </div>
             </div>
-
-            {isAdminLoggedIn && (
-              <Link
-                href="/admin"
-                onClick={() => setMobileMenuOpen(false)}
-                className="flex items-center gap-2.5 rounded-xl border border-[#1C1917] bg-[#1C1917] px-3.5 py-2.5 text-xs font-semibold uppercase tracking-wider text-[#FAF7F2]"
-              >
-                <ShieldCheck className="w-4 h-4 text-[#C5A059]" />
-                <span>{t.nav.admin} Dashboard</span>
-              </Link>
-            )}
           </div>
         </div>
 

@@ -31,6 +31,11 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
+body:has(.admin-theme) {
+  background-color: #F8FAFC !important;
+  color: #0F172A !important;
+}
+
 /* Editorial Display Typography */
 .font-serif-display {
   font-family: var(--font-serif);

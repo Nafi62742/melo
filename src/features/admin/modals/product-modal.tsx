@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import Image from 'next/image';
 import { ProductType } from '@/core/models/product-type.model';
 import { X, ZoomIn, Plus, Trash2, Image as ImageIcon } from 'lucide-react';
 import { useI18n } from '@/core/i18n/i18n.context';
@@ -66,7 +67,6 @@ export function AdminProductModal({
 
   const handleRemoveImage = (urlToRemove: string) => {
     if (urlToRemove === form.imageUrl) {
-      // If removing main image, promote the first gallery image or leave blank
       const remainingGallery = (form.images || []).filter((u) => u !== urlToRemove);
       const nextMain = remainingGallery[0] || '';
       onChangeForm({
@@ -84,7 +84,6 @@ export function AdminProductModal({
 
   const handleSetMainCover = (url: string) => {
     const currentGallery = form.images || [];
-    // Old main goes into gallery if not already there
     const updatedGallery = Array.from(
       new Set([form.imageUrl, ...currentGallery].filter((u) => u && u !== url))
     );
@@ -99,27 +98,27 @@ export function AdminProductModal({
     <div
       role="dialog"
       aria-modal="true"
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-3 sm:p-4 overflow-y-auto"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-xs p-3 sm:p-4 overflow-y-auto"
       onClick={onClose}
     >
       <div
-        className="w-full max-w-2xl bg-white border border-[#C5A059] shadow-2xl rounded-2xl overflow-hidden my-auto flex flex-col max-h-[92vh]"
+        className="w-full max-w-2xl bg-slate-900 border border-slate-800 text-slate-100 shadow-2xl rounded-2xl overflow-hidden my-auto flex flex-col max-h-[92vh]"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="flex items-center justify-between bg-[#181512] px-6 py-4 text-[#FAF7F2] flex-shrink-0">
+        <div className="flex items-center justify-between bg-slate-950 px-6 py-4 border-b border-slate-800 flex-shrink-0">
           <div>
-            <h3 className="font-serif-display text-xl sm:text-2xl font-medium text-white">
+            <h3 className="text-base sm:text-lg font-bold text-slate-900">
               {editingId ? t.admin.modals.editProductTitle : t.admin.modals.addProductTitle}
             </h3>
-            <p className="text-[11px] text-[#D4C3A3] mt-0.5">
+            <p className="text-xs text-slate-400 mt-0.5">
               {editingId ? `Editing piece ID: ${editingId}` : 'Add a new piece to your boutique catalog'}
             </p>
           </div>
           <button
             type="button"
             onClick={onClose}
-            className="p-1.5 rounded-full hover:bg-white/10 text-stone-300 hover:text-white transition cursor-pointer"
+            className="p-1.5 rounded-lg hover:bg-slate-200 text-slate-400 hover:text-slate-700 transition cursor-pointer"
             aria-label="Close edit popup"
           >
             <X className="w-5 h-5" />
@@ -130,8 +129,8 @@ export function AdminProductModal({
         <form onSubmit={onSaveProduct} className="flex-1 overflow-y-auto p-5 sm:p-6 space-y-4 text-xs">
           {/* Product Name */}
           <div>
-            <label className="block text-[11px] font-semibold uppercase tracking-wider text-[#1C1917] mb-1">
-              {t.admin.modals.productName}
+            <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">
+              {t.admin.modals.productName} *
             </label>
             <input
               type="text"
@@ -139,15 +138,15 @@ export function AdminProductModal({
               value={form.name}
               onChange={(e) => onChangeForm({ ...form, name: e.target.value })}
               placeholder="e.g. Pearl Camellia Ear Clip"
-              className="w-full border border-[#D6CFC5] rounded-lg px-3 py-2 text-[#1C1917] focus:outline-none focus:border-[#C5A059] bg-[#FAF7F2]/40 focus:bg-white"
+              className="w-full border border-slate-300 rounded-xl px-3 py-2 text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-slate-900 bg-white"
             />
           </div>
 
           {/* Product Type & Stock */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="block text-[11px] font-semibold uppercase tracking-wider text-[#1C1917] mb-1">
-                {t.admin.modals.productType}
+              <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">
+                {t.admin.modals.productType} *
               </label>
               <select
                 value={form.category}
@@ -157,10 +156,10 @@ export function AdminProductModal({
                     category: e.target.value,
                   })
                 }
-                className="w-full border border-[#D6CFC5] rounded-lg bg-white px-3 py-2 text-[#1C1917] focus:outline-none focus:border-[#C5A059]"
+                className="w-full border border-slate-300 rounded-xl bg-white px-3 py-2 text-slate-900 focus:outline-none focus:border-slate-900"
               >
                 {productTypes.map((pt) => (
-                  <option key={pt.slug} value={pt.slug}>
+                  <option key={pt.slug} value={pt.slug} className="bg-slate-900 text-white">
                     {pt.name} ({pt.slug})
                   </option>
                 ))}
@@ -168,8 +167,8 @@ export function AdminProductModal({
             </div>
 
             <div>
-              <label className="block text-[11px] font-semibold uppercase tracking-wider text-[#1C1917] mb-1">
-                {t.admin.modals.stockQty}
+              <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">
+                {t.admin.modals.stockQty} *
               </label>
               <input
                 type="number"
@@ -177,7 +176,7 @@ export function AdminProductModal({
                 required
                 value={form.stock}
                 onChange={(e) => onChangeForm({ ...form, stock: Number(e.target.value) })}
-                className="w-full border border-[#D6CFC5] rounded-lg px-3 py-2 text-[#1C1917] focus:outline-none focus:border-[#C5A059]"
+                className="w-full border border-slate-700 rounded-xl bg-slate-950 px-3 py-2 text-white font-mono focus:outline-none focus:border-indigo-500"
               />
             </div>
           </div>
@@ -185,185 +184,171 @@ export function AdminProductModal({
           {/* Pricing Row */}
           <div className="grid grid-cols-3 gap-3">
             <div>
-              <label className="block text-[11px] font-semibold uppercase tracking-wider text-[#1C1917] mb-1">
-                {t.admin.modals.costPrice}
+              <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">
+                {t.admin.modals.costPrice} (¥ CNY)
               </label>
               <input
                 type="number"
                 min={0}
                 value={form.costPriceCNY}
                 onChange={(e) => onChangeForm({ ...form, costPriceCNY: Number(e.target.value) })}
-                className="w-full border border-[#D6CFC5] rounded-lg px-3 py-2 text-[#1C1917] focus:outline-none focus:border-[#C5A059] font-mono"
+                className="w-full border border-slate-700 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-indigo-500 font-mono bg-slate-950"
               />
             </div>
 
             <div>
-              <label className="block text-[11px] font-semibold uppercase tracking-wider text-[#1C1917] mb-1">
-                {t.admin.modals.sellingPrice}
+              <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">
+                {t.admin.modals.sellingPrice} (৳ BDT) *
               </label>
               <input
                 type="number"
-                min={1}
+                min={0}
                 required
                 value={form.priceBDT}
                 onChange={(e) => onChangeForm({ ...form, priceBDT: Number(e.target.value) })}
-                className="w-full border border-[#D6CFC5] rounded-lg px-3 py-2 text-[#1C1917] focus:outline-none focus:border-[#C5A059] font-mono font-bold"
+                className="w-full border border-slate-700 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-indigo-500 font-mono font-bold bg-slate-950"
               />
             </div>
 
             <div>
-              <label className="block text-[11px] font-semibold uppercase tracking-wider text-[#1C1917] mb-1">
-                {t.admin.modals.originalPrice}
+              <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">
+                {t.admin.modals.originalPrice} (৳ BDT)
               </label>
               <input
                 type="number"
-                min={1}
-                value={form.originalPriceBDT}
+                min={0}
+                value={form.originalPriceBDT || ''}
                 onChange={(e) =>
-                  onChangeForm({ ...form, originalPriceBDT: Number(e.target.value) })
+                  onChangeForm({
+                    ...form,
+                    originalPriceBDT: e.target.value ? Number(e.target.value) : 0,
+                  })
                 }
-                className="w-full border border-[#D6CFC5] rounded-lg px-3 py-2 text-[#1C1917] focus:outline-none focus:border-[#C5A059] font-mono"
+                placeholder="Optional strike"
+                className="w-full border border-slate-700 rounded-xl px-3 py-2 text-slate-300 focus:outline-none focus:border-indigo-500 font-mono bg-slate-950"
               />
             </div>
           </div>
 
-          {/* Product Images Section (Main + Gallery Preview) */}
-          <div className="border border-[#E7E0D6] rounded-xl p-3.5 bg-[#FAF7F2]/60 space-y-3">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-1.5 font-semibold text-xs text-[#1C1917] uppercase tracking-wider">
-                <ImageIcon className="w-4 h-4 text-[#C5A059]" />
-                <span>{t.admin.modals.productImages} ({allImages.length})</span>
-              </div>
-              <span className="text-[11px] text-[#78716C]">
-                Click thumbnail to zoom · Set main cover
-              </span>
-            </div>
+          {/* Cover & Gallery Images */}
+          <div className="space-y-2 pt-2 border-t border-slate-800">
+            <label className="block text-xs font-bold uppercase tracking-wider text-slate-700">
+              Product Images &amp; Gallery
+            </label>
 
-            {/* Gallery Thumbnails List */}
-            {allImages.length > 0 ? (
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
-                {allImages.map((imgUrl, idx) => {
-                  const isMain = imgUrl === form.imageUrl;
-                  return (
-                    <div
-                      key={`${imgUrl}-${idx}`}
-                      className={`relative flex flex-col rounded-xl overflow-hidden border transition bg-white p-1.5 shadow-2xs ${
-                        isMain ? 'border-[#C5A059] ring-2 ring-[#C5A059]/30' : 'border-[#E7E0D6]'
-                      }`}
-                    >
-                      <button
-                        type="button"
-                        onClick={() =>
-                          onZoomImage?.({
-                            src: imgUrl,
-                            title: form.name || 'Product Image',
-                            subtitle: isMain ? 'Main Cover Photo' : `Gallery Image #${idx + 1}`,
-                          })
-                        }
-                        className="relative h-24 w-full rounded-lg overflow-hidden bg-stone-100 group cursor-zoom-in"
-                        title="Click to zoom image"
-                      >
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img
-                          src={imgUrl}
-                          alt={`${form.name} ${idx + 1}`}
-                          className="h-full w-full object-cover group-hover:scale-105 transition duration-200"
-                          onError={(e) => {
-                            (e.target as HTMLImageElement).style.opacity = '0.3';
-                          }}
-                        />
-                        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 flex items-center justify-center opacity-0 group-hover:opacity-100 transition">
-                          <ZoomIn className="w-4 h-4 text-white drop-shadow" />
-                        </div>
-                      </button>
-
-                      {/* Card Footer / Actions */}
-                      <div className="mt-1.5 flex items-center justify-between gap-1 text-[10px]">
-                        {isMain ? (
-                          <span className="px-1.5 py-0.5 rounded-md bg-[#C5A059] text-white font-semibold">
-                            {t.admin.modals.mainCover}
-                          </span>
-                        ) : (
-                          <button
-                            type="button"
-                            onClick={() => handleSetMainCover(imgUrl)}
-                            className="text-[#9A7B3E] hover:underline cursor-pointer font-medium"
-                          >
-                            {t.admin.modals.setMain}
-                          </button>
-                        )}
-
-                        <button
-                          type="button"
-                          onClick={() => handleRemoveImage(imgUrl)}
-                          className="p-1 rounded text-stone-400 hover:text-red-600 cursor-pointer"
-                          title="Remove image"
-                        >
-                          <Trash2 className="w-3 h-3" />
-                        </button>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            ) : (
-              <div className="p-4 text-center text-xs text-stone-400 border border-dashed border-stone-300 rounded-xl">
-                No images added yet. Add an image path or URL below.
-              </div>
-            )}
-
-            {/* Main Cover Image Path Input */}
+            {/* Main Cover URL */}
             <div>
-              <label className="block text-[10px] font-semibold uppercase tracking-wider text-[#78716C] mb-1">
-                {t.admin.modals.mainCoverUrl}
-              </label>
+              <span className="text-[10px] text-slate-400 block mb-1">
+                Primary Cover Image URL *
+              </span>
               <input
                 type="text"
                 required
                 value={form.imageUrl}
                 onChange={(e) => onChangeForm({ ...form, imageUrl: e.target.value })}
-                placeholder="/products/earrings/camellia.webp"
-                className="w-full border border-[#D6CFC5] rounded-lg px-3 py-1.5 text-xs text-[#1C1917] bg-white focus:outline-none focus:border-[#C5A059] font-mono"
+                placeholder="https://... or /products/..."
+                className="w-full border border-slate-700 rounded-xl px-3 py-2 text-white placeholder:text-slate-500 focus:outline-none focus:border-indigo-500 font-mono text-[11px] bg-slate-950"
               />
             </div>
 
-            {/* Add Extra Gallery Image Input */}
-            <div className="flex gap-2">
+            {/* Visual Image Grid of Cover + Gallery */}
+            {allImages.length > 0 && (
+              <div className="grid grid-cols-4 sm:grid-cols-6 gap-2 pt-2">
+                {allImages.map((url, idx) => {
+                  const isMain = url === form.imageUrl;
+                  return (
+                    <div
+                      key={`${url}-${idx}`}
+                      className={`relative group rounded-xl overflow-hidden border ${
+                        isMain ? 'border-indigo-500 ring-2 ring-indigo-500/50' : 'border-slate-800'
+                      } bg-slate-950 aspect-square flex items-center justify-center`}
+                    >
+                      <Image
+                        src={url}
+                        alt="Preview"
+                        fill
+                        unoptimized
+                        className="object-cover"
+                      />
+                      <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition flex flex-col items-center justify-between p-1">
+                        <div className="flex items-center justify-between w-full">
+                          {onZoomImage && (
+                            <button
+                              type="button"
+                              onClick={() =>
+                                onZoomImage({
+                                  src: url,
+                                  title: form.name || 'Image Preview',
+                                  subtitle: isMain ? 'Primary Cover' : 'Gallery Image',
+                                })
+                              }
+                              className="p-1 rounded bg-black/50 text-white hover:bg-black"
+                              title="Zoom in"
+                            >
+                              <ZoomIn className="w-3 h-3" />
+                            </button>
+                          )}
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveImage(url)}
+                            className="p-1 rounded bg-rose-900/80 text-rose-200 hover:bg-rose-700"
+                            title="Remove image"
+                          >
+                            <Trash2 className="w-3 h-3" />
+                          </button>
+                        </div>
+                        {!isMain && (
+                          <button
+                            type="button"
+                            onClick={() => handleSetMainCover(url)}
+                            className="w-full py-0.5 text-[9px] font-bold uppercase tracking-wider bg-indigo-600 hover:bg-indigo-500 text-white rounded text-center"
+                          >
+                            Set Cover
+                          </button>
+                        )}
+                        {isMain && (
+                          <span className="text-[9px] font-bold uppercase tracking-wider bg-indigo-600 text-white px-1.5 py-0.5 rounded">
+                            Cover
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+
+            {/* Add more gallery URLs */}
+            <div className="flex items-center gap-2 pt-2">
               <input
                 type="text"
                 value={newGalleryUrl}
                 onChange={(e) => setNewGalleryUrl(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') {
-                    e.preventDefault();
-                    handleAddGalleryImage();
-                  }
-                }}
-                placeholder={t.admin.modals.addGalleryPlaceholder}
-                className="flex-1 border border-[#D6CFC5] rounded-lg px-3 py-1.5 text-xs text-[#1C1917] bg-white focus:outline-none focus:border-[#C5A059] font-mono"
+                placeholder="Paste extra photo URL..."
+                className="flex-1 border border-slate-700 rounded-xl px-3 py-1.5 text-xs text-white placeholder:text-slate-500 focus:outline-none focus:border-indigo-500 bg-slate-950"
               />
               <button
                 type="button"
                 onClick={handleAddGalleryImage}
-                className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg border border-[#C5A059] bg-[#FAF7F2] text-xs font-semibold text-[#9A7B3E] hover:bg-[#1C1917] hover:text-white transition cursor-pointer"
+                className="inline-flex items-center gap-1 border border-slate-700 bg-slate-800 hover:bg-indigo-600 hover:text-white hover:border-indigo-500 px-3 py-1.5 text-xs font-bold uppercase tracking-wider text-slate-700 rounded-xl transition cursor-pointer"
               >
                 <Plus className="w-3.5 h-3.5" />
-                <span>{t.admin.modals.addImage}</span>
+                <span>Add Photo</span>
               </button>
             </div>
           </div>
 
           {/* Description */}
           <div>
-            <label className="block text-[11px] font-semibold uppercase tracking-wider text-[#1C1917] mb-1">
-              {t.admin.modals.description}
+            <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">
+              {t.admin.modals.description} *
             </label>
             <textarea
               rows={3}
               required
               value={form.description}
               onChange={(e) => onChangeForm({ ...form, description: e.target.value })}
-              className="w-full border border-[#D6CFC5] rounded-lg px-3 py-2 text-[#1C1917] focus:outline-none focus:border-[#C5A059]"
+              className="w-full border border-slate-300 rounded-xl px-3 py-2 text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-slate-900 bg-white"
             />
           </div>
 
@@ -374,9 +359,9 @@ export function AdminProductModal({
                 type="checkbox"
                 checked={form.isFeatured}
                 onChange={(e) => onChangeForm({ ...form, isFeatured: e.target.checked })}
-                className="accent-[#1C1917] rounded"
+                className="accent-indigo-600 rounded"
               />
-              <span className="font-semibold text-[#1C1917]">{t.admin.modals.featuredStorefront}</span>
+              <span className="font-semibold text-slate-200">{t.admin.modals.featuredStorefront}</span>
             </label>
 
             <label className="flex items-center gap-2 cursor-pointer">
@@ -384,24 +369,24 @@ export function AdminProductModal({
                 type="checkbox"
                 checked={form.isNew}
                 onChange={(e) => onChangeForm({ ...form, isNew: e.target.checked })}
-                className="accent-[#1C1917] rounded"
+                className="accent-indigo-600 rounded"
               />
-              <span className="font-semibold text-[#1C1917]">{t.admin.modals.markNewArrival}</span>
+              <span className="font-semibold text-slate-200">{t.admin.modals.markNewArrival}</span>
             </label>
           </div>
 
           {/* Footer Actions */}
-          <div className="flex justify-end gap-3 pt-4 border-t border-[#E7E0D6]">
+          <div className="flex justify-end gap-3 pt-4 border-t border-slate-800">
             <button
               type="button"
               onClick={onClose}
-              className="px-5 py-2.5 rounded-lg border border-[#D6CFC5] bg-white hover:bg-stone-50 text-xs font-semibold text-[#78716C] hover:text-[#1C1917] transition cursor-pointer"
+              className="px-5 py-2.5 rounded-xl border border-slate-700 bg-slate-800 hover:bg-slate-750 text-xs font-bold uppercase tracking-wider text-slate-700 hover:text-white transition cursor-pointer"
             >
               {t.admin.modals.cancel}
             </button>
             <button
               type="submit"
-              className="px-6 py-2.5 rounded-lg bg-[#1C1917] hover:bg-[#9A7B3E] text-white text-xs font-semibold shadow-md transition cursor-pointer"
+              className="px-6 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold uppercase tracking-wider shadow-md transition cursor-pointer"
             >
               {editingId ? t.admin.modals.saveChanges : t.admin.modals.addPiece}
             </button>

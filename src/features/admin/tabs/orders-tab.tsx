@@ -7,24 +7,30 @@ import { CustomerProfile } from '@/core/models/customer.model';
 import { formatBDT } from '@/core/utils/currency.util';
 import { COURIER_OPTIONS, buildCourierTrackingUrl } from '@/core/utils/tracking.util';
 import { useI18n } from '@/core/i18n/i18n.context';
+import { AdminCustomersTab } from './customers-tab';
 import {
-  Clock,
   Plus,
   RefreshCw,
   Truck,
   Search,
   ExternalLink,
-  User,
   Phone,
   Users,
   X,
+  Smartphone,
+  ShoppingBag,
+  Clock,
   CheckCircle2,
-  XCircle,
+  AlertCircle,
+  Package,
 } from 'lucide-react';
 
 interface AdminOrdersTabProps {
   orders: Order[];
   customers?: CustomerProfile[];
+  bkashNumber?: string;
+  onChangeBkashNumber?: (value: string) => void;
+  onSaveBkashNumber?: (e: React.FormEvent) => void;
   onOpenManualOrderModal: () => void;
   onRefreshOrders: () => void;
   onPaymentStatusChange: (orderId: string, paymentStatus: PaymentStatus) => void;
@@ -42,9 +48,21 @@ interface AdminOrdersTabProps {
   onZoomImage?: (image: { src: string; title: string; subtitle?: string }) => void;
 }
 
+type OrderSubTab =
+  | 'all'
+  | 'pending'
+  | 'bkash_pending'
+  | 'confirmed'
+  | 'dispatched'
+  | 'delivered'
+  | 'cancelled';
+
 export function AdminOrdersTab({
   orders,
   customers = [],
+  bkashNumber = '',
+  onChangeBkashNumber,
+  onSaveBkashNumber,
   onOpenManualOrderModal,
   onRefreshOrders,
   onPaymentStatusChange,
@@ -54,7 +72,7 @@ export function AdminOrdersTab({
 }: AdminOrdersTabProps) {
   const { t } = useI18n();
   const [viewMode, setViewMode] = useState<'orders' | 'customers'>('orders');
-  const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [activeOrderTab, setActiveOrderTab] = useState<OrderSubTab>('all');
   const [searchQuery, setSearchQuery] = useState('');
 
   // Tracking Modal / Popover State
@@ -65,12 +83,50 @@ export function AdminOrdersTab({
   const [estimatedDelivery, setEstimatedDelivery] = useState('');
   const [autoMarkDispatched, setAutoMarkDispatched] = useState(true);
 
-  // Filtered Orders
+  const pendingCount = useMemo(
+    () => orders.filter((o) => o.status === 'pending').length,
+    [orders]
+  );
+  const bkashPendingCount = useMemo(
+    () => orders.filter((o) => o.paymentMethod === 'bkash' && o.paymentStatus === 'pending').length,
+    [orders]
+  );
+  const confirmedCount = useMemo(
+    () => orders.filter((o) => o.status === 'confirmed').length,
+    [orders]
+  );
+  const dispatchedCount = useMemo(
+    () => orders.filter((o) => o.status === 'dispatched').length,
+    [orders]
+  );
+  const deliveredCount = useMemo(
+    () => orders.filter((o) => o.status === 'delivered').length,
+    [orders]
+  );
+  const cancelledCount = useMemo(
+    () => orders.filter((o) => o.status === 'cancelled').length,
+    [orders]
+  );
+
   const filteredOrders = useMemo(() => {
     return orders.filter((o) => {
-      const matchesStatus = statusFilter === 'all' || o.status === statusFilter;
+      let matchesTab = true;
+      if (activeOrderTab === 'pending') {
+        matchesTab = o.status === 'pending';
+      } else if (activeOrderTab === 'bkash_pending') {
+        matchesTab = o.paymentMethod === 'bkash' && o.paymentStatus === 'pending';
+      } else if (activeOrderTab === 'confirmed') {
+        matchesTab = o.status === 'confirmed';
+      } else if (activeOrderTab === 'dispatched') {
+        matchesTab = o.status === 'dispatched';
+      } else if (activeOrderTab === 'delivered') {
+        matchesTab = o.status === 'delivered';
+      } else if (activeOrderTab === 'cancelled') {
+        matchesTab = o.status === 'cancelled';
+      }
+
       const q = searchQuery.trim().toLowerCase();
-      if (!q) return matchesStatus;
+      if (!q) return matchesTab;
 
       const matchesQuery =
         o.orderNumber.toLowerCase().includes(q) ||
@@ -81,79 +137,43 @@ export function AdminOrdersTab({
         (o.trxId && o.trxId.toLowerCase().includes(q)) ||
         (o.trackingNumber && o.trackingNumber.toLowerCase().includes(q));
 
-      return matchesStatus && matchesQuery;
+      return matchesTab && matchesQuery;
     });
-  }, [orders, statusFilter, searchQuery]);
+  }, [orders, activeOrderTab, searchQuery]);
 
-  // Unique customers derived from orders + registered accounts
-  const customerDirectory = useMemo(() => {
-    const map = new Map<string, {
-      phone: string;
-      fullName: string;
-      address: string;
-      deliveryZone: string;
-      totalOrders: number;
-      totalSpent: number;
-      latestOrderDate: string;
-    }>();
-
-    // 1. Tally from all orders
-    for (const o of orders) {
-      const phone = o.customer.phone.trim().replace(/\s+/g, '');
-      const existing = map.get(phone);
-      if (existing) {
-        existing.totalOrders += 1;
-        existing.totalSpent += o.total;
-        if (new Date(o.createdAt) > new Date(existing.latestOrderDate)) {
-          existing.latestOrderDate = o.createdAt;
-          existing.address = o.customer.address || existing.address;
-        }
-      } else {
-        map.set(phone, {
-          phone,
-          fullName: o.customer.fullName,
-          address: o.customer.address,
-          deliveryZone: o.customer.deliveryZone,
-          totalOrders: 1,
-          totalSpent: o.total,
-          latestOrderDate: o.createdAt,
-        });
-      }
-    }
-
-    // 2. Merge registered customers
+  // Derived customer directory for count
+  const customerCount = useMemo(() => {
+    const phones = new Set<string>();
     for (const c of customers) {
-      const phone = c.phone.trim().replace(/\s+/g, '');
-      if (!map.has(phone)) {
-        map.set(phone, {
-          phone,
-          fullName: c.fullName,
-          address: c.defaultAddress,
-          deliveryZone: c.deliveryZone,
-          totalOrders: c.totalOrders || 0,
-          totalSpent: c.totalSpent || 0,
-          latestOrderDate: c.createdAt,
-        });
-      }
+      const p = c.phone.trim().replace(/\s+/g, '');
+      if (p) phones.add(p);
     }
-
-    return Array.from(map.values());
+    for (const o of orders) {
+      const p = o.customer.phone.trim().replace(/\s+/g, '');
+      if (p) phones.add(p);
+    }
+    return phones.size;
   }, [orders, customers]);
 
   const openTrackingModal = (o: Order) => {
     setTrackingModalOrder(o);
-    const existingCourier = o.courierName?.toLowerCase() || 'steadfast';
-    const foundPreset = COURIER_OPTIONS.find((c) => c.name.toLowerCase().includes(existingCourier));
-    if (foundPreset && foundPreset.key !== 'other') {
-      setCourierKey(foundPreset.key);
+    const existingCourier = COURIER_OPTIONS.find(
+      (c) => c.name.toLowerCase() === (o.courierName || '').toLowerCase()
+    );
+    if (existingCourier) {
+      setCourierKey(existingCourier.key);
       setCustomCourierName('');
-    } else {
+    } else if (o.courierName) {
       setCourierKey('other');
       setCustomCourierName(o.courierName || '');
+    } else {
+      setCourierKey('steadfast');
+      setCustomCourierName('');
     }
     setTrackingCode(o.trackingNumber || '');
     setEstimatedDelivery(
-      o.estimatedDelivery || (o.customer.deliveryZone === 'inside_dhaka' ? '24–48 hours' : '3–4 days')
+      o.estimatedDelivery ||
+        (o.customer.deliveryZone === 'inside_dhaka' ? '24–48 hours' : '3–4 days')
     );
     setAutoMarkDispatched(o.status !== 'delivered');
   };
@@ -182,592 +202,672 @@ export function AdminOrdersTab({
     setTrackingModalOrder(null);
   };
 
+  const orderTabs: Array<{
+    key: OrderSubTab;
+    label: string;
+    count: number;
+    showRedDot?: boolean;
+  }> = [
+    {
+      key: 'all',
+      label: 'All Orders',
+      count: orders.length,
+      showRedDot: false,
+    },
+    {
+      key: 'pending',
+      label: 'Pending',
+      count: pendingCount,
+      showRedDot: pendingCount > 0,
+    },
+    {
+      key: 'bkash_pending',
+      label: 'bKash Check',
+      count: bkashPendingCount,
+      showRedDot: bkashPendingCount > 0,
+    },
+    {
+      key: 'confirmed',
+      label: 'Confirmed',
+      count: confirmedCount,
+      showRedDot: false,
+    },
+    {
+      key: 'dispatched',
+      label: 'Dispatched',
+      count: dispatchedCount,
+      showRedDot: false,
+    },
+    {
+      key: 'delivered',
+      label: 'Delivered',
+      count: deliveredCount,
+      showRedDot: false,
+    },
+    {
+      key: 'cancelled',
+      label: 'Cancelled',
+      count: cancelledCount,
+      showRedDot: false,
+    },
+  ];
+
   return (
-    <div className="border border-[#E7E0D6] bg-white overflow-hidden shadow-xs rounded-xl space-y-0">
-      {/* Top Action & View Toggle Header */}
-      <div className="px-6 py-4 border-b border-[#E7E0D6] flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <div className="flex items-center gap-3">
-            <h2 className="text-xs font-semibold uppercase tracking-[0.2em] text-[#1C1917]">
-              {t.admin.ordersTab.title}
+    <div className="space-y-4">
+      {/* Top Action Bar & Mode Switcher */}
+      <div className="border border-slate-200 bg-white rounded-2xl shadow-xs overflow-hidden">
+        <div className="px-5 py-4 border-b border-slate-200 bg-white flex flex-wrap items-center justify-between gap-4">
+          <div className="flex flex-wrap items-center gap-4">
+            <h2 className="text-sm font-bold uppercase tracking-[0.14em] text-slate-900">
+              Customer &amp; Orders Hub
             </h2>
-            <div className="inline-flex border border-[#E7E0D6] p-0.5 bg-[#FAF7F2] text-xs rounded-lg gap-0.5">
+
+            {/* Separate View Tabs: Orders vs Customer Directory */}
+            <div className="inline-flex bg-slate-100 border border-slate-200 p-1 rounded-xl gap-1">
               <button
                 type="button"
                 onClick={() => setViewMode('orders')}
-                className={`px-3 py-1 text-[11px] font-semibold uppercase tracking-wider cursor-pointer rounded-md transition ${
+                className={`inline-flex items-center gap-2 px-3.5 py-1.5 text-xs font-bold uppercase tracking-wider cursor-pointer rounded-lg transition-all ${
                   viewMode === 'orders'
-                    ? 'bg-[#1C1917] text-[#FAF7F2] shadow-2xs'
-                    : 'text-[#78716C] hover:text-[#1C1917]'
+                    ? 'bg-slate-900 text-white shadow-xs'
+                    : 'text-slate-700 hover:bg-white hover:text-slate-900'
                 }`}
               >
-                {t.admin.ordersTab.ordersBtn} ({orders.length})
+                <ShoppingBag className="w-3.5 h-3.5" />
+                <span>Orders</span>
+                <span
+                  className={`rounded-full px-2 py-0.5 text-[10px] font-extrabold ${
+                    viewMode === 'orders'
+                      ? 'bg-slate-800 text-white'
+                      : orders.length > 0
+                      ? 'bg-rose-500 text-white'
+                      : 'bg-slate-200 text-slate-700'
+                  }`}
+                >
+                  {orders.length}
+                </span>
               </button>
+
               <button
                 type="button"
                 onClick={() => setViewMode('customers')}
-                className={`inline-flex items-center gap-1.5 px-3 py-1 text-[11px] font-semibold uppercase tracking-wider cursor-pointer rounded-md transition ${
+                className={`inline-flex items-center gap-2 px-3.5 py-1.5 text-xs font-bold uppercase tracking-wider cursor-pointer rounded-lg transition-all ${
                   viewMode === 'customers'
-                    ? 'bg-[#1C1917] text-[#FAF7F2] shadow-2xs'
-                    : 'text-[#78716C] hover:text-[#1C1917]'
+                    ? 'bg-slate-900 text-white shadow-xs'
+                    : 'text-slate-700 hover:bg-white hover:text-slate-900'
                 }`}
               >
-                <Users className="w-3 h-3" />
-                <span>{t.admin.ordersTab.customersBtn} ({customerDirectory.length})</span>
+                <Users className="w-3.5 h-3.5" />
+                <span>Customers</span>
+                <span
+                  className={`rounded-full px-2 py-0.5 text-[10px] font-extrabold ${
+                    viewMode === 'customers'
+                      ? 'bg-slate-800 text-white'
+                      : 'bg-slate-200 text-slate-700'
+                  }`}
+                >
+                  {customerCount}
+                </span>
               </button>
             </div>
           </div>
-          <p className="text-[11px] text-[#78716C] mt-1">
-            {t.admin.ordersTab.subtitle}
-          </p>
-        </div>
 
-        <div className="flex items-center gap-3">
-          <button
-            type="button"
-            onClick={onOpenManualOrderModal}
-            className="inline-flex items-center gap-1.5 bg-emerald-700 text-white px-3.5 py-2 text-[11px] font-semibold uppercase tracking-wider hover:bg-emerald-800 transition cursor-pointer rounded-lg shadow-2xs"
-          >
-            <Plus className="w-3.5 h-3.5" />
-            <span>{t.admin.ordersTab.manualOrderBtn}</span>
-          </button>
-
-          <button
-            onClick={onRefreshOrders}
-            className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#9A7B3E] hover:text-[#1C1917] cursor-pointer rounded-lg px-2.5 py-1.5 transition"
-          >
-            <RefreshCw className="w-3.5 h-3.5" />
-            <span>{t.admin.ordersTab.refresh}</span>
-          </button>
-        </div>
-      </div>
-
-      {/* VIEW MODE 1: ORDERS LIST & TRACKING */}
-      {viewMode === 'orders' && (
-        <>
-          {/* Filter & Search Bar */}
-          <div className="p-4 border-b border-[#E7E0D6] bg-[#FAF7F2]/50 flex flex-wrap items-center justify-between gap-3">
-            {/* Status Filter Pills */}
-            <div className="flex flex-wrap items-center gap-1">
-              {[
-                { key: 'all', label: `${t.admin.ordersTab.all} (${orders.length})` },
-                {
-                  key: 'pending',
-                  label: `${t.admin.ordersTab.pending} (${orders.filter((o) => o.status === 'pending').length})`,
-                },
-                {
-                  key: 'confirmed',
-                  label: `${t.admin.ordersTab.confirmed} (${orders.filter((o) => o.status === 'confirmed').length})`,
-                },
-                {
-                  key: 'dispatched',
-                  label: `${t.admin.ordersTab.dispatched} (${orders.filter((o) => o.status === 'dispatched').length})`,
-                },
-                {
-                  key: 'delivered',
-                  label: `${t.admin.ordersTab.delivered} (${orders.filter((o) => o.status === 'delivered').length})`,
-                },
-                {
-                  key: 'cancelled',
-                  label: `${t.admin.ordersTab.cancelled} (${orders.filter((o) => o.status === 'cancelled').length})`,
-                },
-              ].map((pill) => (
+          <div className="flex flex-wrap items-center gap-2.5">
+            {/* Inline bKash Collection Number Editor */}
+            {onSaveBkashNumber && onChangeBkashNumber && (
+              <form
+                onSubmit={onSaveBkashNumber}
+                className="flex items-center gap-2 bg-slate-50 border border-slate-200 px-3 py-1.5 rounded-xl shadow-2xs"
+              >
+                <Smartphone className="w-4 h-4 text-pink-600 shrink-0" />
+                <span className="text-xs font-bold uppercase tracking-wider text-pink-700 hidden sm:inline">
+                  bKash:
+                </span>
+                <input
+                  type="text"
+                  value={bkashNumber}
+                  onChange={(e) => onChangeBkashNumber(e.target.value)}
+                  placeholder="01700-000000"
+                  className="border border-slate-300 bg-white px-2.5 py-1 text-xs font-mono font-bold text-slate-900 focus:outline-none focus:border-pink-500 w-32 rounded-lg"
+                />
                 <button
-                  key={pill.key}
-                  type="button"
-                  onClick={() => setStatusFilter(pill.key)}
-                  className={`px-3 py-1.5 text-[10px] font-semibold uppercase tracking-wider border transition cursor-pointer rounded-lg ${
-                    statusFilter === pill.key
-                      ? 'border-[#1C1917] bg-[#1C1917] text-[#FAF7F2] shadow-2xs'
-                      : 'border-[#E7E0D6] bg-white text-[#78716C] hover:text-[#1C1917]'
-                  }`}
+                  type="submit"
+                  className="px-2.5 py-1 text-[11px] font-bold uppercase tracking-wider bg-pink-600 hover:bg-pink-700 text-white transition cursor-pointer rounded-lg shadow-xs"
                 >
-                  {pill.label}
+                  Save
                 </button>
-              ))}
-            </div>
+              </form>
+            )}
 
-            {/* Search Input */}
-            <div className="relative">
-              <input
-                type="text"
-                maxLength={60}
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder={t.admin.ordersTab.searchPlaceholder}
-                className="w-72 border border-[#D6CFC5] bg-white pl-8 pr-3 py-1.5 text-xs text-[#1C1917] focus:outline-none focus:border-[#C5A059] rounded-lg shadow-2xs"
-              />
-              <Search className="w-3.5 h-3.5 text-[#78716C] absolute left-2.5 top-2.5" />
-            </div>
+            <button
+              type="button"
+              onClick={onOpenManualOrderModal}
+              className="inline-flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white px-3.5 py-2 text-xs font-bold uppercase tracking-wider transition-all cursor-pointer rounded-xl shadow-xs"
+            >
+              <Plus className="w-3.5 h-3.5" />
+              <span>+ Manual Order</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={onRefreshOrders}
+              className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-slate-700 hover:text-slate-900 hover:bg-slate-100 cursor-pointer rounded-xl px-3 py-2 transition border border-slate-200 bg-white shadow-2xs"
+              title="Refresh live orders"
+            >
+              <RefreshCw className="w-3.5 h-3.5 text-indigo-600" />
+              <span>Refresh</span>
+            </button>
           </div>
+        </div>
 
-          {filteredOrders.length === 0 ? (
-            <div className="p-14 text-center text-[#78716C]">
-              <Clock className="w-8 h-8 mx-auto text-[#C5A059] mb-2 stroke-[1.25]" />
-              <div className="font-serif-display text-2xl text-[#1C1917]">{t.admin.ordersTab.noOrders}</div>
-              <div className="text-xs text-[#78716C] mt-1">
-                {t.admin.ordersTab.noOrdersSub}
+        {/* VIEW MODE 1: ORDERS TABS */}
+        {viewMode === 'orders' && (
+          <>
+            {/* Status Filter Tabs Bar & Search */}
+            <div className="px-5 py-3 border-b border-slate-200 bg-slate-50/70 flex flex-col xl:flex-row xl:items-center justify-between gap-3">
+              <div className="flex flex-wrap items-center gap-1.5">
+                {orderTabs.map((tab) => {
+                  const isActive = activeOrderTab === tab.key;
+                  return (
+                    <button
+                      key={tab.key}
+                      type="button"
+                      onClick={() => setActiveOrderTab(tab.key)}
+                      className={`relative inline-flex items-center gap-2 px-3 py-1.5 text-xs font-bold uppercase tracking-wider border transition-all cursor-pointer rounded-xl ${
+                        isActive
+                          ? 'border-slate-900 bg-slate-900 text-white shadow-xs'
+                          : 'border-slate-200 bg-white text-slate-700 hover:border-slate-300 hover:bg-slate-50'
+                      }`}
+                    >
+                      <span>{tab.label}</span>
+                      <span
+                        className={`rounded-full px-2 py-0.5 text-[10px] font-extrabold ${
+                          isActive
+                            ? 'bg-slate-800 text-white'
+                            : tab.showRedDot
+                            ? 'bg-rose-500 text-white'
+                            : 'bg-slate-100 text-slate-700'
+                        }`}
+                      >
+                        {tab.count}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+
+              <div className="flex items-center gap-2 border border-slate-300 bg-white px-3 py-1.5 rounded-xl shadow-2xs w-full xl:w-72 focus-within:border-slate-900">
+                <Search className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Search order #, phone, name, trx..."
+                  className="w-full bg-transparent text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none"
+                />
               </div>
             </div>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full min-w-[1000px] text-left text-xs text-[#78716C] table-fixed">
-                <thead className="bg-[#FAF7F2] border-b border-[#E7E0D6] text-[#1C1917] uppercase font-semibold text-[10px] tracking-[0.16em]">
-                  <tr>
-                    <th className="py-3.5 px-4 w-[14%]">{t.admin.ordersTab.colRef}</th>
-                    <th className="py-3.5 px-4 w-[22%]">{t.admin.ordersTab.colCustomer}</th>
-                    <th className="py-3.5 px-4 w-[18%]">{t.admin.ordersTab.colItems}</th>
-                    <th className="py-3.5 px-4 w-[10%]">{t.admin.ordersTab.colTotal}</th>
-                    <th className="py-3.5 px-4 w-[16%]">{t.admin.ordersTab.colPayment}</th>
-                    <th className="py-3.5 px-4 w-[10%]">{t.admin.ordersTab.colCourier}</th>
-                    <th className="py-3.5 px-4 w-[10%]">{t.admin.ordersTab.colStatus}</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-[#F3EDE4]">
-                  {filteredOrders.map((o) => {
-                    const source = o.customer.orderSource || 'website';
-                    const bkashNumber = o.bkashSenderNumber || o.customer.phone || o.customerPhone;
-                    return (
-                      <tr key={o.id} className="hover:bg-[#FAF7F2]/60">
-                        {/* 1. Order Ref & Date */}
-                        <td className="py-3.5 px-4 align-top">
-                          <div className="flex items-center gap-1.5 flex-wrap">
-                            <span className="font-mono font-bold text-[#9A7B3E] break-all">
-                              {o.orderNumber}
-                            </span>
-                            <span
-                              className={`px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider border rounded shrink-0 ${
-                                source === 'whatsapp'
-                                  ? 'border-emerald-300 bg-emerald-50 text-emerald-800'
+
+            {/* Orders Fulfillment Table */}
+            {filteredOrders.length === 0 ? (
+              <div className="py-14 text-center text-slate-500">
+                <ShoppingBag className="w-8 h-8 text-slate-400 mx-auto mb-2" />
+                <div className="text-sm font-bold text-slate-800">No orders found</div>
+                <div className="text-xs text-slate-500 mt-1">
+                  Try clearing your search query or switching your status filter.
+                </div>
+              </div>
+            ) : (
+              <div className="w-full overflow-x-auto">
+                <table
+                  className="w-full text-left text-xs text-slate-800"
+                  style={{ tableLayout: 'fixed', minWidth: '950px' }}
+                >
+                  <colgroup>
+                    <col style={{ width: '13%' }} />
+                    <col style={{ width: '22%' }} />
+                    <col style={{ width: '18%' }} />
+                    <col style={{ width: '9%' }} />
+                    <col style={{ width: '14%' }} />
+                    <col style={{ width: '12%' }} />
+                    <col style={{ width: '12%' }} />
+                  </colgroup>
+                  <thead className="bg-slate-50 border-b border-slate-200 text-slate-600 uppercase font-bold text-[10px] tracking-wider">
+                    <tr>
+                      <th className="py-3 px-3.5">Order Ref &amp; Date</th>
+                      <th className="py-3 px-3.5">Customer Details</th>
+                      <th className="py-3 px-3.5">Items</th>
+                      <th className="py-3 px-3.5">Total</th>
+                      <th className="py-3 px-3.5">Payment &amp; TrxID</th>
+                      <th className="py-3 px-3.5">Courier &amp; Tracking</th>
+                      <th className="py-3 px-3.5">Fulfillment Status</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100 bg-white">
+                    {filteredOrders.map((o) => {
+                      const source = o.customer.orderSource || 'website';
+                      const bkashNumberVal =
+                        o.bkashSenderNumber || o.customer.phone || o.customerPhone;
+                      return (
+                        <tr
+                          key={o.id}
+                          className="hover:bg-slate-50/80 transition-colors"
+                        >
+                          {/* 1. Order Ref & Date */}
+                          <td style={{ verticalAlign: 'top' }} className="py-3.5 px-3.5">
+                            <div className="flex flex-col items-start gap-1.5">
+                              <span className="font-mono font-bold text-xs text-slate-900 bg-slate-100 border border-slate-200 px-2 py-0.5 rounded-md break-all">
+                                {o.orderNumber}
+                              </span>
+                              <span
+                                className={`text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full border ${
+                                  source === 'whatsapp'
+                                    ? 'bg-emerald-50 text-emerald-800 border-emerald-200'
+                                    : source === 'messenger'
+                                    ? 'bg-sky-50 text-sky-800 border-sky-200'
+                                    : 'bg-slate-100 text-slate-700 border-slate-200'
+                                }`}
+                              >
+                                {source === 'whatsapp'
+                                  ? 'WhatsApp'
                                   : source === 'messenger'
-                                  ? 'border-blue-300 bg-blue-50 text-blue-800'
-                                  : 'border-[#E6D5B8] bg-[#FAF7F2] text-[#9A7B3E]'
-                              }`}
-                            >
-                              {source}
-                            </span>
-                          </div>
-                          <div className="text-[10px] text-[#A8A29E] mt-1 whitespace-nowrap">
-                            {new Date(o.createdAt).toLocaleString([], {
-                              month: 'short',
-                              day: 'numeric',
-                              hour: '2-digit',
-                              minute: '2-digit',
-                            })}
-                          </div>
-                        </td>
-
-                        {/* 2. Customer Details */}
-                        <td className="py-3.5 px-4 align-top">
-                          <div className="font-semibold text-[#1C1917] break-words line-clamp-1" title={o.customer.fullName}>
-                            {o.customer.fullName}
-                          </div>
-                          <div className="text-[11px] text-[#1C1917] font-mono mt-0.5 flex items-center gap-1">
-                            <Phone className="w-3 h-3 text-[#9A7B3E] shrink-0" />
-                            <a
-                              href={`tel:${o.customer.phone}`}
-                              className="hover:underline font-semibold break-all"
-                            >
-                              {o.customer.phone}
-                            </a>
-                          </div>
-                          <div className="text-[10px] text-[#78716C] mt-0.5 break-words line-clamp-2" title={o.customer.address}>
-                            {o.customer.address} ({o.customer.deliveryZone === 'inside_dhaka' ? 'Dhaka' : 'Outside'})
-                          </div>
-                          {o.customer.notes && (
-                            <div
-                              className="mt-1 text-[10px] italic text-[#9A7B3E] break-words line-clamp-2 bg-amber-50/70 px-1.5 py-0.5 rounded border border-amber-200/60"
-                              title={o.customer.notes}
-                            >
-                              Note: {o.customer.notes}
+                                  ? 'Messenger'
+                                  : 'Website'}
+                              </span>
+                              <span className="text-[11px] text-slate-500 font-medium">
+                                {new Date(o.createdAt).toLocaleDateString('en-US', {
+                                  month: 'short',
+                                  day: 'numeric',
+                                  hour: '2-digit',
+                                  minute: '2-digit',
+                                })}
+                              </span>
                             </div>
-                          )}
-                        </td>
+                          </td>
 
-                        {/* 3. Items */}
-                        <td className="py-3.5 px-4 align-top">
-                          <div className="text-[11px] text-[#1C1917] font-medium space-y-1.5">
-                            {o.items.map((item, idx) => (
-                              <div key={idx} className="flex items-center gap-2 overflow-hidden">
-                                {item.product.imageUrl && (
-                                  <button
-                                    type="button"
-                                    onClick={() =>
-                                      onZoomImage?.({
-                                        src: item.product.imageUrl,
-                                        title: item.product.name,
-                                        subtitle: `${item.product.categoryName} • ৳${item.product.priceBDT}`,
-                                      })
-                                    }
-                                    className="relative h-7 w-6 rounded-xs overflow-hidden border border-[#E7E0D6] flex-shrink-0 cursor-zoom-in hover:border-[#9A7B3E] transition"
-                                    title="Click to zoom image"
-                                  >
-                                    <Image
-                                      src={item.product.imageUrl}
-                                      alt={item.product.name}
-                                      fill
-                                      unoptimized
-                                      className="object-cover"
-                                    />
-                                  </button>
-                                )}
-                                <span className="truncate" title={item.product.name}>
-                                  <span className="font-bold text-[#9A7B3E]">{item.quantity}×</span>{' '}
-                                  {item.product.name}
+                          {/* 2. Customer Details */}
+                          <td style={{ verticalAlign: 'top' }} className="py-3.5 px-3.5">
+                            <div className="space-y-1">
+                              <div className="text-sm font-bold text-slate-900 break-words">
+                                {o.customer.fullName || 'Guest Customer'}
+                              </div>
+
+                              <div className="inline-flex items-center gap-1.5 text-xs font-mono font-bold text-emerald-800 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-md">
+                                <Phone className="w-3 h-3 shrink-0" />
+                                <span>{o.customer.phone || o.customerPhone}</span>
+                              </div>
+
+                              <p className="text-xs text-slate-600 break-words leading-relaxed whitespace-pre-line mt-1 max-w-xs">
+                                {o.customer.address}
+                              </p>
+
+                              <div className="pt-1 flex flex-wrap items-center gap-1.5">
+                                <span className="text-[10px] uppercase font-bold text-indigo-800 bg-indigo-50 border border-indigo-200 px-2 py-0.5 rounded">
+                                  {o.customer.deliveryZone === 'inside_dhaka'
+                                    ? 'Inside Dhaka'
+                                    : 'Outside Dhaka'}
                                 </span>
                               </div>
-                            ))}
-                          </div>
-                        </td>
 
-                        {/* 4. Total */}
-                        <td className="py-3.5 px-4 align-top">
-                          <div className="font-serif-display text-base font-bold text-[#1C1917] whitespace-nowrap">
-                            {formatBDT(o.total)}
-                          </div>
-                          <div className="text-[10px] text-[#A8A29E] whitespace-nowrap">
-                            Fee: ৳{o.deliveryFee}
-                          </div>
-                        </td>
-
-                        {/* 5. Payment & TrxID */}
-                        <td className="py-3.5 px-4 align-top">
-                          <div className="flex items-center gap-1.5 flex-wrap">
-                            <span
-                              className={`inline-block px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider rounded-md ${
-                                o.paymentMethod === 'bkash'
-                                  ? 'bg-pink-50 text-pink-700 border border-pink-200'
-                                  : o.paymentMethod === 'card'
-                                  ? 'bg-[#FAF7F2] text-[#1C1917] border border-[#C5A059]'
-                                  : 'bg-neutral-100 text-neutral-700'
-                              }`}
-                            >
-                              {o.paymentMethod}
-                            </span>
-                            <select
-                              value={o.paymentStatus}
-                              onChange={(e) =>
-                                onPaymentStatusChange(o.id, e.target.value as PaymentStatus)
-                              }
-                              className={`border px-1.5 py-0.5 text-[10px] font-semibold focus:outline-none cursor-pointer rounded-md ${
-                                o.paymentStatus === 'verified'
-                                  ? 'border-emerald-300 bg-emerald-50 text-emerald-800'
-                                  : o.paymentStatus === 'failed'
-                                  ? 'border-red-300 bg-red-50 text-red-800'
-                                  : 'border-amber-300 bg-amber-50 text-amber-800'
-                              }`}
-                            >
-                              <option value="pending">{t.admin.ordersTab.checkTrx}</option>
-                              <option value="verified">{t.admin.ordersTab.verified}</option>
-                              <option value="failed">{t.admin.ordersTab.unpaid}</option>
-                            </select>
-                          </div>
-
-                          {/* Customer bKash Number (shown if order is bKash) */}
-                          {o.paymentMethod === 'bkash' && (
-                            <div className="mt-1.5 space-y-0.5">
-                              <div className="flex items-center gap-1 text-[11px] font-mono font-bold text-pink-800 break-all">
-                                <Phone className="w-3 h-3 text-pink-600 shrink-0" />
-                                <span className="text-[9px] uppercase font-sans font-semibold text-pink-600">bKash:</span>
-                                <a
-                                  href={`tel:${bkashNumber}`}
-                                  className="hover:underline font-mono"
-                                  title="Customer's bKash phone number"
-                                >
-                                  {bkashNumber}
-                                </a>
-                              </div>
-                              {o.bkashSenderNumber && o.bkashSenderNumber !== o.customer.phone && (
-                                <div className="text-[9px] text-[#78716C] font-mono truncate" title={`Contact: ${o.customer.phone}`}>
-                                  (Contact: {o.customer.phone})
+                              {o.customer.notes && (
+                                <div className="mt-1.5 text-xs text-amber-900 bg-amber-50 border border-amber-200 px-2.5 py-1 rounded-lg italic break-words">
+                                  Note: {o.customer.notes}
                                 </div>
                               )}
                             </div>
-                          )}
+                          </td>
 
-                          {/* TrxID with break-all and overflow handling */}
-                          {o.trxId ? (
-                            <div
-                              className="mt-1 font-mono text-[10px] font-bold text-pink-700 break-all leading-tight bg-pink-50/80 px-2 py-1 rounded border border-pink-200"
-                              title={o.trxId}
-                            >
-                              <span className="text-[9px] text-pink-500 font-semibold uppercase block">Trx:</span>
-                              <span>{o.trxId}</span>
-                            </div>
-                          ) : o.paymentMethod === 'bkash' ? (
-                            <div className="mt-1 text-[9px] text-amber-700 bg-amber-50 px-1.5 py-0.5 rounded border border-amber-200/60 inline-block font-medium">
-                              No TrxID submitted
-                            </div>
-                          ) : null}
-                        </td>
-
-                        {/* 6. Courier & Tracking */}
-                        <td className="py-3.5 px-4 align-top">
-                          {o.trackingNumber ? (
-                            <div className="space-y-1">
-                              <div className="font-semibold text-[#1C1917] flex items-center gap-1.5 truncate">
-                                <Truck className="w-3.5 h-3.5 text-[#9A7B3E] shrink-0" />
-                                <span className="truncate">{o.courierName || 'Courier'}</span>
-                              </div>
-                              <div className="font-mono text-[11px] font-bold text-[#1C1917] break-all">
-                                {o.trackingNumber}
-                              </div>
-                              {o.courierTrackingUrl && (
-                                <a
-                                  href={o.courierTrackingUrl}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="inline-flex items-center gap-1 text-[10px] font-semibold text-[#9A7B3E] hover:underline"
+                          {/* 3. Items Column */}
+                          <td style={{ verticalAlign: 'top' }} className="py-3.5 px-3.5">
+                            <div className="space-y-2">
+                              {o.items.map((it, idx) => (
+                                <div
+                                  key={`${o.id}-item-${idx}`}
+                                  className="flex items-center gap-2 border border-slate-100 bg-slate-50/60 p-1.5 rounded-xl"
                                 >
-                                  <span>{t.admin.ordersTab.liveTrack}</span>
-                                  <ExternalLink className="w-2.5 h-2.5" />
-                                </a>
+                                  {it.product.imageUrl && (
+                                    <div
+                                      onClick={() =>
+                                        onZoomImage &&
+                                        onZoomImage({
+                                          src: it.product.imageUrl!,
+                                          title: it.product.name,
+                                          subtitle: `Qty: ${it.quantity} • ৳${it.product.priceBDT}`,
+                                        })
+                                      }
+                                      className="relative h-9 w-9 shrink-0 overflow-hidden rounded-lg border border-slate-200 bg-white cursor-zoom-in"
+                                    >
+                                      <Image
+                                        src={it.product.imageUrl}
+                                        alt={it.product.name}
+                                        fill
+                                        unoptimized
+                                        className="object-cover"
+                                      />
+                                    </div>
+                                  )}
+                                  <div className="min-w-0 flex-1">
+                                    <div className="text-xs font-semibold text-slate-900 truncate">
+                                      <span className="text-slate-900 font-bold mr-1">
+                                        {it.quantity}×
+                                      </span>
+                                      {it.product.name}
+                                    </div>
+                                    <div className="text-xs text-slate-700 font-mono font-semibold">
+                                      ৳{it.product.priceBDT} / pc
+                                    </div>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          </td>
+
+                          {/* 4. Total & Delivery Fee */}
+                          <td style={{ verticalAlign: 'top' }} className="py-3.5 px-3.5">
+                            <div className="font-mono font-extrabold text-base text-slate-900">
+                              {formatBDT(o.total)}
+                            </div>
+                            <div className="text-[11px] text-slate-500 font-medium font-mono mt-0.5">
+                              Fee: {formatBDT(o.deliveryFee)}
+                            </div>
+                          </td>
+
+                          {/* 5. Payment & TrxID */}
+                          <td style={{ verticalAlign: 'top' }} className="py-3.5 px-3.5">
+                            <div className="space-y-1.5">
+                              <div className="flex items-center gap-1.5">
+                                <span
+                                  className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded border ${
+                                    o.paymentMethod === 'bkash'
+                                      ? 'bg-pink-50 text-pink-700 border-pink-200'
+                                      : o.paymentMethod === 'cod'
+                                      ? 'bg-slate-100 text-slate-700 border-slate-200'
+                                      : 'bg-indigo-50 text-indigo-700 border-indigo-200'
+                                  }`}
+                                >
+                                  {o.paymentMethod.toUpperCase()}
+                                </span>
+                              </div>
+
+                              {/* Payment status dropdown */}
+                              <select
+                                value={o.paymentStatus}
+                                onChange={(e) =>
+                                  onPaymentStatusChange(
+                                    o.id,
+                                    e.target.value as PaymentStatus
+                                  )
+                                }
+                                className={`w-full text-xs font-bold rounded-lg border px-2 py-1 transition cursor-pointer ${
+                                  o.paymentStatus === 'verified'
+                                    ? 'bg-emerald-50 border-emerald-300 text-emerald-900'
+                                    : o.paymentStatus === 'failed'
+                                    ? 'bg-rose-50 border-rose-300 text-rose-900'
+                                    : 'bg-amber-50 border-amber-300 text-amber-900'
+                                }`}
+                              >
+                                <option value="pending" className="bg-white text-amber-900">
+                                  Check TrxID (Pending)
+                                </option>
+                                <option value="verified" className="bg-white text-emerald-900">
+                                  Verified ✓
+                                </option>
+                                <option value="failed" className="bg-white text-rose-900">
+                                  Failed / Unpaid ✗
+                                </option>
+                              </select>
+
+                              {bkashNumberVal && (
+                                <div className="text-[10px] text-slate-600 font-mono font-medium">
+                                  📞 {bkashNumberVal}
+                                </div>
                               )}
+
+                              {o.trxId && (
+                                <div className="text-[11px] font-mono font-bold text-pink-900 bg-pink-50 border border-pink-200 px-2 py-0.5 rounded-md break-all select-all">
+                                  Trx: {o.trxId}
+                                </div>
+                              )}
+                            </div>
+                          </td>
+
+                          {/* 6. Courier & Tracking */}
+                          <td style={{ verticalAlign: 'top' }} className="py-3.5 px-3.5">
+                            {o.trackingNumber ? (
+                              <div className="space-y-1.5">
+                                <div className="text-xs font-bold text-slate-900">
+                                  {o.courierName || 'Courier'}
+                                </div>
+                                <div className="font-mono text-xs font-bold text-indigo-900 bg-indigo-50 border border-indigo-200 px-2 py-0.5 rounded break-all">
+                                  {o.trackingNumber}
+                                </div>
+                                {o.courierTrackingUrl && (
+                                  <a
+                                    href={o.courierTrackingUrl}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="inline-flex items-center gap-1 text-[11px] font-bold text-indigo-600 hover:text-indigo-800 underline"
+                                  >
+                                    <ExternalLink className="w-3 h-3" />
+                                    <span>Live Track</span>
+                                  </a>
+                                )}
+                                <div>
+                                  <button
+                                    type="button"
+                                    onClick={() => openTrackingModal(o)}
+                                    className="text-[10px] text-slate-500 hover:text-slate-900 underline cursor-pointer"
+                                  >
+                                    Edit Tracking
+                                  </button>
+                                </div>
+                              </div>
+                            ) : (
                               <button
                                 type="button"
                                 onClick={() => openTrackingModal(o)}
-                                className="block text-[10px] text-[#78716C] hover:text-[#1C1917] underline cursor-pointer"
+                                className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 hover:border-slate-300 px-2.5 py-1.5 text-[11px] font-bold uppercase tracking-wider text-slate-700 transition cursor-pointer shadow-2xs"
                               >
-                                {t.admin.ordersTab.editTracking}
+                                <Truck className="w-3 h-3" />
+                                <span>+ Add Courier</span>
                               </button>
-                            </div>
-                          ) : (
-                            <button
-                              type="button"
-                              onClick={() => openTrackingModal(o)}
-                              className="inline-flex items-center gap-1 border border-[#D6CFC5] bg-white px-2 py-1 text-[10px] font-semibold uppercase tracking-wider text-[#1C1917] hover:border-[#9A7B3E] cursor-pointer rounded-lg shadow-2xs whitespace-nowrap"
-                            >
-                              <Truck className="w-3 h-3 text-[#9A7B3E]" />
-                              <span>{t.admin.ordersTab.addCourier}</span>
-                            </button>
-                          )}
-                        </td>
-
-                        {/* 7. Fulfillment Status */}
-                        <td className="py-3.5 px-4 align-top">
-                          <div className="flex items-center gap-1.5">
-                            {o.status === 'delivered' ? (
-                              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 flex-shrink-0" />
-                            ) : o.status === 'dispatched' ? (
-                              <Truck className="w-3.5 h-3.5 text-indigo-600 flex-shrink-0" />
-                            ) : o.status === 'confirmed' ? (
-                              <CheckCircle2 className="w-3.5 h-3.5 text-sky-600 flex-shrink-0" />
-                            ) : o.status === 'cancelled' ? (
-                              <XCircle className="w-3.5 h-3.5 text-rose-600 flex-shrink-0" />
-                            ) : (
-                              <Clock className="w-3.5 h-3.5 text-amber-600 flex-shrink-0" />
                             )}
+                          </td>
+
+                          {/* 7. Fulfillment Status */}
+                          <td style={{ verticalAlign: 'top' }} className="py-3.5 px-3.5">
                             <select
                               value={o.status}
-                              onChange={(e) => onOrderStatusChange(o.id, e.target.value as OrderStatus)}
-                              className={`border px-2 py-1 text-xs font-semibold cursor-pointer rounded-lg shadow-2xs focus:outline-none ${
+                              onChange={(e) =>
+                                onOrderStatusChange(o.id, e.target.value as OrderStatus)
+                              }
+                              className={`w-full text-xs font-bold rounded-lg border px-2.5 py-1.5 transition cursor-pointer ${
                                 o.status === 'delivered'
-                                  ? 'border-emerald-300 bg-emerald-50 text-emerald-900 focus:border-emerald-500'
+                                  ? 'bg-emerald-50 border-emerald-300 text-emerald-900'
                                   : o.status === 'dispatched'
-                                  ? 'border-indigo-300 bg-indigo-50 text-indigo-900 focus:border-indigo-500'
+                                  ? 'bg-sky-50 border-sky-300 text-sky-900'
                                   : o.status === 'confirmed'
-                                  ? 'border-sky-300 bg-sky-50 text-sky-900 focus:border-sky-500'
+                                  ? 'bg-indigo-50 border-indigo-300 text-indigo-900'
                                   : o.status === 'cancelled'
-                                  ? 'border-rose-300 bg-rose-50 text-rose-900 focus:border-rose-500'
-                                  : 'border-amber-300 bg-amber-50 text-amber-900 focus:border-amber-500'
+                                  ? 'bg-rose-50 border-rose-300 text-rose-900'
+                                  : 'bg-amber-50 border-amber-300 text-amber-900'
                               }`}
                             >
-                              <option value="pending">{t.admin.ordersTab.pending}</option>
-                              <option value="confirmed">{t.admin.ordersTab.confirmed}</option>
-                              <option value="dispatched">{t.admin.ordersTab.dispatched}</option>
-                              <option value="delivered">{t.admin.ordersTab.delivered}</option>
-                              <option value="cancelled">{t.admin.ordersTab.cancelled}</option>
+                              <option value="pending" className="bg-white text-amber-900">
+                                Pending
+                              </option>
+                              <option value="confirmed" className="bg-white text-indigo-900">
+                                Confirmed
+                              </option>
+                              <option value="dispatched" className="bg-white text-sky-900">
+                                Dispatched
+                              </option>
+                              <option value="delivered" className="bg-white text-emerald-900">
+                                Delivered
+                              </option>
+                              <option value="cancelled" className="bg-white text-rose-900">
+                                Cancelled
+                              </option>
                             </select>
-                          </div>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </>
-      )}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </>
+        )}
 
-      {/* VIEW MODE 2: CUSTOMERS DIRECTORY */}
-      {viewMode === 'customers' && (
-        <div className="overflow-x-auto">
-          <table className="w-full min-w-[950px] text-left text-xs text-[#78716C] table-fixed">
-            <thead className="bg-[#FAF7F2] border-b border-[#E7E0D6] text-[#1C1917] uppercase font-semibold text-[10px] tracking-[0.16em]">
-              <tr>
-                <th className="py-3.5 px-4 w-[20%]">{t.admin.ordersTab.colCustName}</th>
-                <th className="py-3.5 px-4 w-[15%]">{t.admin.ordersTab.colPhone}</th>
-                <th className="py-3.5 px-4 w-[25%]">{t.admin.ordersTab.colAddress}</th>
-                <th className="py-3.5 px-4 w-[12%]">{t.admin.ordersTab.colZone}</th>
-                <th className="py-3.5 px-4 w-[10%]">{t.admin.ordersTab.colTotalOrders}</th>
-                <th className="py-3.5 px-4 w-[10%]">{t.admin.ordersTab.colLifetimeSpend}</th>
-                <th className="py-3.5 px-4 w-[8%] text-right">{t.admin.ordersTab.colQuickContact}</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-[#F3EDE4]">
-              {customerDirectory.map((c, idx) => (
-                <tr key={idx} className="hover:bg-[#FAF7F2]/60">
-                  <td className="py-3.5 px-4 font-semibold text-[#1C1917] flex items-center gap-2">
-                    <User className="w-3.5 h-3.5 text-[#9A7B3E] shrink-0" />
-                    <span className="break-words line-clamp-1" title={c.fullName || t.admin.ordersTab.guestCustomer}>
-                      {c.fullName || t.admin.ordersTab.guestCustomer}
-                    </span>
-                  </td>
-                  <td className="py-3.5 px-4 font-mono font-medium text-[#1C1917] break-all">
-                    {c.phone}
-                  </td>
-                  <td className="py-3.5 px-4 break-words line-clamp-2" title={c.address || '—'}>
-                    {c.address || '—'}
-                  </td>
-                  <td className="py-3.5 px-4 uppercase text-[10px] font-semibold whitespace-nowrap">
-                    {c.deliveryZone === 'inside_dhaka' ? 'Inside Dhaka' : 'Outside Dhaka'}
-                  </td>
-                  <td className="py-3.5 px-4 font-bold text-[#1C1917] whitespace-nowrap">
-                    {c.totalOrders} order{c.totalOrders === 1 ? '' : 's'}
-                  </td>
-                  <td className="py-3.5 px-4 font-serif-display font-bold text-[#1C1917] whitespace-nowrap">
-                    {formatBDT(c.totalSpent)}
-                  </td>
-                  <td className="py-3.5 px-4 text-right space-x-1.5 whitespace-nowrap">
-                    <a
-                      href={`https://wa.me/88${c.phone.replace(/^\+?88/, '').replace(/\D/g, '')}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1 border border-emerald-300 bg-emerald-50 px-2 py-1 text-[10px] font-semibold text-emerald-800 hover:bg-emerald-100"
-                    >
-                      <span>WhatsApp</span>
-                    </a>
-                    <a
-                      href={`tel:${c.phone}`}
-                      className="inline-flex items-center gap-1 border border-[#E7E0D6] bg-white px-2 py-1 text-[10px] font-semibold text-[#1C1917] hover:border-[#1C1917]"
-                    >
-                      <span>{t.admin.ordersTab.call}</span>
-                    </a>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
+        {/* VIEW MODE 2: CUSTOMERS DIRECTORY */}
+        {viewMode === 'customers' && (
+          <div className="p-4">
+            <AdminCustomersTab
+              orders={orders}
+              customers={customers}
+              onZoomImage={onZoomImage}
+            />
+          </div>
+        )}
+      </div>
 
-      {/* COURIER & TRACKING ASSIGNMENT MODAL */}
+      {/* Courier Consignment Tracking Modal */}
       {trackingModalOrder && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-          <div className="w-full max-w-md border border-[#E7E0D6] bg-white p-6 shadow-2xl rounded-2xl space-y-4">
-            <div className="flex items-center justify-between border-b border-[#E7E0D6] pb-3">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4">
+          <div className="relative w-full max-w-md rounded-2xl border border-slate-200 bg-white text-slate-900 shadow-2xl overflow-hidden">
+            <div className="flex items-center justify-between border-b border-slate-200 bg-slate-50 px-5 py-3.5">
               <div className="flex items-center gap-2">
-                <Truck className="w-4 h-4 text-[#9A7B3E]" />
-                <h3 className="font-serif-display text-lg font-semibold text-[#1C1917]">
-                  {t.admin.ordersTab.modalTitle}
+                <Truck className="w-4 h-4 text-indigo-600" />
+                <h3 className="text-xs font-bold uppercase tracking-wider text-slate-900">
+                  Assign Courier &amp; Tracking
                 </h3>
               </div>
               <button
                 type="button"
                 onClick={() => setTrackingModalOrder(null)}
-                className="p-1 text-[#78716C] hover:text-[#1C1917] rounded-full hover:bg-stone-100 transition cursor-pointer"
+                className="rounded-lg p-1 text-slate-400 hover:bg-slate-200 hover:text-slate-700 transition cursor-pointer"
               >
                 <X className="w-4 h-4" />
               </button>
             </div>
 
-            <div className="text-xs text-[#78716C]">
-              Order: <strong className="font-mono text-[#1C1917]">{trackingModalOrder.orderNumber}</strong> • Customer: <strong className="text-[#1C1917]">{trackingModalOrder.customer.fullName}</strong> ({trackingModalOrder.customer.phone})
-            </div>
-
-            <div className="space-y-3 text-xs">
+            <div className="p-5 space-y-4">
               <div>
-                <label className="block text-[10px] font-semibold uppercase tracking-wider text-[#78716C] mb-1">
-                  {t.admin.ordersTab.providerLabel}
+                <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5">
+                  Order Ref
                 </label>
-                <select
-                  value={courierKey}
-                  onChange={(e) => setCourierKey(e.target.value)}
-                  className="w-full border border-[#D6CFC5] bg-white px-3 py-2 font-medium text-[#1C1917] focus:outline-none focus:border-[#C5A059] rounded-lg shadow-2xs"
-                >
+                <div className="font-mono font-bold text-sm text-slate-900">
+                  {trackingModalOrder.orderNumber}
+                </div>
+                <div className="text-xs text-slate-500 mt-0.5">
+                  {trackingModalOrder.customer.fullName} · {trackingModalOrder.customer.phone}
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5">
+                  Select Courier
+                </label>
+                <div className="grid grid-cols-2 gap-2">
                   {COURIER_OPTIONS.map((c) => (
-                    <option key={c.key} value={c.key}>
+                    <button
+                      key={c.key}
+                      type="button"
+                      onClick={() => setCourierKey(c.key)}
+                      className={`px-3 py-2 text-xs font-semibold rounded-xl border text-left transition cursor-pointer ${
+                        courierKey === c.key
+                          ? 'border-slate-900 bg-slate-900 text-white shadow-xs'
+                          : 'border-slate-200 bg-white text-slate-700 hover:border-slate-300 hover:bg-slate-50'
+                      }`}
+                    >
                       {c.name}
-                    </option>
+                    </button>
                   ))}
-                </select>
+                  <button
+                    type="button"
+                    onClick={() => setCourierKey('other')}
+                    className={`px-3 py-2 text-xs font-semibold rounded-xl border text-left transition cursor-pointer ${
+                      courierKey === 'other'
+                        ? 'border-slate-900 bg-slate-900 text-white shadow-xs'
+                        : 'border-slate-200 bg-white text-slate-700 hover:border-slate-300 hover:bg-slate-50'
+                    }`}
+                  >
+                    Other
+                  </button>
+                </div>
               </div>
 
               {courierKey === 'other' && (
                 <div>
-                  <label className="block text-[10px] font-semibold uppercase tracking-wider text-[#78716C] mb-1">
-                    {t.admin.ordersTab.customCourierLabel}
+                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5">
+                    Courier Name
                   </label>
                   <input
                     type="text"
-                    maxLength={50}
                     value={customCourierName}
                     onChange={(e) => setCustomCourierName(e.target.value)}
-                    placeholder="e.g. In-house Delivery"
-                    className="w-full border border-[#D6CFC5] bg-white px-3 py-2 text-[#1C1917] rounded-lg shadow-2xs"
+                    placeholder="e.g. Paperfly, Sundarban, SA Paribahan"
+                    className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-indigo-600"
                   />
                 </div>
               )}
 
               <div>
-                <label className="block text-[10px] font-semibold uppercase tracking-wider text-[#78716C] mb-1">
-                  {t.admin.ordersTab.trackingNumLabel}
+                <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5">
+                  Tracking Code / Consignment ID *
                 </label>
                 <input
                   type="text"
-                  maxLength={40}
                   value={trackingCode}
                   onChange={(e) => setTrackingCode(e.target.value)}
-                  placeholder="e.g. CID-9284102 or Pathao ID"
-                  className="w-full border border-[#D6CFC5] bg-white px-3 py-2 font-mono font-bold text-[#1C1917] focus:outline-none focus:border-[#C5A059] rounded-lg shadow-2xs"
+                  placeholder="e.g. 177626922 or CID-8921"
+                  className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-xs font-mono font-bold text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-indigo-600"
                 />
               </div>
 
               <div>
-                <label className="block text-[10px] font-semibold uppercase tracking-wider text-[#78716C] mb-1">
-                  {t.admin.ordersTab.estDeliveryLabel}
+                <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5">
+                  Estimated Delivery Window
                 </label>
                 <input
                   type="text"
-                  maxLength={40}
                   value={estimatedDelivery}
                   onChange={(e) => setEstimatedDelivery(e.target.value)}
-                  placeholder="e.g. 24–48 hours"
-                  className="w-full border border-[#D6CFC5] bg-white px-3 py-2 text-[#1C1917] rounded-lg shadow-2xs"
+                  placeholder="e.g. 24–48 hours, Tomorrow by 6 PM"
+                  className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-indigo-600"
                 />
               </div>
 
-              <div className="pt-2 flex items-center gap-2">
+              <label className="flex items-center gap-2 cursor-pointer">
                 <input
                   type="checkbox"
-                  id="autoDispatched"
                   checked={autoMarkDispatched}
                   onChange={(e) => setAutoMarkDispatched(e.target.checked)}
-                  className="accent-[#C5A059]"
+                  className="rounded border-slate-300 text-indigo-600 focus:ring-0"
                 />
-                <label htmlFor="autoDispatched" className="text-xs text-[#1C1917] font-medium cursor-pointer">
-                  {t.admin.ordersTab.autoDispatchedLabel}
-                </label>
-              </div>
-            </div>
+                <span className="text-xs text-slate-700">
+                  Automatically set order status to &quot;Dispatched&quot;
+                </span>
+              </label>
 
-            <div className="flex items-center justify-end gap-3 pt-3 border-t border-[#E7E0D6]">
-              <button
-                type="button"
-                onClick={() => setTrackingModalOrder(null)}
-                className="border border-[#E7E0D6] bg-white px-4 py-2 text-xs font-semibold text-[#78716C] hover:text-[#1C1917] cursor-pointer rounded-lg shadow-2xs"
-              >
-                {t.admin.modals.cancel}
-              </button>
-              <button
-                type="button"
-                onClick={handleSaveTracking}
-                disabled={!trackingCode.trim()}
-                className="bg-[#1C1917] text-[#FAF7F2] hover:bg-[#9A7B3E] disabled:opacity-40 px-5 py-2 text-xs font-semibold uppercase tracking-wider transition cursor-pointer rounded-lg shadow-2xs"
-              >
-                {t.admin.ordersTab.saveUpdateBtn}
-              </button>
+              <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-200">
+                <button
+                  type="button"
+                  onClick={() => setTrackingModalOrder(null)}
+                  className="px-4 py-2 text-xs font-semibold text-slate-600 hover:text-slate-900 rounded-xl border border-slate-200 hover:bg-slate-50 transition cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={handleSaveTracking}
+                  disabled={!trackingCode.trim()}
+                  className="px-4 py-2 text-xs font-bold uppercase tracking-wider bg-slate-900 hover:bg-black disabled:opacity-50 text-white rounded-xl shadow-xs transition cursor-pointer"
+                >
+                  Save &amp; Track
+                </button>
+              </div>
             </div>
           </div>
         </div>

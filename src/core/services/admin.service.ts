@@ -1,4 +1,6 @@
 import { adminRepository, ADMIN_AUTH_CHANGED_EVENT } from '../repositories/admin.repository';
+import { customerRepository } from '../repositories/customer.repository';
+import { CUSTOMER_AUTH_CHANGED_EVENT } from './customer.service';
 import { productService } from './product.service';
 import { productTypeService } from './product-type.service';
 import { orderService } from './order.service';
@@ -21,6 +23,13 @@ class AdminService {
   }
 
   setAuthenticated(authenticated: boolean): void {
+    if (authenticated) {
+      // Clear any active customer session so Admin and Customer roles never clash
+      customerRepository.saveCurrentLocal(null);
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent(CUSTOMER_AUTH_CHANGED_EVENT, { detail: null }));
+      }
+    }
     adminRepository.setSessionAuthenticated(authenticated);
   }
 
