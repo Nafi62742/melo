@@ -1,32 +1,26 @@
 import { notFound } from 'next/navigation';
-import { cacheLife } from 'next/cache';
 import { productRepository } from '@/core/repositories/product.repository';
+import { productService } from '@/core/services/product.service';
 import { ProductDetailFeature } from '@/features/product-detail/product-detail.feature';
 
 interface ProductPageProps {
   params: Promise<{ slug: string }>;
 }
 
-/** Allow route to block on params before streaming shell (Next.js 16 PPR) */
-export const instant = false;
-
-/** Placeholder used when Supabase returns no slugs at build time (Cache Components needs ≥ 1 param). */
-const PLACEHOLDER_SLUG = '__placeholder__';
-
 async function getProductBySlug(slug: string) {
-  'use cache';
-  // Short cache — the client re-syncs from Supabase on mount, so prices stay fresh.
-  cacheLife('minutes');
-  if (slug === PLACEHOLDER_SLUG) return null;
-  return productRepository.fetchBySlugFromDb(slug);
+  // First try remote database if configured
+  const remote = await productRepository.fetchBySlugFromDb(slug);
+  if (remote) return remote;
+  // Fall back to offline/local catalogue
+  return productService.getProductBySlug(slug) || null;
 }
 
 export async function generateStaticParams() {
-  const slugs = await productRepository.fetchAllSlugsFromDb();
-  if (slugs.length === 0) {
-    return [{ slug: PLACEHOLDER_SLUG }];
+  const remoteSlugs = await productRepository.fetchAllSlugsFromDb();
+  if (remoteSlugs.length > 0) {
+    return remoteSlugs.map((slug) => ({ slug }));
   }
-  return slugs.map((slug) => ({ slug }));
+  return productService.getAllProducts().map((p) => ({ slug: p.slug }));
 }
 
 export async function generateMetadata({ params }: ProductPageProps) {

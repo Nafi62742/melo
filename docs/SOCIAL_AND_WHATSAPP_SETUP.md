@@ -135,3 +135,11 @@ Whenever a customer orders a gadget or jewellery item through **WhatsApp**, **Fa
 - The order is saved in `public.orders` with a `WHATSAPP` or `MESSENGER` channel badge.
 - Once marked as **Delivered**, its revenue, per-unit cost (`costPriceCNY + shipping`), and net profit are automatically calculated under its category (e.g., `Gadgets`, `Earrings`, `Rings`) in your **`Profit & Analytics`** tab.
 - Your customer can visit **`/account`** on your website and enter their phone number or Order ID (`MELO-...`) to track their order status live!
+
+---
+
+## 7. Dual-Channel Customer Invoicing (Email + WhatsApp)
+
+For order invoices and automated confirmation emails:
+- Check out the dedicated guide: [`docs/FREE_EMAIL_INVOICE_AND_SOCIAL_PLAN.md`](./FREE_EMAIL_INVOICE_AND_SOCIAL_PLAN.md).
+- Combines a **100% free email invoice system (3,000 emails/month free via Resend)** with a **1-tap WhatsApp invoice confirmation link** so Bangladesh customers receive their itemized receipt on their preferred channel.
