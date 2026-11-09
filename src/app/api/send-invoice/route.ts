@@ -1,5 +1,4 @@
 import { NextResponse } from 'next/server';
-import nodemailer from 'nodemailer';
 import { Order } from '@/core/models/order.model';
 import { generateInvoiceHtml } from '@/core/emails/invoice-template';
 
@@ -52,7 +51,9 @@ export async function POST(request: Request) {
 
     const htmlContent = generateInvoiceHtml(order);
 
-    // Create Gmail SMTP Transporter
+    // Create Gmail SMTP Transporter (dynamically loaded when feature is active)
+    const { default: nodemailer } = await import('nodemailer');
+
     const transporter = nodemailer.createTransport({
       service: 'gmail',
       auth: {

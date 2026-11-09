@@ -28,6 +28,7 @@ const jakarta = Plus_Jakarta_Sans({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || 'https://melo-bd.vercel.app'),
   title: 'MELO | Curated Lifestyle, Accessories & Little Wonders — Dhaka, Bangladesh',
   description:
     'MELO is your boutique destination for curated lifestyle finds, aesthetic gadgets, French ear clips, and charming accessories in Bangladesh. Card, bKash & Cash on Delivery.',
