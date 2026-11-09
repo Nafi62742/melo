@@ -47,6 +47,7 @@ function CheckoutContent() {
 
   const [fullName, setFullName] = useState(initialCustomer?.fullName || '');
   const [phone, setPhone] = useState(initialCustomer?.phone || '');
+  const [email, setEmail] = useState(initialCustomer?.email || '');
   const [address, setAddress] = useState(initialCustomer?.defaultAddress || '');
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('bkash');
   const [trxId, setTrxId] = useState('');
@@ -111,7 +112,7 @@ function CheckoutContent() {
       customer: {
         fullName,
         phone,
-        email: initialCustomer?.email || undefined,
+        email: email.trim() || initialCustomer?.email || undefined,
         address,
         deliveryZone,
         notes,
@@ -139,6 +140,16 @@ function CheckoutContent() {
     if (newOrder.trxId) {
       void customerService.addTrxIdToCustomer(phone, newOrder.trxId);
     }
+
+    // Trigger automated email invoice in background (safe, inactive by default until Gmail credentials are set)
+    void fetch('/api/send-invoice', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ order: newOrder }),
+    }).catch(() => {
+      // Background non-blocking call: checkout never fails if email is inactive or offline
+    });
+
     setCompletedOrder(newOrder);
     clearCart();
     setIsSubmitting(false);
@@ -276,6 +287,19 @@ function CheckoutContent() {
                   placeholder={t.checkout.phonePlaceholder}
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
+                  className="w-full border border-[#D6CFC5] bg-[#FAF7F2]/50 px-3.5 py-2.5 text-xs text-[#1C1917] focus:bg-white focus:outline-none focus:border-[#C5A059]"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-semibold uppercase tracking-wider text-[#1C1917] mb-1.5">
+                  Email Address <span className="text-[#A8A29E] font-normal lowercase tracking-normal">(optional — to receive your invoice copy)</span>
+                </label>
+                <input
+                  type="email"
+                  placeholder="e.g. customer@gmail.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
                   className="w-full border border-[#D6CFC5] bg-[#FAF7F2]/50 px-3.5 py-2.5 text-xs text-[#1C1917] focus:bg-white focus:outline-none focus:border-[#C5A059]"
                 />
               </div>
