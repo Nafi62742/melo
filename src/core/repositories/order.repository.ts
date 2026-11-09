@@ -74,9 +74,27 @@ export class OrderRepository {
   }
 
   async insertInDb(order: Order): Promise<boolean> {
+    // 1. Try our dedicated /api/orders server route first (runs server-side with direct env access)
+    if (typeof window !== 'undefined') {
+      try {
+        const apiRes = await fetch('/api/orders', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ order }),
+        });
+        if (apiRes.ok) {
+          const data = (await apiRes.json()) as { success?: boolean };
+          if (data?.success) return true;
+        }
+      } catch {
+        // Fallback to direct client call if API route is unreachable
+      }
+    }
+
+    // 2. Direct client call to Supabase PostgREST
     if (!supabaseClient.isConfigured()) return false;
     try {
-      const payload = {
+      const fullPayload = {
         id: order.id,
         orderNumber: order.orderNumber,
         createdAt: order.createdAt,
@@ -105,15 +123,42 @@ export class OrderRepository {
         deliveredAt: order.deliveredAt || null,
       };
 
-      const res = await fetch(`${supabaseClient.baseUrl}/rest/v1/orders`, {
+      // Use standard representation preference, NOT resolution=merge-duplicates (which requires UPDATE RLS permission)
+      let res = await fetch(`${supabaseClient.baseUrl}/rest/v1/orders`, {
         method: 'POST',
-        headers: supabaseClient.getHeaders({
-          Prefer: 'resolution=merge-duplicates',
-        }),
-        body: JSON.stringify(payload),
+        headers: supabaseClient.getHeaders(),
+        body: JSON.stringify(fullPayload),
       });
+
+      if (res.ok) return true;
+
+      // Tier 2 Fallback: If table in Supabase doesn't have tracking/courier columns, send standard base schema
+      const basePayload = {
+        id: order.id,
+        orderNumber: order.orderNumber,
+        createdAt: order.createdAt,
+        customer: order.customer,
+        items: order.items,
+        subtotal: order.subtotal,
+        deliveryFee: order.deliveryFee,
+        total: order.total,
+        paymentMethod: order.paymentMethod,
+        status: order.status,
+        paymentStatus: order.paymentStatus,
+        trxId: order.trxId || null,
+        bkashSenderNumber: order.bkashSenderNumber || null,
+        cardLast4: order.cardLast4 || null,
+      };
+
+      res = await fetch(`${supabaseClient.baseUrl}/rest/v1/orders`, {
+        method: 'POST',
+        headers: supabaseClient.getHeaders(),
+        body: JSON.stringify(basePayload),
+      });
+
       return res.ok;
-    } catch {
+    } catch (err) {
+      console.error('Direct Supabase insert error:', err);
       return false;
     }
   }

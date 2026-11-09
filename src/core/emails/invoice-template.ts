@@ -110,6 +110,12 @@ export function generateInvoiceHtml(order: Order): string {
               <td style="padding: 4px 0;">Delivery Fee:</td>
               <td style="padding: 4px 0; text-align: right; font-weight: 600; color: #1C1917;">${formatBDT(order.deliveryFee)}</td>
             </tr>
+            ${order.paymentMethod === 'cod' ? `
+            <tr>
+              <td style="padding: 4px 0;">Cash on Delivery Fee:</td>
+              <td style="padding: 4px 0; text-align: right; font-weight: 600; color: #1C1917;">+৳10</td>
+            </tr>
+            ` : ''}
             <tr>
               <td style="padding: 10px 0 4px 0; font-size: 15px; font-weight: 700; color: #1C1917; border-top: 1px dashed #E7E0D6;">Total Payable:</td>
               <td style="padding: 10px 0 4px 0; text-align: right; font-size: 16px; font-weight: 800; color: #9A7B3E; border-top: 1px dashed #E7E0D6;">${formatBDT(order.total)}</td>

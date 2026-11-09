@@ -11,6 +11,8 @@ import {
   PRODUCT_TYPES_UPDATED_EVENT,
 } from '@/core/services/product-type.service';
 import { adminService, ADMIN_AUTH_CHANGED_EVENT } from '@/core/services/admin.service';
+import { customerService, CUSTOMER_AUTH_CHANGED_EVENT } from '@/core/services/customer.service';
+import { CustomerProfile } from '@/core/models/customer.model';
 import { useI18n } from '@/core/i18n/i18n.context';
 import {
   ShoppingBag,
@@ -47,6 +49,9 @@ export function Navbar() {
   const [langDropdownOpen, setLangDropdownOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [isAdminLoggedIn, setIsAdminLoggedIn] = useState(false);
+  const [currentCustomer, setCurrentCustomer] = useState<CustomerProfile | null>(() =>
+    customerService.getCurrentCustomer()
+  );
   const headerSearchInputRef = useRef<HTMLInputElement>(null);
   const drawerSearchInputRef = useRef<HTMLInputElement>(null);
   const langDropdownRef = useRef<HTMLDivElement>(null);
@@ -58,19 +63,22 @@ export function Navbar() {
     () => DEFAULT_PRODUCT_TYPES
   );
 
-  // Check admin authentication state
+  // Check admin & customer authentication states
   useEffect(() => {
-    const checkAdminAuth = () => {
+    const checkAuth = () => {
       setIsAdminLoggedIn(adminService.isAuthenticated());
+      setCurrentCustomer(customerService.getCurrentCustomer());
     };
 
-    checkAdminAuth();
+    checkAuth();
 
-    window.addEventListener(ADMIN_AUTH_CHANGED_EVENT, checkAdminAuth);
-    window.addEventListener('storage', checkAdminAuth);
+    window.addEventListener(ADMIN_AUTH_CHANGED_EVENT, checkAuth);
+    window.addEventListener(CUSTOMER_AUTH_CHANGED_EVENT, checkAuth);
+    window.addEventListener('storage', checkAuth);
     return () => {
-      window.removeEventListener(ADMIN_AUTH_CHANGED_EVENT, checkAdminAuth);
-      window.removeEventListener('storage', checkAdminAuth);
+      window.removeEventListener(ADMIN_AUTH_CHANGED_EVENT, checkAuth);
+      window.removeEventListener(CUSTOMER_AUTH_CHANGED_EVENT, checkAuth);
+      window.removeEventListener('storage', checkAuth);
     };
   }, [pathname]);
 
@@ -304,10 +312,16 @@ export function Navbar() {
                 ? 'border-[#C5A059] bg-[#FAF7F2] text-[#1C1917]'
                 : 'border-[#E7E0D6] bg-white/80 text-[#1C1917] hover:border-[#C5A059]'
             }`}
-            title="My Account & Order Tracking"
+            title={
+              currentCustomer
+                ? `Logged in as ${currentCustomer.fullName}`
+                : 'My Account & Order Tracking'
+            }
           >
-            <User className="w-3.5 h-3.5 text-[#9A7B3E]" />
-            <span className="hidden xl:inline">{t.nav.account}</span>
+            <User className={`w-3.5 h-3.5 ${currentCustomer ? 'text-emerald-600' : 'text-[#9A7B3E]'}`} />
+            <span className="hidden xl:inline">
+              {currentCustomer ? currentCustomer.fullName.split(' ')[0] : t.nav.account}
+            </span>
           </Link>
 
           {/* Admin Quick Link (Only when authenticated) */}
@@ -494,8 +508,12 @@ export function Navbar() {
               className="flex items-center justify-between rounded-xl border border-[#E7E0D6] bg-white px-3.5 py-2.5 text-xs font-semibold uppercase tracking-wider text-[#1C1917] hover:border-[#C5A059] transition"
             >
               <div className="flex items-center gap-2.5">
-                <User className="w-4 h-4 text-[#9A7B3E]" />
-                <span>My Orders &amp; Tracking</span>
+                <User className={`w-4 h-4 ${currentCustomer ? 'text-emerald-600' : 'text-[#9A7B3E]'}`} />
+                <span>
+                  {currentCustomer
+                    ? `Account (${currentCustomer.fullName.split(' ')[0]})`
+                    : 'My Orders & Tracking'}
+                </span>
               </div>
               <span className="text-[10px] text-[#8C7A5B]">→</span>
             </Link>

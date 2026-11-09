@@ -190,13 +190,18 @@ export class CustomerRepository {
     }
   }
 
-  async findByCredentialsInDb(phone: string, password: string): Promise<CustomerProfile | null> {
+  async findByCredentialsInDb(identifier: string, password: string): Promise<CustomerProfile | null> {
     if (!supabaseClient.isConfigured()) return null;
     try {
+      const cleanId = identifier.trim();
+      const cleanPass = password.trim();
+      const isEmail = cleanId.includes('@');
+      const queryParam = isEmail
+        ? `email=eq.${encodeURIComponent(cleanId.toLowerCase())}&password=eq.${encodeURIComponent(cleanPass)}`
+        : `phone=eq.${encodeURIComponent(cleanId.replace(/\s+/g, ''))}&password=eq.${encodeURIComponent(cleanPass)}`;
+
       const res = await fetch(
-        `${supabaseClient.baseUrl}/rest/v1/customers?phone=eq.${encodeURIComponent(
-          phone.trim()
-        )}&password=eq.${encodeURIComponent(password.trim())}&select=*`,
+        `${supabaseClient.baseUrl}/rest/v1/customers?${queryParam}&select=*`,
         {
           headers: supabaseClient.getHeaders(),
           cache: 'no-store',
